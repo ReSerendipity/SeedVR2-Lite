@@ -9,7 +9,7 @@
     "require_code_owner_reviews": false,
     "require_last_push_approval": false,
     "strict": false,
-    "enforce_admins": true,
+    "enforce_admins": false,
     "allow_auto_merge": true,
     "required_signatures": false,
     "required_linear_history": false,
@@ -18,12 +18,15 @@
     "block_creations": false,
     "lock_branch": false,
     "allow_fork_syncing": false,
-    "restrictions": null
+    "restrictions": null,
+    "bypass_note": "admin（ReSerendipity，仓库 owner）可绕过 PR 要求直推 main；其他协作者必须走 PR + 1 审批。个人账号仓库不支持用户级 bypass，以 enforce_admins=false 实现。"
   },
   "contexts": [
     "quality-gate (ubuntu-latest)",
     "quality-gate (windows-latest)",
     "Typecheck (mypy ratchet) / Typecheck (mypy ratchet)"
   ],
-  "required_conversation_resolution": false
+  "required_conversation_resolution": false,
+  "_measured_at": "2026-09-28T10:25Z（gh api repos/ReSerendipity/SeedVR2-lite/branches/main/protection，启用 PR 要求 + enforce_admins=false）",
+  "_meets_reality": "live 已改为：require PR(1 approval) + enforce_admins=false；owner/admin 直推 main 免 PR，其余账号强制 PR。"
 }
