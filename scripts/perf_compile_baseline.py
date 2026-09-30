@@ -230,7 +230,7 @@ def driver(runs: int, resolution: int, input_path: Path, keep_cache: bool) -> li
         cmd = [
             sys.executable,
             # 子进程必须同样跑在 UTF-8 模式：否则 inductor 用 GBK 读文件崩掉、编译静默回退，
-            # 量出来的又是"四组无差异"的假结论（本机踩过，见 docs/reports/compile_perf_*.md）。
+            # 量出来的又是"四组无差异"的假结论（本机踩过，见 docs/reports/compile_perf_*.md——维护者本地目录，未随仓库分发）。
             "-X",
             "utf8",
             str(SCRIPT_DIR / "perf_compile_baseline.py"),

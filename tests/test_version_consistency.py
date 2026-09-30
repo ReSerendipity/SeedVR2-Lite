@@ -60,7 +60,10 @@ def test_no_hardcoded_old_version():
 
     offenders = []
     for pyfile in PROJECT_ROOT.rglob("*.py"):
-        if any(skip in str(pyfile) for skip in [".venv", "__pycache__", "node_modules"]):
+        # dist/ 与 build/ 是构建产物根（二者均在 .gitignore 中）：桌面发布会在
+        # dist/tauri-release/staging 下解压便携 runtime，第三方 site-packages 里
+        # 满是本测试要抓的那类历史版本号赋值字面量，但不属于本项目源码。
+        if any(skip in str(pyfile) for skip in [".venv", "__pycache__", "node_modules", "dist", "build"]):
             continue
         try:
             content = pyfile.read_text(encoding="utf-8", errors="ignore")
