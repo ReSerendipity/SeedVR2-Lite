@@ -3926,7 +3926,10 @@ const SeedVR2 = (() => {
     }
 
     function apply(f) {
-        document.documentElement.style.setProperty('--sv-font', f);
+        // 消费方是 style.css 的 --sv-font-display（h1/h2 等展示字体）。
+        // 历史坑：旧主题用单一 --sv-font，新主题拆成 -display/-body/-mono 后
+        // 这里没跟上，选中字体写进了一个无人读取的变量（选了没反应）。
+        document.documentElement.style.setProperty('--sv-font-display', f);
         try { localStorage.setItem('sv-font', f); } catch (e) {}
         sync();
     }
@@ -3942,7 +3945,7 @@ const SeedVR2 = (() => {
         var saved = curFont();
         if (saved) {
             ensureWebfonts();
-            document.documentElement.style.setProperty('--sv-font', saved);
+            document.documentElement.style.setProperty('--sv-font-display', saved);
         }
         sync();
     }

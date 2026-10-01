@@ -983,26 +983,36 @@ class HistoryDB:
         return await self.get_tasks_by_status({"pending", "processing"})
 
     async def get_statistics(self) -> dict:
-        """获取统计信息"""
+        """获取统计信息。
+
+        全部聚合排除软删除（回收站）记录——统计卡描述的是列表页可见的记录集；
+        回收站中的记录恢复（清 deleted_at）后自动回到统计，彻底清除后自然消失。
+        """
         # 总记录数
-        total_row = await self._fetch_one("SELECT COUNT(*) FROM history")
+        total_row = await self._fetch_one("SELECT COUNT(*) FROM history WHERE deleted_at IS NULL")
         total = total_row[0] if total_row else 0
 
         # 按类型统计
-        type_rows = await self._fetch_all("SELECT task_type, COUNT(*) as cnt FROM history GROUP BY task_type")
+        type_rows = await self._fetch_all(
+            "SELECT task_type, COUNT(*) as cnt FROM history WHERE deleted_at IS NULL GROUP BY task_type"
+        )
         by_type: dict[str, int] = {row[0]: row[1] for row in type_rows}
 
         # 按状态统计
-        status_rows = await self._fetch_all("SELECT status, COUNT(*) as cnt FROM history GROUP BY status")
+        status_rows = await self._fetch_all(
+            "SELECT status, COUNT(*) as cnt FROM history WHERE deleted_at IS NULL GROUP BY status"
+        )
         by_status: dict[str, int] = {row[0]: row[1] for row in status_rows}
 
         # 平均处理时间
-        avg_row = await self._fetch_one("SELECT AVG(processing_time) FROM history WHERE status = 'completed'")
+        avg_row = await self._fetch_one(
+            "SELECT AVG(processing_time) FROM history WHERE status = 'completed' AND deleted_at IS NULL"
+        )
         avg_time = avg_row[0] if avg_row and avg_row[0] else 0
 
         # 成本可见性聚合（P1-1）：总耗时 / 总输出体积
         agg_row = await self._fetch_one("""SELECT COALESCE(SUM(processing_time), 0), COALESCE(SUM(output_size_bytes), 0)
-               FROM history WHERE status = 'completed'""")
+               FROM history WHERE status = 'completed' AND deleted_at IS NULL""")
         total_time = agg_row[0] if agg_row and agg_row[0] else 0
         total_output_bytes = agg_row[1] if agg_row and agg_row[1] else 0
 

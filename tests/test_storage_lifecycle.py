@@ -341,3 +341,40 @@ class TestCostVisibilityColumns:
             record = await db.get_record(rid)
             assert record.output_size_bytes == 512
             assert abs(record.vram_peak_mb - 8123.5) < 0.01
+
+
+@pytest.mark.asyncio
+class TestStatisticsExcludeSoftDeleted:
+    """统计排除软删除（回收站）记录：统计卡描述的是列表页可见记录集。
+
+    回归背景：get_statistics 的五条聚合曾全部不带 deleted_at IS NULL，
+    删除（默认进回收站）后 total_records 永不下降，UI 统计与列表不一致。
+    """
+
+    async def test_soft_deleted_excluded_then_restored_recounted(self, tmp_path):
+        async with HistoryDB(db_path=str(tmp_path / "history.db")) as db:
+            rid_a = await db.add_record(HistoryRecord(task_type="image", input_file="a.png", status="completed"))
+            await db.update_record(rid_a, processing_time=10.0, output_size_bytes=1024)
+            await db.add_record(HistoryRecord(task_type="image", input_file="b.png", status="failed"))
+
+            stats = await db.get_statistics()
+            assert stats["total_records"] == 2
+            assert stats["by_status"]["completed"] == 1
+            assert abs(stats["total_processing_time"] - 10.0) < 0.01
+
+            # 软删除 completed 记录（默认 delete_record(soft=True)）→ 统计立即回落
+            assert await db.delete_record(rid_a, soft=True) is True
+            stats = await db.get_statistics()
+            assert stats["total_records"] == 1
+            assert stats["by_status"] == {"failed": 1}
+            assert stats["by_type"] == {"image": 1}
+            assert stats["avg_processing_time"] == 0
+            assert stats["total_processing_time"] == 0
+            assert stats["total_output_bytes"] == 0
+
+            # 从回收站恢复 → 重新计入
+            assert await db.restore_records([rid_a]) == 1
+            stats = await db.get_statistics()
+            assert stats["total_records"] == 2
+            assert abs(stats["total_processing_time"] - 10.0) < 0.01
+            assert stats["total_output_bytes"] == 1024

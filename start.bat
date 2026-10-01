@@ -148,10 +148,12 @@ if errorlevel 1 (
 
 :: Dev mode: uvicorn auto-reload (edit a line, see the effect without restarting).
 :: Usage: start.bat --dev   (workers must stay 1 - single-GPU serial queue)
+:: app_server has no module-level `app` (it is built per-config in create_app), so --reload
+:: targets dev_runner, whose import-time job is exactly to expose that `app` (GOTCHAS #149).
 if /i "%~1"=="--dev" (
     echo [DEV] Starting with auto-reload ^(uvicorn --reload^)...
     cd /d "%~dp0"
-    "%PYTHON_CMD%" -X utf8 -m uvicorn app.integrated_app.app_server:app --host 127.0.0.1 --port 7870 --workers 1 --reload
+    "%PYTHON_CMD%" -X utf8 -m uvicorn app.integrated_app.dev_runner:app --host 127.0.0.1 --port 7870 --workers 1 --reload
     goto :end
 )
 

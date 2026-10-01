@@ -4,6 +4,14 @@
 > `docs/reports/`、`docs/_devarchive/`、`examples/`、`precheck.ps1` 均为维护者本地文件，未随仓库分发；
 > 对外可执行的禁区与门禁口径见 `docs/CODING_STANDARDS.md` 第 5 节。历史记录按原样保留，不改写。
 
+## [Unreleased]
+
+### Fixed
+
+* **标题字体切换器「选了没反应」（变量名错位回归）**：`app.js` 的 apply/restore 写入的是 `--sv-font`，而现行主题 CSS 消费 `--sv-font-display`（旧主题单一变量在重构时拆成 `-display/-body/-mono`，此处未跟上）——选中字体被存进 localStorage 并高亮菜单项，但没有任何规则读取它，标题字体永不变。改写 `--sv-font-display`（`static/js/app.js`，缓存戳 bump 至 `v=3.8.3`）。实测：选书法体后 h1 计算字体即时变化、跨刷新持久。
+* **历史统计不排除回收站记录**：`history_db.get_statistics()` 的五条聚合（总数 / 按类型 / 按状态 / 平均耗时 / 成本可见性 SUM）全不带 `deleted_at IS NULL`，而列表查询带——软删除（回收站，`delete_record` 默认行为）后统计卡数字永不回落，与列表页不一致。五条聚合补齐过滤；恢复出回收站自动重新计入。附测试（`tests/test_storage_lifecycle.py`：软删→回落→恢复→重计）。
+* **`start.bat --dev` 起不来（uvicorn 找不到 `app_server:app`）**：`app_server` 刻意不提供模块级 `app`（ASGI 应用在 `create_app(config)` 现场构造），而 uvicorn `--reload` 只接受 import string。新增专用开发入口 `app/integrated_app/dev_runner.py`（import 时构造 `app`，无其他行为），`start.bat --dev` 改指 `dev_runner:app`；生产启动路径（clean_launch / start_portable）不受影响。实测：`--reload` reloader 启动、ping 正常、文件变更触发 Reloading。附契约锁测试（`tests/test_dev_runner.py`）。
+
 ## [1.6.0] - 2026-09-30
 
 ### Added
