@@ -397,9 +397,9 @@ httpx==0.28.1 \
     # via
     #   diffusers
     #   huggingface-hub
-huggingface-hub==1.28.0 \
-    --hash=sha256:46a2e950c09234de54093d587d1675382f0d08dbd600d9fb599b5932f5b2c6cb \
-    --hash=sha256:58a8bacb03072edfc38067065e9dc24bbb34805410fcd36a1632de0b329660bb
+huggingface-hub==2.0.0 \
+    --hash=sha256:375e5ad35cb3505efbf19c0cdd7e3fbf1e2304b12cd0e6b7fc8d75c6f5484619 \
+    --hash=sha256:b3eecb60540c17e8ef94c187104f4a5c0c451afcb9510ba8e17739bedcc2d6dd
     # via
     #   diffusers
     #   seedvr2-lite
