@@ -80,8 +80,8 @@ dependencies = [
 [dependency-groups]
 dev = [
     "black==26.5.1",
-    "mypy==2.3.0",
-    "ruff==0.16.6",
+    "mypy==2.3.1",
+    "ruff==0.16.9",
     "pytest>=8.0",
     "pytest-asyncio>=0.24",
     "pytest-cov>=5.0",
