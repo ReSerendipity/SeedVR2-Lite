@@ -1,6 +1,6 @@
 {
-  "version": "1.6.0",
-  "release_date": "2026-09-30",
+  "version": "1.6.1",
+  "release_date": "2026-10-02",
   "minimum_shell_version": "1.0.0",
-  "changelog": "产物文件名一律沿用输入文件名（含网页上传路径，此前会被改成带时间戳与随机后缀的缓存名；重名自动加 _1/_2）；有损输出的隐式标识不再静默丢失：JPEG/WebP 自动改用抗压缩档并在落盘后重读产物验签，验不过按 watermark_on_failure 处置（默认写溯源记录到 data/provenance/，可设 block 拒绝落盘）；新增取证模式开关 SEEDVR2_WATERMARK_PROOF_MODE=1（有损请求强制转 PNG）；输出元数据恒定携带 ai_generated / ai_generator 机器可读标识；水印载荷统一携带品牌前缀且可反查产出任务与参数；核心模块完整性清单改为 LF 字节并签名后自校验，改核心模块未重算清单会被测试门禁抓出；本版本一并发布 v1.5.8 段落中从未对外发布过的条目（权重文件名双命名兼容、模型加载失败诊断增强等）；另并入本版维护修复：12 个 workflow 补并发组、SECURITY_MATRIX 去 BOM、pre-commit mypy 钩子跨环境回退、DCO 按提交作者豁免、性能门禁按 GPU 分流、firefox E2E goto 超时修在根因。"
+  "changelog": "修复标题字体切换器选了没反应（--sv-font/--sv-font-display 变量名错位回归）；修复历史统计不排除回收站记录（删除后统计卡数字不再回落）；修复 start.bat --dev 无法启动（新增 dev_runner 专设开发入口，uvicorn --reload 可用）。"
 }

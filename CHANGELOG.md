@@ -4,7 +4,7 @@
 > `docs/reports/`、`docs/_devarchive/`、`examples/`、`precheck.ps1` 均为维护者本地文件，未随仓库分发；
 > 对外可执行的禁区与门禁口径见 `docs/CODING_STANDARDS.md` 第 5 节。历史记录按原样保留，不改写。
 
-## [Unreleased]
+## [1.6.1] - 2026-10-02
 
 ### Fixed
 
