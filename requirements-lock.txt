@@ -1063,9 +1063,9 @@ httptools==0.8.0 \
 httpx==0.28.1 \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad \
     --hash=sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc
-huggingface_hub==1.28.0 \
-    --hash=sha256:58a8bacb03072edfc38067065e9dc24bbb34805410fcd36a1632de0b329660bb \
-    --hash=sha256:46a2e950c09234de54093d587d1675382f0d08dbd600d9fb599b5932f5b2c6cb
+huggingface_hub==2.0.0 \
+    --hash=sha256:375e5ad35cb3505efbf19c0cdd7e3fbf1e2304b12cd0e6b7fc8d75c6f5484619 \
+    --hash=sha256:b3eecb60540c17e8ef94c187104f4a5c0c451afcb9510ba8e17739bedcc2d6dd
 hypothesis==6.167.0 \
     --hash=sha256:dc30b21a0b9c0f1af43c6c2c53c009bbf08580e904f1f108bf4d13650a7c7784 \
     --hash=sha256:014b237fe33d9abf50a4bbdc1d9de04307a768bf0fee43422f541169b91eae53 \
