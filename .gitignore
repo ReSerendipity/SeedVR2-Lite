@@ -352,3 +352,12 @@ data/.manifest_signing_key.old.*
 
 # 本地 worktree 备份目录（勿入库；ruff/black 亦随之跳过，2026-09-11）
 backups/
+
+# --- 维护者本机文件（2026-10-04）---
+# .zcodeignore：ZCode 工具的本机忽略规则，内容指向 docs/adr/、docs/superpowers/、
+# perf/benchmark/ 等 33 个「仅本地保留」路径，属机器专属配置；入库会被
+# pre-commit 的幻影引用门禁（scripts/check_local_only_refs.py）拒绝。
+.zcodeignore
+# docs/RELEASE_PROFILE.md：含本机绝对路径与 precheck.ps1（维护者本地）引用的项目档案，
+# 与 docs/ARCHITECTURE.md、docs/COMPLIANCE_CHECKLIST.md 同类，按「干净交付」留在本地。
+docs/RELEASE_PROFILE.md
