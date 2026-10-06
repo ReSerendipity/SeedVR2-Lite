@@ -361,3 +361,26 @@ backups/
 # docs/RELEASE_PROFILE.md：含本机绝对路径与 precheck.ps1（维护者本地）引用的项目档案，
 # 与 docs/ARCHITECTURE.md、docs/COMPLIANCE_CHECKLIST.md 同类，按「干净交付」留在本地。
 docs/RELEASE_PROFILE.md
+
+# --- 敏感信息防泄露（Git 版本控制安全工程与防泄露最佳实践指南 v1.1 第二章/第八章）---
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.p12
+*.pfx
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+credentials.json
+credentials.yaml
+credentials.yml
+secrets.json
+secrets.yaml
+secrets.yml
+*.sqlite
+*.sqlite3
+*.db# 私钥与证书：本仓跟踪 manifest_signing_public_key.pem（公钥，须入库），
+# 故不写 *.pem / *.key 通配，按私钥命名精确拦截。
