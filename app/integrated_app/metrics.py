@@ -42,6 +42,10 @@ class InferenceRecord:
     success: bool
     model_size: str
     input_type: str  # "image" or "video"
+    # MLOps P-2：输出侧轻量质量信号——输出图的平均亮度（0-255）。
+    # 仅图片类产出计算，视频/解码失败时为 None。用途：灰度检测「输出全黑」类
+    # 静默劣化（模型加载错配/采样异常时最典型的症状就是输出黑帧）。
+    output_mean_luma: float | None = None
 
 
 @dataclass
@@ -66,6 +70,8 @@ class MetricsSnapshot:
     failed_inferences: int = 0
     avg_inference_duration: float = 0.0
     last_inference_duration: float = 0.0
+    # MLOps P-2：最近成功推理的输出平均亮度均值（无样本时为 None）
+    avg_output_mean_luma: float | None = None
 
     # 缓存指标
     cache_total_files: int = 0
@@ -96,6 +102,10 @@ class MetricsSnapshot:
                 "success_rate": round(self.successful_inferences / max(self.total_inferences, 1) * 100, 1),
                 "avg_duration_seconds": round(self.avg_inference_duration, 2),
                 "last_duration_seconds": round(self.last_inference_duration, 2),
+                # MLOps P-2：无样本时为 null，前端按「未采集」处理
+                "avg_output_mean_luma": (
+                    round(self.avg_output_mean_luma, 1) if self.avg_output_mean_luma is not None else None
+                ),
             },
             "cache": {
                 "total_files": self.cache_total_files,
@@ -120,6 +130,8 @@ class MetricsCollector:
         self._failed_inferences = 0
         self._total_duration = 0.0
         self._last_duration = 0.0
+        # MLOps P-2：输出亮度样本（与推理历史同窗口），None 不入队
+        self._luma_samples: deque[float] = deque(maxlen=_MAX_HISTORY)
 
     def record_inference(
         self,
@@ -127,6 +139,7 @@ class MetricsCollector:
         duration: float,
         model_size: str = "unknown",
         input_type: str = "image",
+        output_mean_luma: float | None = None,
     ) -> None:
         """记录一次推理结果
 
@@ -135,6 +148,8 @@ class MetricsCollector:
             duration: 推理耗时（秒）
             model_size: 模型大小标识（如 "3b"、"7b"）
             input_type: 输入类型（"image" 或 "video"）
+            output_mean_luma: 输出图平均亮度（0-255）；图片产出由调用方 best-effort 采集，
+                视频/失败/解码失败传 None，不参与统计
         """
         with self._lock:
             record = InferenceRecord(
@@ -143,11 +158,14 @@ class MetricsCollector:
                 success=success,
                 model_size=model_size,
                 input_type=input_type,
+                output_mean_luma=output_mean_luma,
             )
             self._inference_records.append(record)
             self._total_inferences += 1
             if success:
                 self._successful_inferences += 1
+                if output_mean_luma is not None:
+                    self._luma_samples.append(output_mean_luma)
             else:
                 self._failed_inferences += 1
             self._total_duration += duration
@@ -195,6 +213,8 @@ class MetricsCollector:
             snap.failed_inferences = self._failed_inferences
             snap.avg_inference_duration = self._total_duration / max(self._total_inferences, 1)
             snap.last_inference_duration = self._last_duration
+            if self._luma_samples:
+                snap.avg_output_mean_luma = sum(self._luma_samples) / len(self._luma_samples)
 
         # 缓存指标 (best-effort) — 使用 os.scandir 递归遍历，比 os.walk 更高效
         try:
@@ -227,6 +247,51 @@ class MetricsCollector:
             self._failed_inferences = 0
             self._total_duration = 0.0
             self._last_duration = 0.0
+            self._luma_samples.clear()
+
+
+# MLOps P-2：输出侧轻量质量信号——支持的图片扩展名（视频容器不在此列，返回 None）
+_LUMA_MEAN_IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".bmp"}
+
+
+def compute_output_mean_luma(path: str, max_side: int = 64) -> float | None:
+    """Best-effort 计算输出图的平均亮度（0-255）。
+
+    用途：输出「全黑/全灰」静默劣化的最低成本探测器——模型加载错配、采样器异常
+    时最典型症状是输出黑帧，而耗时/成功率/PSNR 门在离线环境之外无法在线采集。
+
+    设计原则（与 vram_leak_detector 调用处一致）：
+    - 纯 best-effort：文件缺失、非图片、解码失败一律返回 None，绝不抛出；
+    - 缩到 max_side 边长再算均值，单次开销毫秒级，不拖慢任务收尾路径；
+    - PIL 延迟导入（与 gpu_backend 同文件风格），无图片场景零成本。
+
+    Args:
+        path: 输出文件路径。
+        max_side: 缩放后的最长边，控制解码开销。
+
+    Returns:
+        0-255 亮度均值；不适用或失败时 None。
+    """
+    if not path:
+        return None
+    ext = os.path.splitext(path)[1].lower()
+    if ext not in _LUMA_MEAN_IMAGE_EXTS:
+        return None
+    if not os.path.exists(path):
+        return None
+    try:
+        from PIL import Image
+
+        with Image.open(path) as img:
+            gray = img.convert("L")
+            if max(gray.size) > max_side:
+                gray.thumbnail((max_side, max_side))
+            pixels = gray.tobytes()
+            if not pixels:
+                return None
+            return sum(pixels) / len(pixels)
+    except Exception:
+        return None
 
 
 def _scan_dir_stats(dir_path: str) -> tuple[int, int]:

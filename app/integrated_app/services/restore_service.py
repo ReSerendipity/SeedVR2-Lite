@@ -53,7 +53,7 @@ from app.integrated_app.gpu_utils import (
     recommend_params,
 )
 from app.integrated_app.history_db import HistoryDB, HistoryRecord
-from app.integrated_app.metrics import metrics_collector
+from app.integrated_app.metrics import compute_output_mean_luma, metrics_collector
 from app.integrated_app.model_registry import model_registry
 from app.integrated_app.optimization.gpu.vram_leak_detector import vram_leak_detector
 from app.integrated_app.services.oom_breaker import OomBreaker
@@ -565,6 +565,8 @@ async def run_task_with_state(
                     output_size = os.path.getsize(result.output_path)
             except OSError:
                 output_size = 0
+            # MLOps P-2：输出侧轻量质量信号（best-effort，失败不影响主流程）
+            output_mean_luma = compute_output_mean_luma(result.output_path or "")
             # P2-1: VRAM 峰值落库（引擎 metadata.vram_peak_mb）
             vram_peak_mb = float((getattr(result, "metadata", None) or {}).get("vram_peak_mb") or 0.0)
             await task_state_store.update(
@@ -589,6 +591,7 @@ async def run_task_with_state(
                 duration=result.processing_time or 0.0,
                 model_size=model_size,
                 input_type=input_type,
+                output_mean_luma=output_mean_luma,
             )
             # P2-4：显存泄漏自动告警（峰值落库后喂给趋势检测器）
             if vram_peak_mb > 0:
@@ -1347,6 +1350,8 @@ async def process_batch_background(
                             output_size = os.path.getsize(result.output_path)
                     except OSError:
                         output_size = 0
+                    # MLOps P-2：输出侧轻量质量信号（视频产出由 helper 判扩展名后返回 None）
+                    output_mean_luma = compute_output_mean_luma(result.output_path or "")
                     task_item["output_size_bytes"] = output_size
                     task_item["vram_peak_mb"] = float(
                         (getattr(result, "metadata", None) or {}).get("vram_peak_mb") or 0.0
@@ -1356,6 +1361,7 @@ async def process_batch_background(
                         duration=result.processing_time or 0.0,
                         model_size=use_model_size,
                         input_type=media_type,
+                        output_mean_luma=output_mean_luma,
                     )
                     # P2-4：批量链路同样喂入显存泄漏检测器
                     batch_vram = float(task_item.get("vram_peak_mb") or 0.0)

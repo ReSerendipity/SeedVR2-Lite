@@ -5,7 +5,11 @@
 
 import pytest
 
-from app.integrated_app.metrics import MetricsCollector, MetricsSnapshot
+from app.integrated_app.metrics import (
+    MetricsCollector,
+    MetricsSnapshot,
+    compute_output_mean_luma,
+)
 
 
 class TestMetricsCollector:
@@ -125,3 +129,49 @@ class TestMetricsSnapshot:
         assert d["inference"]["total"] == 10
         assert d["inference"]["successful"] == 8
         assert d["inference"]["success_rate"] == 80.0
+
+
+class TestOutputMeanLuma:
+    """MLOps P-2：输出侧轻量质量信号（compute_output_mean_luma 与采集链路）"""
+
+    def test_missing_file_returns_none(self):
+        assert compute_output_mean_luma("definitely/not/exist.png") is None
+
+    def test_video_extension_returns_none(self, tmp_path):
+        fake = tmp_path / "out.mp4"
+        fake.write_bytes(b"not a real video")
+        assert compute_output_mean_luma(str(fake)) is None
+
+    def test_real_image_mean_luma_in_range(self, tmp_path):
+        from PIL import Image
+
+        img = Image.new("L", (32, 16), color=120)
+        p = tmp_path / "out.png"
+        img.save(p)
+        value = compute_output_mean_luma(str(p))
+        assert value is not None
+        assert 0.0 <= value <= 255.0
+        assert value == pytest.approx(120.0, abs=1.0)
+
+    def test_luma_sample_recorded_and_averaged(self):
+        collector = MetricsCollector()
+        collector.record_inference(success=True, duration=1.0, output_mean_luma=100.0)
+        collector.record_inference(success=True, duration=1.0, output_mean_luma=200.0)
+        snap = collector.snapshot()
+        assert snap.avg_output_mean_luma == pytest.approx(150.0, rel=0.01)
+        d = snap.to_dict()
+        assert d["inference"]["avg_output_mean_luma"] == 150.0
+
+    def test_luma_none_without_samples(self):
+        collector = MetricsCollector()
+        collector.record_inference(success=True, duration=1.0)
+        snap = collector.snapshot()
+        assert snap.avg_output_mean_luma is None
+        assert snap.to_dict()["inference"]["avg_output_mean_luma"] is None
+
+    def test_luma_cleared_on_reset(self):
+        collector = MetricsCollector()
+        collector.record_inference(success=True, duration=1.0, output_mean_luma=100.0)
+        collector.reset()
+        snap = collector.snapshot()
+        assert snap.avg_output_mean_luma is None
