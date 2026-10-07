@@ -8,10 +8,10 @@
 # ============================================================
 
 # Core
-fastapi==0.141.1
-uvicorn[standard]==0.52.4
-gunicorn==26.1.0
-pydantic==2.13.4
+fastapi==0.142.2
+uvicorn[standard]==0.54.0
+gunicorn==26.2.0
+pydantic==2.13.5
 pyyaml==6.0.3
 
 # Template & Frontend
@@ -21,18 +21,18 @@ python-multipart==0.0.32
 # Deep Learning
 
 # Model & Inference
-transformers==5.15.0
+transformers==5.18.0
 safetensors==0.8.0
 huggingface_hub==1.28.0
 einops==0.8.2
 omegaconf==2.3.1
-diffusers==0.39.0
+diffusers==0.40.0
 mediapy==1.2.7
 rotary-embedding-torch==0.9.1
 
 # Video Processing
 opencv-python==5.0.0.93
-imageio==2.37.4
+imageio==2.38.0
 imageio-ffmpeg==0.6.0
 pillow==12.3.0
 
@@ -43,8 +43,8 @@ aiosqlite==0.22.1
 aiofiles==25.1.0
 psutil==7.2.2
 rich==15.0.0
-PyWavelets==1.9.0
-cryptography==50.0.1  # 启动自检 Ed25519 验签依赖（GOTCHAS #98：WinPython 7z 解 NSIS 后预装 cryptography 丢失，便携包必须显式安装）
+PyWavelets==1.10.0
+cryptography==50.0.2  # 启动自检 Ed25519 验签依赖（GOTCHAS #98：WinPython 7z 解 NSIS 后预装 cryptography 丢失，便携包必须显式安装）
 
 # Flash Attention (需要 CUDA 编译环境，Windows 下可能需要预编译包)
 # 如果安装失败，请从以下地址下载预编译 whl：
