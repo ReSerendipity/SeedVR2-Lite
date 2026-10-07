@@ -23,7 +23,7 @@ python-multipart==0.0.32
 # Model & Inference
 transformers==5.15.0
 safetensors==0.8.0
-huggingface_hub==1.28.0
+huggingface_hub==2.1.1
 einops==0.8.2
 omegaconf==2.3.1
 diffusers==0.39.0
