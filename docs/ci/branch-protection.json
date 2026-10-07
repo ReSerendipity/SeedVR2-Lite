@@ -4,7 +4,7 @@
   "repo": "SeedVR2-lite",
   "branch": "main",
   "policy": {
-    "required_approving_review_count": 0,
+    "required_approving_review_count": 1,
     "dismiss_stale_reviews": true,
     "require_code_owner_reviews": false,
     "require_last_push_approval": false,
