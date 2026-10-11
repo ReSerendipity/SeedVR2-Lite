@@ -8,7 +8,7 @@
 |---|---|---|
 | 分支保护 | GitHub Branch Protection（main 受保护，需 PR + required checks） | ✅ |
 | DCO 签名 | .githooks/commit-msg 强制 Signed-off-by | ✅ |
-| 代码审查 | PR 需 review | ⚠️ 待配置 CODEOWNERS |
+| 代码审查 | PR 需 review | ⚠️ CODEOWNERS 已配置（.github/CODEOWNERS，死规则已于 2026-10-05 修正）；分支保护 require_code_owner_reviews=false，属策略声明而非强制 |
 
 ## 代码安全
 
