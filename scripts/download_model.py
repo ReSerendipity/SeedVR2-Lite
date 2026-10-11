@@ -294,11 +294,13 @@ def download_model(
     print()
 
     missing: list[str] = []
+    sources: dict[str, tuple[str, str | None]] = {}
     for filename in files:
         # only_files 模式不允许静默跳过：便携包 CI 以「全部权重就在该仓库」为前提，
         # 任何文件缺失都必须失败并暴露给调用方，否则会产出"假成功"（此前就漏了 pos/neg）。
         allow = (filename in _SHARED_FILES) and not only_files
         repo, subfolder = _resolve_source(filename, repo_id)
+        sources[filename] = (repo, subfolder)
         if not _download_file(repo, filename, save_path, allow_missing=allow, subfolder=subfolder):
             missing.append(filename)
 
@@ -319,6 +321,66 @@ def download_model(
     # 下载后立即按 config.yaml 的 sha256_* 期望哈希校验（成本治理 P1-3）
     if verify_hashes:
         verify_downloaded_hashes(save_path, files, config_path)
+
+    # 下载产物写权重 sidecar（数据治理 P2-2：来源可追溯）——放在哈希校验之后，
+    # 保证写入的 sidecar 对应的是已通过完整性校验的文件；幂等（哈希一致即跳过）
+    write_download_sidecars(save_path, files, sources)
+    # 双命名族并存警告（评估 P2-6）：ema_ 前缀族与裸名族互不兼容，并存时提示
+    warn_on_dual_naming(save_path, files)
+
+
+def warn_on_dual_naming(save_dir: Path, files: list[str]) -> None:
+    """检测同一权重双命名族并存（评估 P2-6），提示裸名覆盖/混用风险。
+
+    numz 族以 ``seedvr2_ema_`` 前缀命名、Comfy-Org 族为裸名（``seedvr2_*``）；
+    两套文件名互不兼容、严禁混用。引擎按 config.yaml ``checkpoint_*`` 主字段
+    加载不受影响，但人工拷贝/手动改名场景容易踩坑，此处显式警告。
+    """
+    for filename in files:
+        alt: str | None = None
+        if filename.startswith("seedvr2_ema_"):
+            alt = "seedvr2_" + filename[len("seedvr2_ema_") :]
+        elif filename.startswith("seedvr2_"):
+            alt = "seedvr2_ema_" + filename[len("seedvr2_") :]
+        if alt and (save_dir / filename).exists() and (save_dir / alt).exists():
+            print(
+                f"  [警告] 双命名族并存: {filename} 与 {alt}（互不兼容的权重，"
+                f"引擎按 config.yaml checkpoint_* 主字段加载；请勿混用/手动改名）"
+            )
+
+
+def write_download_sidecars(save_dir: Path, files: list[str], sources: dict[str, tuple[str, str | None]]) -> None:
+    """为下载产物写权重 sidecar（``<file>.meta.json``），记录来源仓库与内容哈希。
+
+    幂等：sidecar 已存在且其哈希与文件当前哈希一致时跳过，避免重复计算 GB 级
+    文件的 SHA256；文件缺失或大小为 0 时跳过。model/ 目录已被 .gitignore 覆盖，
+    写入不会污染工作树。
+
+    Args:
+        save_dir: 权重保存目录。
+        files: 本次下载/确认的文件名清单。
+        sources: 文件名 → (repo, subfolder) 来源映射（_resolve_source 的输出）。
+    """
+    root = Path(__file__).resolve().parent.parent
+    if str(root) not in sys.path:
+        sys.path.insert(0, str(root))
+    from training.weight_sidecar import build_sidecar, read_sidecar, sidecar_path_for, write_sidecar
+
+    for filename in files:
+        target = save_dir / filename
+        if not target.exists() or target.stat().st_size == 0:
+            continue
+        repo, subfolder = sources.get(filename, ("", None))
+        existing = read_sidecar(str(target))
+        if existing and existing.get("sha256") == _sha256_of(target):
+            print(f"  [sidecar] 已存在且哈希一致，跳过: {sidecar_path_for(str(target))}")
+            continue
+        meta = build_sidecar(
+            str(target),
+            extra={"source_repo": repo, "source_subfolder": subfolder or ""},
+        )
+        written = write_sidecar(meta, str(target))
+        print(f"  [sidecar] 已写入: {written}")
 
 
 def _load_expected_hashes(config_path: Path) -> dict[str, str]:
