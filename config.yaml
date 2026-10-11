@@ -73,6 +73,13 @@ logging:
   level: INFO
   max_size_mb: 50
 model:
+  # ── 权重命名双族说明（评估 P2-6）────────────────────────────────────
+  # 官方 SeedVR2 权重存在两个命名族：ByteDance 官方仓与社区整理仓用
+  # 「seedvr2_ema_*」前缀（checkpoint_* 主字段），Comfy-Org 量化转包用裸名
+  # 「seedvr2_*」（与 sha256_*_alt 期望哈希对应）。两套文件名互不兼容、
+  # 严禁混用；引擎加载按 checkpoint_* 主字段查找，sha256_*_alt 用于校验
+  # 裸名族文件（如便携包内置的 Comfy-Org 变体）完整性。download_model.py
+  # 按前缀自动路由来源（numz→HF，Comfy-Org→ModelScope），并存双命名时警告。
   auto_load: false
   default_precision: mxfp8
   default_size: 3b
@@ -204,6 +211,10 @@ runtime:
     - data/checkpoints/
     - model/
     integrity_enforce: false
+    # integrity_enforce 差异说明（评估 P3-8）：false 仅为本地开发默认值；
+    # 发布/便携构建在构建期注入 true（见 verify_release_integrity.py 与发布
+    # 流水线），用户端启动自检在清单漂移时直接拒绝启动。本地改回 true 会
+    # 让自检在源码变更未同步清单时报错，故保持 false 属预期行为。
     integrity_recheck_interval_seconds: 1800
     max_upload_image_mb: 50
     max_upload_video_mb: 500
