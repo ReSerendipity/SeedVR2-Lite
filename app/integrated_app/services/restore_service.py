@@ -1187,6 +1187,7 @@ async def process_batch_background(
                 task_item["output_path"] = fp.get("output_path", "")
                 results.append(task_item)
                 # P1-7：逐文件即时落库，崩溃/重启不再丢失已完成文件的账目
+                skip_geometry = _probe_media_geometry(media_path, media_type)
                 await history_db.add_record(
                     HistoryRecord(
                         task_type=media_type,
@@ -1194,6 +1195,9 @@ async def process_batch_background(
                         model_size=use_model_size,
                         status="completed",
                         output_file=fp.get("output_path", ""),
+                        input_width=skip_geometry[0] if skip_geometry else 0,
+                        input_height=skip_geometry[1] if skip_geometry else 0,
+                        input_duration_sec=skip_geometry[2] if skip_geometry else 0.0,
                     )
                 )
                 continue
@@ -1202,6 +1206,7 @@ async def process_batch_background(
 
         if task_queue.is_cancelled(batch_id):
             for remaining in media_files[i:]:
+                cancel_geometry = _probe_media_geometry(remaining, media_type)
                 await history_db.add_record(
                     HistoryRecord(
                         task_type=media_type,
@@ -1209,6 +1214,9 @@ async def process_batch_background(
                         model_size=use_model_size,
                         status="cancelled",
                         error_message="批量任务被取消",
+                        input_width=cancel_geometry[0] if cancel_geometry else 0,
+                        input_height=cancel_geometry[1] if cancel_geometry else 0,
+                        input_duration_sec=cancel_geometry[2] if cancel_geometry else 0.0,
                     )
                 )
             break
@@ -1490,6 +1498,8 @@ async def process_batch_background(
         # 数据治理 P1-2：视频任务把 ffmpeg 版本写入 parameters（编码器血缘，
         # 进程级缓存；置于降级合并之后，避免被覆盖）
         batch_parameters_json = apply_ffmpeg_lineage(batch_parameters_json, media_type)
+        # 输入分布台账（评估 P2-4a）：批量主路径每文件探测一次宽高/时长；失败留 0
+        geometry = _probe_media_geometry(media_path, media_type)
         await history_db.add_record(
             HistoryRecord(
                 task_type=media_type,
@@ -1503,6 +1513,9 @@ async def process_batch_background(
                 output_size_bytes=int(task_item.get("output_size_bytes") or 0),
                 vram_peak_mb=float(task_item.get("vram_peak_mb") or 0.0),
                 input_sha256=input_sha256,
+                input_width=geometry[0] if geometry else 0,
+                input_height=geometry[1] if geometry else 0,
+                input_duration_sec=geometry[2] if geometry else 0.0,
             )
         )
 

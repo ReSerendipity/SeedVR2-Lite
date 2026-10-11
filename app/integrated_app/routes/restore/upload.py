@@ -46,6 +46,7 @@ from app.integrated_app.model_registry import model_registry
 from app.integrated_app.routes.restore import common
 from app.integrated_app.security.magic_check import validate_upload_magic
 from app.integrated_app.services.restore_service import (
+    _probe_media_geometry,
     model_size_from_dit_model,
     process_image_task,
     process_video_task,
@@ -358,6 +359,8 @@ async def upload_and_restore(
 
     # 幂等键通过格式校验后作为 task_id 使用（客户端可据此实现提交去重）
     task_id = client_key or uuid.uuid4().hex[: config.get("runtime", {}).get("task", {}).get("id_length", 16)]
+    # 输入分布台账（评估 P2-4a）：探测宽高/时长写入历史记录；探测失败返回 None → 保持 0
+    geometry = _probe_media_geometry(input_path, task_type)
     record = HistoryRecord(
         task_type=task_type,
         input_file=input_path,
@@ -365,6 +368,9 @@ async def upload_and_restore(
         status="pending",
         parameters=_lineage_parameters(params.model_dump_json(), task_type),
         input_sha256=input_sha256,
+        input_width=geometry[0] if geometry else 0,
+        input_height=geometry[1] if geometry else 0,
+        input_duration_sec=geometry[2] if geometry else 0.0,
     )
     record_id = await history_db.add_record(record)
     await common.create_task_state(task_id, record_id, history_db, task_type=task_type)

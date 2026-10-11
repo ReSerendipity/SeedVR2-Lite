@@ -293,6 +293,7 @@ FIX_LOG.md
 
 # MLOps 产物（本地生成，不入库）
 perf/benchmark/results/
+perf/results/
 experiments/logs/
 data/heartbeats/
 data/checkpoints/

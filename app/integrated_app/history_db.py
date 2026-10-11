@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 # 历史库 schema 当前版本（数据治理 P0-2）。
 # 约定：新增列/索引等结构变更时 +1，并在 _MIGRATIONS 登记对应迁移步骤（v0 表示
 # 未打版本标记的历史旧库）。首次建表即包含全部列，因此新库从 v0 一步推进到最新版。
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 
 async def _migrate_v2_to_v3(db: aiosqlite.Connection) -> None:
@@ -78,6 +78,23 @@ async def _migrate_v3_to_v4(db: aiosqlite.Connection) -> None:
         await db.execute("ALTER TABLE history ADD COLUMN deleted_at TEXT DEFAULT NULL")
 
 
+async def _migrate_v4_to_v5(db: aiosqlite.Connection) -> None:
+    """v4 → v5：history 表新增输入分布列（输入分辨率/时长，评估 P2-4a 漂移台账）。
+
+    ``input_width`` / ``input_height`` 为输入媒体像素宽高（图片与视频均适用），
+    ``input_duration_sec`` 为视频时长（秒），图片恒为 0。缺探测数据时保持 0
+    （fail-open，不阻塞任务主流程）。必须幂等：列已存在时 no-op。
+    """
+    cursor = await db.execute("PRAGMA table_info(history)")
+    existing_cols = {row[1] for row in await cursor.fetchall()}
+    if existing_cols and "input_width" not in existing_cols:
+        await db.execute("ALTER TABLE history ADD COLUMN input_width INTEGER DEFAULT 0")
+    if existing_cols and "input_height" not in existing_cols:
+        await db.execute("ALTER TABLE history ADD COLUMN input_height INTEGER DEFAULT 0")
+    if existing_cols and "input_duration_sec" not in existing_cols:
+        await db.execute("ALTER TABLE history ADD COLUMN input_duration_sec REAL DEFAULT 0.0")
+
+
 async def _migrate_v0_to_v1(db: aiosqlite.Connection) -> None:
     """v0（未打版本标记的旧库）→ v1：补列 output_size_bytes / vram_peak_mb。
 
@@ -103,6 +120,7 @@ _MIGRATIONS: tuple[tuple[int, str, Callable[[aiosqlite.Connection], Awaitable[No
     (2, "补列 input_sha256（源文件内容寻址血缘，P1-1）", _migrate_v1_to_v2),
     (3, "补列 pinned（用户标记保留，retention 清理豁免，数据治理 P1-5）", _migrate_v2_to_v3),
     (4, "补列 deleted_at（软删除 / 回收站，防误删）", _migrate_v3_to_v4),
+    (5, "补列 input_width / input_height / input_duration_sec（输入分布台账，评估 P2-4a）", _migrate_v4_to_v5),
 )
 
 
@@ -127,6 +145,9 @@ class HistoryRecord:
         vram_peak_mb: 本次推理的 VRAM 峰值（MB），无监控数据时为 0（P2-1）。
         input_sha256: 源输入文件内容 SHA-256（hex），内容寻址血缘（数据治理 P1-1）；
             空串表示未计算（如内存数据库/测试桩场景）。
+        input_width: 输入媒体像素宽（探测失败时为 0；评估 P2-4a 输入分布台账）。
+        input_height: 输入媒体像素高（探测失败时为 0）。
+        input_duration_sec: 输入视频时长（秒）；图片恒为 0（评估 P2-4a）。
         pinned: 用户「标记保留」。置位后该记录的输出文件被 retention
             年龄/数量清理豁免（数据治理 P1-5）。
     """
@@ -144,6 +165,9 @@ class HistoryRecord:
     output_size_bytes: int = 0
     vram_peak_mb: float = 0.0
     input_sha256: str = ""
+    input_width: int = 0
+    input_height: int = 0
+    input_duration_sec: float = 0.0
     pinned: bool = False
 
 
@@ -456,8 +480,8 @@ class HistoryDB:
             record.created_at = datetime.now().isoformat()
 
         record_id = await self._execute_write(
-            """INSERT INTO history (task_type, input_file, output_file, model_size, status, parameters, processing_time, created_at, error_message, output_size_bytes, vram_peak_mb, input_sha256)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            """INSERT INTO history (task_type, input_file, output_file, model_size, status, parameters, processing_time, created_at, error_message, output_size_bytes, vram_peak_mb, input_sha256, input_width, input_height, input_duration_sec)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 record.task_type,
                 record.input_file,
@@ -471,6 +495,9 @@ class HistoryDB:
                 record.output_size_bytes,
                 record.vram_peak_mb,
                 record.input_sha256,
+                record.input_width,
+                record.input_height,
+                record.input_duration_sec,
             ),
         )
         await self._maybe_prune()
@@ -500,11 +527,14 @@ class HistoryDB:
                     record.output_size_bytes,
                     record.vram_peak_mb,
                     record.input_sha256,
+                    record.input_width,
+                    record.input_height,
+                    record.input_duration_sec,
                 )
             )
 
-        sql = """INSERT INTO history (task_type, input_file, output_file, model_size, status, parameters, processing_time, created_at, error_message, output_size_bytes, vram_peak_mb, input_sha256)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+        sql = """INSERT INTO history (task_type, input_file, output_file, model_size, status, parameters, processing_time, created_at, error_message, output_size_bytes, vram_peak_mb, input_sha256, input_width, input_height, input_duration_sec)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
         try:
             # P1-7：先取当前最大 id 作为基线，插入后按基线推算整批 id。
@@ -547,6 +577,9 @@ class HistoryDB:
             "output_size_bytes",
             "vram_peak_mb",
             "input_sha256",
+            "input_width",
+            "input_height",
+            "input_duration_sec",
             "pinned",
         }
         invalid_keys = set(kwargs.keys()) - allowed_columns
@@ -1056,6 +1089,9 @@ class HistoryDB:
             output_size_bytes=row["output_size_bytes"] if "output_size_bytes" in cols else 0,
             vram_peak_mb=row["vram_peak_mb"] if "vram_peak_mb" in cols else 0.0,
             input_sha256=row["input_sha256"] if "input_sha256" in cols else "",
+            input_width=int(row["input_width"]) if "input_width" in cols else 0,
+            input_height=int(row["input_height"]) if "input_height" in cols else 0,
+            input_duration_sec=float(row["input_duration_sec"]) if "input_duration_sec" in cols else 0.0,
             pinned=bool(row["pinned"]) if "pinned" in cols else False,
         )
 
