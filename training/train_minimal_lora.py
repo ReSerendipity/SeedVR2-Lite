@@ -137,8 +137,21 @@ def build_synthetic_batch(device: torch.device, dtype: torch.dtype, grid=(1, 2, 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--steps", type=int, default=8)
+    ap.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="随机种子（固定可复现；写入结果 JSON 与权重 sidecar）",
+    )
     ap.add_argument("--ckpt-out", type=str, default="data/checkpoints/minimal_lora_smoke.pt")
     args = ap.parse_args()
+
+    # 复现性：单进程 smoke 用 same_across_ranks=True，保证全 RNG 精确可复现
+    # （common.seed.set_seed 覆盖 random/numpy/torch CPU+CUDA；cudnn 确定性与
+    #   kernel 级取舍留待真实训练评估，与 common/seed.py 文档一致）
+    from common.seed import set_seed
+
+    set_seed(args.seed, same_across_ranks=True)
 
     assert torch.cuda.is_available(), "需要 CUDA"
     device = torch.device("cuda")
@@ -191,13 +204,38 @@ def main() -> int:
     out_path = ROOT / args.ckpt_out
     out_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save({"adapter": adapter.state_dict(), "losses": losses}, out_path)
+
+    # 训练产物溯源（数据治理 P2-2）：落盘权重 sidecar，记录来源/种子/超参，
+    # 使 checkpoint 能回答"用什么数据、什么配置训出来的"
+    from training.weight_sidecar import build_sidecar, write_sidecar
+
+    sidecar_meta = build_sidecar(
+        str(out_path),
+        training={
+            "steps": args.steps,
+            "seed": args.seed,
+            "adapter_rank": 8,
+            "learning_rate": 1e-4,
+            "weight_decay": 0.0,
+            "base_model": "seedvr2_3b_fp8_e4m3fn.safetensors (frozen, fp8→bf16 dequant)",
+            "dataset": "synthetic latent (no real dataset yet; hook in build_synthetic_batch)",
+        },
+        extra={
+            "adapter_params": n_trainable,
+            "peak_vram_mb": round(torch.cuda.max_memory_allocated() / 1024**2, 1),
+        },
+    )
+    sidecar_path = write_sidecar(sidecar_meta, str(out_path))
+
     result = {
         "steps": args.steps,
+        "seed": args.seed,
         "losses": [round(x, 6) for x in losses],
         "adapter_params": n_trainable,
         "peak_vram_mb": round(torch.cuda.max_memory_allocated() / 1024**2, 1),
         "ckpt": str(out_path),
         "ckpt_bytes": out_path.stat().st_size,
+        "sidecar": sidecar_path,
     }
     print("===MINIMAL_TRAIN_RESULT===")
     print(json.dumps(result, indent=2))
