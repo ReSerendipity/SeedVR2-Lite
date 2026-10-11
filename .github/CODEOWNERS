@@ -8,20 +8,22 @@
 * @ReSerendipity
 
 # 安全核心模块 — 所有改动必须由安全负责人审查
-app/security/ @ReSerendipity
-app/auth/ @ReSerendipity
-app/csrf* @ReSerendipity
+# （禁区路径，与 docs/CODING_STANDARDS.md §5.1 逐项对齐；2026-10-05 修死规则：
+#   原 app/security/、app/auth/、app/csrf* 指向不存在路径，安全模块实际位置如下）
+app/integrated_app/security/ @ReSerendipity
 
-# 密钥与配置
+# 密钥与运行时唯一配置源（原 config/ 指向不存在路径，实际配置文件为根级 config.yaml）
 .env* @ReSerendipity
-config/ @ReSerendipity
+config.yaml @ReSerendipity
+
+# 上游 vendored 模型架构源码（禁区，改错没有静态网兜住）
+model_lib/ @ReSerendipity
 
 # 安全策略与审查流程
-SECURITY.md @ReSerendipity
+.github/SECURITY.md @ReSerendipity
 SECURITY_MATRIX.md @ReSerendipity
 .github/workflows/ @ReSerendipity
 .github/CODEOWNERS @ReSerendipity
 
-# 构建与发布
+# 构建与发布（原 scripts/assemble* 无匹配跟踪文件，已删）
 scripts/build* @ReSerendipity
-scripts/assemble* @ReSerendipity
