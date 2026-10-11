@@ -41,7 +41,7 @@ on:
         required: false
         default: ""
       quant_baseline:
-        description: "额外跑跨精度量化质量基线（MLOps P2-6，追加 fp8 权重下载 + 常驻服务真机对比，耗时显著）"
+        description: "额外跑跨精度量化质量基线（MLOps P2-6，追加 fp8 权重下载 + 常驻服务真机对比，耗时显著）；schedule 触发时自动执行"
         type: boolean
         required: false
         default: false
@@ -323,7 +323,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "source-overlay smoke failed: main 源码在发布包运行时上未通过真机验收" }
 
       - name: Quant baseline — prepare cross-precision weights (fp8; bundle ships mxfp8)
-        if: inputs.quant_baseline == true
+        # 评估报告 P1-3 落地：schedule（周一/周四）自动执行量化质量基线并归档，
+        # 消除「评估结果无留档、仅手动 on-demand 才产出」的盲区；workflow_run（发布后）
+        # 不加重负担，仍按 inputs.quant_baseline 决定。
+        if: github.event_name == 'schedule' || inputs.quant_baseline
         shell: pwsh
         run: |
           # 量化基线需要 ≥2 精度对比。便携包只内置 3B MXFP8（见 SOURCE.md），此处补下
@@ -336,7 +339,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "fp8 权重下载失败：量化基线缺参考精度" }
 
       - name: Quant baseline — serve-and-run cross-precision PSNR/SSIM
-        if: inputs.quant_baseline == true
+        if: github.event_name == 'schedule' || inputs.quant_baseline
         shell: pwsh
         run: |
           # 常驻模式（smoke --serve-and-run）：由 smoke 起便携服务并复用其 boot/健康/关停链路，
@@ -358,7 +361,7 @@ jobs:
           Get-Content $out -Raw
 
       - name: Upload quant baseline JSON
-        if: inputs.quant_baseline == true && always()
+        if: (github.event_name == 'schedule' || inputs.quant_baseline) && always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: quant-baseline
