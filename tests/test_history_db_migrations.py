@@ -158,3 +158,91 @@ class TestSchemaVersionFramework:
         await tmp_db.create_task(TaskRecord(task_id="t1", record_id=record_id, status="processing"))
         task = await tmp_db.get_task_by_record_id(record_id)
         assert task is not None and task.task_id == "t1"
+
+    @pytest.mark.asyncio
+    async def test_v4_db_migrates_input_distribution_columns(self, tmp_path):
+        """v4 旧库迁移后补齐 input_width/input_height/input_duration_sec 且旧数据可读。
+
+        对应评估报告 P2-4a：输入分布（分辨率/时长）台账落地。
+        """
+        path = str(tmp_path / "v4.db")
+        async with aiosqlite.connect(path) as raw:
+            # 构造 v4 结构（含 deleted_at，但缺输入分布三列）
+            await raw.execute("""CREATE TABLE history (
+                       id INTEGER PRIMARY KEY AUTOINCREMENT,
+                       task_type TEXT NOT NULL,
+                       input_file TEXT NOT NULL,
+                       output_file TEXT DEFAULT '',
+                       model_size TEXT DEFAULT '',
+                       status TEXT NOT NULL DEFAULT 'pending',
+                       parameters TEXT DEFAULT '{}',
+                       processing_time REAL DEFAULT 0.0,
+                       created_at TEXT NOT NULL,
+                       error_message TEXT DEFAULT '',
+                       output_size_bytes INTEGER DEFAULT 0,
+                       vram_peak_mb REAL DEFAULT 0.0,
+                       input_sha256 TEXT DEFAULT '',
+                       pinned INTEGER DEFAULT 0,
+                       deleted_at TEXT DEFAULT NULL
+                   )""")
+            await raw.execute("PRAGMA user_version=4")
+            await raw.execute(
+                "INSERT INTO history (task_type, input_file, status, created_at) VALUES ('video', 'a.mp4', 'completed', '2026-01-01')"
+            )
+            await raw.commit()
+
+        async with HistoryDB(path) as db:
+            async with aiosqlite.connect(path) as raw:
+                cursor = await raw.execute("PRAGMA table_info(history)")
+                cols = {row[1] for row in await cursor.fetchall()}
+            assert {"input_width", "input_height", "input_duration_sec"} <= cols
+            assert await db.get_schema_version() == SCHEMA_VERSION
+            record = await db.get_record(1)
+            assert record is not None
+            assert record.task_type == "video"
+            # 旧记录新列取默认值 0
+            assert record.input_width == 0
+            assert record.input_height == 0
+            assert record.input_duration_sec == 0.0
+
+    @pytest.mark.asyncio
+    async def test_input_distribution_fields_roundtrip(self, tmp_db: HistoryDB):
+        """输入分布字段写入→读回一致（评估 P2-4a 台账数据真实落库）。"""
+        from app.integrated_app.history_db import HistoryRecord
+
+        record_id = await tmp_db.add_record(
+            HistoryRecord(
+                task_type="image",
+                input_file="x.png",
+                status="completed",
+                input_width=1920,
+                input_height=1080,
+                input_duration_sec=0.0,
+            )
+        )
+        record = await tmp_db.get_record(record_id)
+        assert record is not None
+        assert record.input_width == 1920
+        assert record.input_height == 1080
+        assert record.input_duration_sec == 0.0
+
+        vid_id = await tmp_db.add_record(
+            HistoryRecord(
+                task_type="video",
+                input_file="v.mp4",
+                status="completed",
+                input_width=1280,
+                input_height=720,
+                input_duration_sec=12.5,
+            )
+        )
+        vid = await tmp_db.get_record(vid_id)
+        assert vid is not None
+        assert vid.input_width == 1280
+        assert vid.input_height == 720
+        assert vid.input_duration_sec == 12.5
+
+        # update_record 白名单包含输入分布列（供后续修正场景）
+        await tmp_db.update_record(record_id, input_width=640)
+        record = await tmp_db.get_record(record_id)
+        assert record is not None and record.input_width == 640
