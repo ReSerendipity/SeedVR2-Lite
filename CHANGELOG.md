@@ -4,6 +4,22 @@
 > `docs/reports/`、`docs/_devarchive/`、`examples/`、`precheck.ps1` 均为维护者本地文件，未随仓库分发；
 > 对外可执行的禁区与门禁口径见 `docs/CODING_STANDARDS.md` 第 5 节。历史记录按原样保留，不改写。
 
+## [Unreleased]
+
+### Added
+
+* **history schema v5 输入分布台账**：history 表新增 `input_width` / `input_height` / `input_duration_sec`（v4→v5 幂等迁移，迁移前自动备份），单文件与批量入口均经媒体几何探测落账（探测失败留 0，fail-open）；`.gitignore` 增加 `perf/results/`（perf_monitor 台账目录）。（`8cc6298`）
+* **训练 smoke 种子固定 + 权重/ckpt sidecar 溯源 + 量化基线定期化**：`train_minimal_lora` 接入 `common.seed.set_seed` + `--seed`（默认 42），结果与 sidecar 记录种子；checkpoint 落盘写 weight_sidecar（training 段含来源/超参），`download_model` 校验后写权重 sidecar（幂等）；`gpu-smoke.yml` 量化质量基线纳入 schedule 定期执行并归档 artifact；`download_model` 增加双命名族并存警告。（`861398e`）
+
+### Changed
+
+* **权重双命名族与完整性自检差异注释**：`config.yaml` model 段注释说明 `ema_` 前缀族与裸名族互不兼容、`sha256_*_alt` 用途与下载路由，及 `integrity_enforce=false` 仅为本地开发默认值、发布构建期注入 `true` 的差异；仅注释变更。（`b2823e0`）
+* **治理文件同步**：`CODEOWNERS` 修正死规则（路径改指 `app/integrated_app/security` 等、新增 `model_lib/` 禁区、删除失效条目）；`SECURITY_MATRIX.md` 代码审查行状态按实际同步。（`2c44d34`）
+
+### Fixed
+
+* **依赖升级修复 dependabot 11 项告警（3 个包）**：urllib3 2.7.0→2.8.0（三清单同步）、source-map-js 1.2.1→1.2.2（tests npm）、rustls 0.23.43→0.23.45（desktop Cargo.lock）；uv.lock 顺带对齐 pyproject 过期条目（ruff 0.16.6、项目版本 1.6.1）。（`2b1e3b6`）
+
 ## [1.6.1] - 2026-10-02
 
 ### Fixed
