@@ -10,12 +10,29 @@ git config core.hooksPath .githooks      # 或执行 ./.githooks/install.sh
 
 | 钩子 | 作用 |
 | --- | --- |
-| `pre-commit` | 分发器按「仓库 `.venv` → PATH 上的 python → 控制台 `pre-commit` → `pre-commit-lite`」四级回退执行框架检查 |
-| `pre-push` | gitleaks 待推送扫描 + 执行 `precheck.ps1`（维护者本地预检脚本，未随仓库分发；传入推送范围 `-FromSha/-ToSha`，仅文档类变更走快速跳检；无该脚本则退回根目录守卫，其余门禁由 CI 兜底） |
+| `pre-commit` | 分发器按「仓库 `.venv` → PATH 上的 python → 控制台 `pre-commit` → `pre-commit-lite`」四级回退执行框架检查（含 `post-edit-validation`） |
+| `pre-push` | gitleaks 待推送扫描 + 执行 `precheck.ps1`（维护者本地预检脚本，未随仓库分发；传入推送范围 `-FromSha/-ToSha`，仅文档变更走快速跳检）。无该脚本时：待推送范围含 `.py` 则直接跑 `scripts/post_edit_gate.py --full`（全量 pytest + 覆盖率门槛 55%），再走根目录守卫 |
 | `prepare-commit-msg` | 自动追加 `Signed-off-by`（幂等，插在注释块之前） |
 | `commit-msg` | DCO 硬校验（缺签名阻断）+ conventional 规范软提示 |
 | `post-merge` / `post-checkout` | 依赖清单变更提醒（pip / pnpm / npm / cargo / gradle） |
-| `pre-commit-lite` | 轻量检查：大文件、私钥与令牌、冲突标记 + 根目录守卫 |
+| `pre-commit-lite` | 轻量检查：大文件、私钥与令牌、冲突标记 + 根目录守卫 + 编辑后验证门禁 |
+
+## 编辑后验证（两层门禁）
+
+同一个入口 `scripts/post_edit_gate.py` 跑两层，区别只在测试范围：
+
+| 层 | 调用点 | 命令 | 开销 |
+| --- | --- | --- | --- |
+| commit | `.pre-commit-config.yaml` 的 `post-edit-validation`（或回退链里的 `pre-commit-lite` 第 5 步） | `ruff check <改动的 .py>` + 定向 `pytest tests/test_<模块名>*.py -q`；一个定向用例都对不上时退回全量 | 约 10 秒 |
+| push | `precheck.ps1`（维护者本地脚本，未随仓库分发）或无该脚本时 `pre-push` 直接调用 | 同上 + 强制 `--full`：`pytest tests/ -q --cov=app/integrated_app --cov-fail-under=55` | 约 3 分钟 |
+
+要点：
+
+- commit 层的钩子开了 `verbose: true`，验证输出**总是**留在终端（进而留在会话上下文）当证据；
+  静默通过等于没留痕。
+- 每次运行追加一行到 `logs/post-edit-gate.jsonl`（`logs/` 已被 .gitignore 排除），事后能查「这次改动的
+  代码到底验过没有」。
+- 紧急出口：`POST_EDIT_GATE=off` 或 `git commit --no-verify`；前者会打醒目告警并记台账，两者都不豁免 CI。
 
 ## 说明
 

@@ -4,6 +4,9 @@
 #   2. 私钥与常见令牌
 #   3. 合并冲突标记、尾随空白、缺失末尾换行、调试语句
 #   4. structure-guard 根目录守卫（python 不可用时明确告警，不再静默放行）
+#   5. 编辑后验证门禁（ruff 改动文件 + 定向 pytest）——与 .pre-commit-config.yaml 的
+#      post-edit-validation 同口径；本文件是「没装 pre-commit 框架」那条路的兜底，
+#      少了这一步，兜底机器就只剩下「改完不验」的通路。
 FAILED=0
 MAX_MB=${GUARD_MAX_FILE_MB:-5}
 LIMIT=$((MAX_MB * 1024 * 1024))
@@ -67,6 +70,28 @@ else
         echo "    处理1：python \"\$HOME/.workbuddy-ai/scripts/auto_tidy.py\" --apply" >&2
         echo "    处理2：确属有意则加入 .github/layout-rules.yaml 的 root_allowlist" >&2
         FAILED=1
+    fi
+fi
+
+# 5) 编辑后验证：只对本次暂存的 .py 跑 ruff + 定向 pytest（解释器沿用第 4 步的探测结果）
+STAGED_PY=""
+for f in $STAGED; do
+    case "$f" in
+        *.py) STAGED_PY="$STAGED_PY $f" ;;
+    esac
+done
+if [ -n "$STAGED_PY" ]; then
+    if [ -n "$PY" ]; then
+        if ! $PY scripts/post_edit_gate.py $STAGED_PY; then
+            echo "" >&2
+            echo "  [FAIL] 编辑后验证未通过 —— ruff 或定向 pytest 有红的，请按上面输出当场修。" >&2
+            FAILED=1
+        fi
+    elif [ "$GUARD_STRICT" = "1" ]; then
+        echo "  [FAIL] GUARD_STRICT=1：无 Python，编辑后验证无法执行视为失败。" >&2
+        FAILED=1
+    else
+        echo "  [WARN] 未找到 Python，编辑后验证本次未执行 —— 全量门禁由 pre-push / CI 兜底。" >&2
     fi
 fi
 
