@@ -1,0 +1,74 @@
+name: CI - Lock Consistency
+
+# requirements-container-lock.txt 是 uv.lock 的导出件，Dockerfile 直接按它装镜像依赖。
+# Dependabot 会就地改这个导出件而不重跑 uv lock（#155 的 urllib3、#160 的 78 项都是
+# 这么来的），于是 uv.lock 与线上镜像各说各话，最后以 docker-publish 连红 35 分钟
+# 后才被发现（见 603f279 的说明）。本闸把这件事压回引入它的那笔 PR。
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  # 刻意不加 paths 过滤：与 ci.yml 同理——被 workflow 级过滤掉的 workflow 不产生任何
+  # check run，一旦本闸将来被登记为必需检查，纯文档 PR 就会永久卡在 Expected。
+  # 这个 job 只装 uv + 一次导出，成本在秒级，不值得为省它开这个口子。
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'push' }}
+
+jobs:
+  lock-consistency:
+    # 只在 ubuntu 跑：比对的是 uv.lock 导出件与提交件的 name==version 钉版集合，
+    # 与运行平台无关。多 OS 只会把同一份结论复制两遍。
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+
+      - name: Install the pinned uv
+        # 每条 run 一律显式 shell: bash —— Windows 默认 pwsh 不因原生命令非零退出中断
+        # 脚本、步骤退出码只取末条命令，会把真失败伪装成 success（ci.yml 里已实锤过一次）
+        shell: bash
+        run: |
+          set -euo pipefail
+          # uv 版本必须钉死：export 的输出会随 uv 版本变（哈希条目集合、marker 处理都动过），
+          # 不钉版本这个闸本身就是噪声源。改这一行前先在本地复跑导出并核对差异。
+          python -m pip install --quiet --disable-pip-version-check uv==0.13.0
+          uv --version
+
+      - name: Export uv.lock the way the container lock was produced
+        shell: bash
+        run: |
+          set -euo pipefail
+          # --frozen    : 闸只读，绝不让 uv 顺手改写 uv.lock（否则失败信息会把"锁过期"
+          #               和"锁与导出件不一致"两件事混在一起）
+          # --no-header : 提交件头部第二行记的是当初执行导出的人的 -o 路径（本机是
+          #               %TEMP%/req-container-lock.txt），逐机不同，不能参与比对
+          # 清 UV_DEFAULT_INDEX/UV_INDEX_URL : 机器上的镜像源配置会改写 --index-url 行，
+          #               那是执行环境属性不是仓库状态（本地实测踩过）
+          env -u UV_DEFAULT_INDEX -u UV_INDEX_URL -u UV_INDEX \
+            uv export --format requirements-txt --no-dev --no-emit-project \
+                --emit-index-url --frozen --no-header \
+                -o "${RUNNER_TEMP}/container-lock.from-uv-lock.txt"
+          test -s "${RUNNER_TEMP}/container-lock.from-uv-lock.txt"
+          echo "exported $(grep -cE '^[A-Za-z0-9._-]+==' \
+            "${RUNNER_TEMP}/container-lock.from-uv-lock.txt") pinned distributions"
+
+      - name: Compare pinned versions with the committed export
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/check_lock_consistency.py \
+            --export "${RUNNER_TEMP}/container-lock.from-uv-lock.txt" \
+            --committed requirements-container-lock.txt \
+            --list-info
