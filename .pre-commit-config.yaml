@@ -44,6 +44,25 @@ repos:
         pass_filenames: false
         files: ^app/integrated_app/.*\.py$
 
+  # 编辑后验证（commit 层）：ruff 只查本次改到的 .py + 定向 pytest；一个定向用例都对不上时
+  # 退回全量 + 覆盖率门槛。本钩子存在的理由就是把「改完就地验一次」钉在最早的门禁点上，
+  # 而不是让它在 push / CI 才第一次被执行（失败原因已经隔了几百行改动）。
+  # `verbose: true` 是刻意的：验证输出必须留在终端（进而留在会话上下文）当证据，
+  # 静默通过等于没留痕；口径与退出码含义见 scripts/post_edit_gate.py。
+  # 注：push 层的全量 + --cov-fail-under=55 在 .githooks/pre-push 一侧跑（见该文件），
+  # 不在此钩子内叠加，否则每次提交都要为重推一次付完整测试时间。本钩子只在 pre-commit 阶段生效，
+  # 避免 `pre-commit run --hook-stage pre-push` 把十秒层误当成全量层。
+  - repo: local
+    hooks:
+      - id: post-edit-validation
+        name: Post-edit validation (ruff changed files + targeted pytest)
+        entry: python scripts/post_edit_gate.py
+        language: system
+        files: \.py$
+        require_serial: true
+        verbose: true
+        stages: [pre-commit]
+
   - repo: local
     hooks:
       - id: structure-guard

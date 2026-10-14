@@ -1,8 +1,10 @@
 #!/bin/sh
 # 通用 pre-push（无机器特定路径，可随仓库分发）。
-#   1) 先执行 gitleaks 待推送提交扫描（密钥防线，最高优先）
-#   2) 仓库提供 precheck.ps1 -> 执行它（家族既有门禁口径）
-#   3) 否则 -> 退回根目录守卫 structure-guard
+#   1) gitleaks 待推送提交扫描（密钥防线，最高优先）
+#   2) 仓库提供 precheck.ps1 -> 执行它，并传入推送范围 -FromSha/-ToSha（纯文档推送才能走快速跳检）
+#   3) 没有 precheck.ps1（非 Windows / 干净克隆）-> 待推送范围含 .py 时直接跑
+#      `scripts/post_edit_gate.py --full`（全量 pytest + 覆盖率门槛 55%，push 层口径与 ci.yml 同款），
+#      再补根目录守卫 structure-guard
 # gitleaks v8.30.1 无 `git pre-push` 子命令，改用 detect --log-opts 扫描 remote..local 范围。
 # 紧急绕过：git push --no-verify（仅限用户明确要求时）
 #
@@ -11,33 +13,65 @@
 # 属预期，不是坏境）。
 failed=0
 
-# 1) gitleaks 扫描待推送提交（密钥防线）
-if command -v gitleaks >/dev/null 2>&1; then
-    while read lref lsha rref rsha; do
-        [ -z "$lsha" ] && continue
-        if [ "$lsha" = "0000000000000000000000000000000000000000" ]; then
-            continue  # 删除远程分支，无需扫描
-        fi
-        if [ "$rsha" = "0000000000000000000000000000000000000000" ]; then
-            range="$lsha"  # 新分支：扫描该分支可达历史
-        else
-            range="$rsha..$lsha"
-        fi
+# git 在 stdin 上逐行给出 `<local ref> <local sha> <remote ref> <remote sha>`，而 $1/$2 是
+# <remote name> <remote url>。stdin 只能读一次，而下面的 gitleaks / precheck / 全量门禁
+# 都要知道推送范围 —— 先把清单收进位置参数（腾开 git 传入的两个参数），再逐条处理。
+if [ "$#" -gt 0 ]; then shift "$#"; fi
+while read lref lsha rref rsha; do
+    [ -n "$lref" ] || continue
+    set -- "$@" "$lref" "$lsha" "$rref" "$rsha"
+done
+
+FIRST_FROM=""
+FIRST_TO=""
+
+# 1) 逐 ref：gitleaks 扫描 + 记下第一个推送范围（预检按单范围判定，口径同 precheck.ps1）
+if [ "$#" -eq 0 ]; then
+    echo "[pre-push] stdin 未收到推送清单，按全量预检处理。" >&2
+fi
+while [ "$#" -ge 4 ]; do
+    lref="$1"; lsha="$2"; rref="$3"; rsha="$4"; shift 4
+
+    if [ "$lsha" = "0000000000000000000000000000000000000000" ]; then
+        echo "[pre-push] 删除远程分支 $lref —— 无需扫描与预检。"
+        continue
+    fi
+
+    if [ "$rsha" = "0000000000000000000000000000000000000000" ]; then
+        range="$lsha"  # 新分支：无基准，扫描该分支可达历史
+    else
+        range="$rsha..$lsha"
+    fi
+
+    [ -n "$FIRST_FROM" ] || { FIRST_FROM="$rsha"; FIRST_TO="$lsha"; }
+
+    if command -v gitleaks >/dev/null 2>&1; then
         echo "[pre-push] gitleaks 扫描: $lref ($range)"
         if ! gitleaks detect --source "$(pwd)" --redact --log-opts="$range" --config "$(pwd)/gitleaks.toml"; then
             echo "[pre-push] gitleaks 检测到泄露，推送已拒绝。绕过：git push --no-verify" >&2
             failed=1
         fi
-    done
-else
-    echo "[pre-push] gitleaks 未安装，跳过推送前密钥扫描" >&2
+    else
+        echo "[pre-push] gitleaks 未安装，跳过推送前密钥扫描" >&2
+    fi
+done
+
+# 2) 待推送范围是否含 Python 改动：取最保守值起步，只有 git 明确给出「非空且不含 .py」才降到 0
+#    （新分支的 rsha 全 0 时 diff 跑不通 -> 保持 1，全量门禁照常跑）。
+PY_IN_RANGE=1
+if [ -n "$FIRST_FROM" ] && [ -n "$FIRST_TO" ]; then
+    RANGE_FILES=$(git diff --name-only "$FIRST_FROM..$FIRST_TO" 2>/dev/null)
+    if [ -n "$RANGE_FILES" ] && ! printf '%s\n' "$RANGE_FILES" | grep -q '\.py$'; then
+        PY_IN_RANGE=0
+    fi
 fi
 
-# 2) precheck.ps1（家族既有门禁）
+# 3) precheck.ps1（家族既有门禁，内部已串上编辑后验证 --full）
 if [ -f ./precheck.ps1 ]; then
-    echo "[pre-push] 运行本地预检 precheck.ps1 ..."
+    echo "[pre-push] 运行本地预检 precheck.ps1（范围 ${FIRST_FROM:-<无基准>}..${FIRST_TO:-<无>}）..."
     if command -v powershell.exe >/dev/null 2>&1; then
-        if ! powershell.exe -NoProfile -ExecutionPolicy Bypass -File "./precheck.ps1"; then
+        if ! powershell.exe -NoProfile -ExecutionPolicy Bypass -File "./precheck.ps1" \
+            -FromSha "$FIRST_FROM" -ToSha "$FIRST_TO"; then
             echo "[pre-push] 预检未通过。绕过：git push --no-verify" >&2
             exit 1
         fi
@@ -47,7 +81,7 @@ if [ -f ./precheck.ps1 ]; then
         exit 1
     fi
 else
-    # 3) structure-guard 根目录守卫
+    # 4) 无 precheck.ps1：先按范围决定要不要跑全量门禁，再补 structure-guard 根目录守卫
     PY=""
     for cand in ".venv/Scripts/python.exe" ".venv/bin/python"; do
         [ -x "$cand" ] && PY="$cand" && break
@@ -58,9 +92,16 @@ else
         done
     fi
     if [ -z "$PY" ]; then
-        echo "[pre-push] 无 precheck.ps1 且未找到 python，跳过推送前检查" >&2
+        echo "[pre-push] 无 precheck.ps1 且未找到 python，跳过推送前检查（CI 兜底）" >&2
     else
-        $PY .github/scripts/check_layout.py || exit 1
+        if [ "$PY_IN_RANGE" = "1" ]; then
+            echo "[pre-push] 待推送范围含 Python 改动 -> 编辑后验证 --full（全量 pytest + 覆盖率门槛 55%）"
+            if ! "$PY" -X utf8 scripts/post_edit_gate.py --full; then
+                echo "[pre-push] 全量门禁未通过。绕过：git push --no-verify" >&2
+                exit 1
+            fi
+        fi
+        "$PY" .github/scripts/check_layout.py || exit 1
     fi
 fi
 exit $failed
