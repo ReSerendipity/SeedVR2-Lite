@@ -89,6 +89,10 @@ jobs:
         # Windows 与锁平台一致（同 dependency-audit.yml 的先例）：torch 2.13.0+cu132 的
         # 索引页只提供 PEP 658 元数据、无轮子哈希锚点，锁内该包哈希为 Windows 轮实测值，
         # 故 Windows 侧走 --require-hashes 真实锁安装（可复现）。
+        # 必须显式 bash：Windows 默认 shell 是 pwsh，它不像 Actions 给 bash 注入的 -e 那样
+        # 因原生命令非零退出而中断 run，步骤退出码只取末条命令。锁解析失败时本步骤会假装
+        # success，把真错误推迟给下游（run 38501971355：安装绿、三步后 ruff 报无此模块）。
+        shell: bash
         run: |
           python -m pip install --upgrade pip
           pip install --require-hashes -r requirements-lock.txt --extra-index-url https://download.pytorch.org/whl/cu132
