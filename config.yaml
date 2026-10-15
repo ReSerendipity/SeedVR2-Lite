@@ -209,6 +209,12 @@ runtime:
     max_upload_video_mb: 500
     rate_limit_per_minute: 30
     watermark_on_failure: mark_metadata
+    mcp_enabled_tools:
+    - list_tools
+    - restore
+    - status
+    - history
+    mcp_max_calls_per_minute: 30
   sse:
     heartbeat_interval_seconds: 30
     max_duration_seconds: 300
