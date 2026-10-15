@@ -103,6 +103,7 @@ grep -rn --include='*.py' -iE 'C:\\Users|/home/|/Users/' .
 | 发布版号口径 | `python scripts/check_readme_release_version.py`（README 声明须等于最新稳定 tag；浅克隆会硬失败） | `docs-consistency.yml` |
 | 发布状态口径 | `python scripts/check_release_state.py`（`pyproject` 版本与 CHANGELOG 小节须对上最新稳定 tag；版本超前时 CHANGELOG 必须标「未发版」；无 tag 时硬失败） | `docs-consistency.yml` |
 | 密钥扫描 | `gitleaks detect --config gitleaks.toml` | `gitleaks.yml`、`.githooks/pre-push` |
+| 崩溃预算（X2） | `python scripts/check_crash_budget.py`（默认 7 天窗口 ≤5 次；崩溃数据只在本机，CI 不可代跑，发版前人工执行） | `docs/release-governance.md` §3、`docs/发布检查清单.md` |
 
 - **push 前本地预检**：钩子目录 `.githooks/` 随仓库分发，克隆后执行 `git config core.hooksPath .githooks`
   启用；`pre-push` 在缺少维护者本地 `precheck.ps1` 时自动退回根目录守卫（提示而非失败），其余门禁由 CI 兜底。

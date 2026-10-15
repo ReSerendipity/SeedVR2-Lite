@@ -29,6 +29,7 @@
 3. 打 tag `git tag v<X.Y.Z>` → `git push origin v<X.Y.Z>` 触发 `portable-release.yml`（分卷便携包）
 4. **签名不是发版自动步骤**：便携包随包发布 `SHA256SUMS.txt`；GPG 分离签名只在 `portable-release.yml` 以 `workflow_dispatch` + `upload_to_release=true` 运行时由 `sign-release` job 产出（或事后手动跑 `gpg-signed-release.yml`），且只认文件名恰为 `SHA256SUMS.txt` 的资产（细则见 `docs/project/PORTABLE_BUNDLES.md`，维护者本地账本）
 5. CI 盯到终态：push 后 `gh run list` / `gh run watch`，红了当场修或 revert 止损
+6. 崩溃预算核验（X2，2026-10-15 新增）：发版前在常测机器跑 `python scripts/check_crash_budget.py`（默认 7 天窗口 ≤5 次，崩溃记录见 `logs/crashes/`）；超限先复盘再发版
 
 ## 4. 回滚判定（满足任一即触发）
 
