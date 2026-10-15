@@ -599,6 +599,9 @@ class RuntimeSecurityConfig(BaseModel):
         max_upload_video_mb: 单个视频上传大小上限（MB），1-10240 范围。
         watermark_on_failure: 水印嵌入失败处置策略（评估报告 R2）：
             mark_metadata=侧车元数据标识（默认）/ block=阻断产出 / ignore=仅日志。
+        mcp_enabled_tools: MCP 工具白名单：tools/list 与 tools/call 双侧按此过滤
+            （缺省=全部可用，空列表=全部禁用）。
+        mcp_max_calls_per_minute: MCP 工具调用频率预算（次/分钟，滑动 60s 窗口；0=不限频）。
     """
 
     model_config = ConfigDict(extra="ignore")
@@ -612,6 +615,17 @@ class RuntimeSecurityConfig(BaseModel):
         "mark_metadata",
         pattern="^(mark_metadata|block|ignore)$",
         description="水印嵌入失败处置策略：mark_metadata（默认）/ block / ignore",
+    )
+
+    mcp_enabled_tools: list[str] = Field(
+        default_factory=lambda: ["list_tools", "restore", "status", "history"],
+        description="MCP 工具白名单：tools/list 与 tools/call 双侧按此过滤（缺省=全部可用，空列表=全部禁用）",
+    )
+    mcp_max_calls_per_minute: int = Field(
+        30,
+        ge=0,
+        le=10000,
+        description="MCP 工具调用频率预算（次/分钟，滑动 60s 窗口）；0 表示不限频",
     )
 
 

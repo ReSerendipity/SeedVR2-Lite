@@ -32,6 +32,8 @@ import asyncio
 import json
 import logging
 import sys
+import time
+from collections import deque
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -133,6 +135,8 @@ class MCPServer:
         """初始化 MCP 服务器，注册所有工具。"""
         self._tools: dict[str, MCPTool] = {}
         self._register_default_tools()
+        self._enabled_tools, self._max_calls_per_minute = self._load_mcp_policy()
+        self._call_times: deque[float] = deque()
 
     def _register_default_tools(self) -> None:
         """注册默认的 SeedVR2 相关工具。"""
@@ -221,6 +225,48 @@ class MCPServer:
             )
         )
 
+    def _load_mcp_policy(self) -> tuple[set[str], int]:
+        """从 config.yaml runtime.security 读取 MCP 工具白名单与调用预算。
+
+        对应评估（LLM 与生成式 AI 应用工程待改进 #1）：工具此前注册即可用，无权限
+        登记与频率约束。配置缺失或加载失败时回退默认（全部工具可用 + 不限频），
+        与历史行为一致，不阻断 MCP 启动。
+        """
+        all_tools = set(self._tools.keys())
+        try:
+            from app.integrated_app.config import get_app_config
+
+            # get_app_config() 返回经验证的 AppConfig 模型（属性访问，非 dict）
+            security = get_app_config().runtime.security
+            enabled = list(security.mcp_enabled_tools or [])
+            if enabled:
+                enabled_set = {str(t) for t in enabled} & all_tools
+            else:
+                enabled_set = set()
+            max_calls = int(security.mcp_max_calls_per_minute)
+        except Exception as e:
+            logger.warning(f"[MCP] 读取 MCP 安全策略失败，回退默认（全部工具、不限频）: {e}")
+            return all_tools, 0
+        return enabled_set, max_calls
+
+    def _budget_exceeded(self) -> bool:
+        """登记一次工具调用并判断是否超出滑动 60s 窗口预算。
+
+        Returns:
+            True 表示超出 runtime.security.mcp_max_calls_per_minute，调用方应拒绝本次
+            tools/call；预算 <= 0 视为不限频，恒返回 False。
+        """
+        if self._max_calls_per_minute <= 0:
+            return False
+        now = time.monotonic()
+        window = self._call_times
+        while window and now - window[0] > 60.0:
+            window.popleft()
+        if len(window) >= self._max_calls_per_minute:
+            return True
+        window.append(now)
+        return False
+
     def register_tool(self, tool: MCPTool) -> None:
         """注册一个 MCP 工具。
 
@@ -299,6 +345,8 @@ class MCPServer:
         """
         tools_list = []
         for tool in self._tools.values():
+            if tool.name not in self._enabled_tools:
+                continue
             tools_list.append(
                 {
                     "name": tool.name,
@@ -330,6 +378,29 @@ class MCPServer:
                 error={
                     "code": -32602,
                     "message": f"未知工具: {tool_name}",
+                },
+            )
+
+        # 权限登记（评估 P1#1）：不在 runtime.security.mcp_enabled_tools 白名单内的工具拒绝调用
+        if tool_name not in self._enabled_tools:
+            return MCPResponse(
+                id=request.id,
+                error={
+                    "code": -32602,
+                    "message": f"工具已被安全策略禁用（runtime.security.mcp_enabled_tools）: {tool_name}",
+                },
+            )
+
+        # 调用预算（评估 P1#1）：滑动 60s 窗口限频，超出 runtime.security.mcp_max_calls_per_minute 拒绝
+        if self._budget_exceeded():
+            return MCPResponse(
+                id=request.id,
+                error={
+                    "code": -32000,
+                    "message": (
+                        "MCP 调用预算耗尽：超过 runtime.security.mcp_max_calls_per_minute "
+                        f"（上限 {self._max_calls_per_minute}/分钟），请稍后重试"
+                    ),
                 },
             )
 
@@ -383,6 +454,7 @@ class MCPServer:
                     "description": tool.description,
                 }
                 for tool in self._tools.values()
+                if tool.name in self._enabled_tools
             ]
 
             model_info: dict[str, Any] = {"available_sizes": list(model_registry.list_engines())}
