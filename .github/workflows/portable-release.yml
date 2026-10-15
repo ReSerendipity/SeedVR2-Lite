@@ -221,6 +221,16 @@ jobs:
           Get-ChildItem $env:BUNDLE_DIR -File |
             Select-Object Name, @{n='MB';e={[math]::Round($_.Length/1MB,1)}} | Format-Table -AutoSize
 
+      - name: Generate Python SBOM (CycloneDX)
+        shell: pwsh
+        run: |
+          # P1#2 (supply-chain): machine-readable dependency SBOM for the shipped
+          # Python runtime, generated from the hash lock and shipped with the bundle
+          # assets (release upload / workflow artifact / provenance attestation).
+          python scripts\generate_sbom.py --lock requirements-lock.txt --output (Join-Path $env:BUNDLE_DIR 'sbom-python.cdx.json')
+          if ($LASTEXITCODE -ne 0) { throw 'SBOM generation failed' }
+          Get-Item (Join-Path $env:BUNDLE_DIR 'sbom-python.cdx.json') | Select-Object Name, Length
+
       - name: GPG-sign SHA256SUMS (default-on; loud UNSIGNED banner when secrets absent)
         shell: pwsh
         run: |
