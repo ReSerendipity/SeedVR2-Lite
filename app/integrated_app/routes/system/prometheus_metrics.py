@@ -131,6 +131,28 @@ def build_prometheus_exposition() -> str:
         _mb_to_bytes(cache.get("total_size_mb")),
     )
 
+    # X2 本地崩溃遥测（运维 P1#1）：壳 panic / 后端异常退出的本地记录计数，尽力而为
+    try:
+        from app.integrated_app.utils.crash_telemetry import (
+            DEFAULT_WINDOW_DAYS,
+            count_crashes,
+        )
+
+        emit(
+            "seedvr2_shell_crashes_total",
+            "gauge",
+            "Local crash records written by the desktop shell (logs/crashes), all time.",
+            count_crashes(),
+        )
+        emit(
+            "seedvr2_shell_crashes_7d",
+            "gauge",
+            "Local crash records written by the desktop shell (logs/crashes), last 7 days.",
+            count_crashes(DEFAULT_WINDOW_DAYS),
+        )
+    except Exception:  # 遥测尽力而为，不影响主指标面
+        logger.debug("crash telemetry metrics unavailable", exc_info=True)
+
     return "\n".join(lines) + "\n"
 
 

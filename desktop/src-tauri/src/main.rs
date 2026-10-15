@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod config;
+mod crash_report;
 mod drag_drop;
 mod health_check;
 mod notification;
@@ -146,7 +147,11 @@ fn start_watchdog(app: AppHandle, state: Arc<PythonState>) {
 
             if needs_restart {
                 log::warn!("检测到 Python 进程崩溃，尝试重启");
-                emit_startup_status(&app, "检测到进程崩溃，正在重启...", None);
+                crash_report::record_backend_exit(
+                    &app.state::<Arc<AppPaths>>().log_dir,
+                    None,
+                    "watchdog: python process not alive while status=Running",
+                );                emit_startup_status(&app, "检测到进程崩溃，正在重启...", None);
 
                 let restarted = {
                     let mut proc = state.process.lock().unwrap();
@@ -496,6 +501,9 @@ fn init_logging() {
 fn main() {
     // 初始化日志（RUST_LOG 可覆盖）
     init_logging();
+
+    // 本地崩溃遥测（X2 保留项）：panic 记录落 logs/crashes/，无远端上报（见 crash_report）
+    crash_report::install(&resolve_app_dir().join("logs"));
 
     tauri::Builder::default()
         // 单实例：二次启动聚焦现有窗口而不是开新实例

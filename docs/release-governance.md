@@ -42,7 +42,8 @@
      发布到 Release 需 `workflow_dispatch` + `upload_to_release=true`（tag 推送默认只构建不发 Release，避免覆盖增量更新包）。
    - **`docker-publish.yml`**：构建并推送 ghcr.io 容器镜像。
 5. 远端建 draft Release 并挂资产 → 人工审核后 `published`。
-6. `gh run list` 盯到终态；红了当场修或 revert 止损。
+6. 崩溃预算核验（X2，2026-10-15 新增）：发版前在常测机器跑 `python scripts/check_crash_budget.py`（默认 7 天窗口 ≤5 次，崩溃记录见 `logs/crashes/`）；超限先复盘再发版。
+7. `gh run list` 盯到终态；红了当场修或 revert 止损。
 
 ## 4. 分发产物与完整性
 
