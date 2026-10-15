@@ -276,7 +276,7 @@ CONTRIBUTING.md
 docs/FILEMAP.md
 docs/README.md
 docs/_devarchive/
-docs/adr/
+# docs/adr/：2026-10-15 起解除忽略（v29-remediate 批次1，架构 P1#2）——ADR 属团队级可回溯资产入库（0001-0004 + README）。
 docs/plans/
 docs/project/
 docs/reports/
