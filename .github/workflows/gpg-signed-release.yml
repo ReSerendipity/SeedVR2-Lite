@@ -4,10 +4,12 @@
 # `SHA256SUMS.gpg`，供进阶用户验证发行产物未被篡改（CWE-912）。
 #
 # 定位：**旁路补签，不是发布链路的默认步骤**。两条已实测的边界（2026-09-22 核对 12 个 Release）：
-#   1. `portable-release.yml` 的 `sign-release` job 条件是
-#      `github.event_name == 'workflow_dispatch' && inputs.upload_to_release`——按 tag 发布时
-#      根本不跑，所以"发版即自动签名"并不成立（v1.5.0 与 v1.5.6 带 SHA256SUMS.gpg，是那两次走了
-#      手动 dispatch；其余 10 个 Release 没有签名）。
+#   1. 【2026-10-15 更新（v29-remediate P1#1）】签名已并入 portable-release.yml 的
+#      build-bundles 默认链路：任一触发（tag 构建会话 / dispatch 发布会话）只要配置了 GPG
+#      secrets 即自动产出并随资产分发 SHA256SUMS.gpg；未配置时构建以 warning + step summary
+#      黄灯明示 UNSIGNED，不再静默。本工作流保留为历史 Release 的补签/修复通道。
+#      （历史注：v1.5.0/v1.5.6 带 SHA256SUMS.gpg 是当年走了手动 dispatch，其余 10 个 Release
+#      未签名——该缺口由上述默认化修复。）
 #   2. 两个工作流都只认**文件名恰为 `SHA256SUMS.txt`** 的资产。历史上出现过 `SHA256SUMS-v1.5.4.txt`
 #      与裸 `SHA256SUMS` 两种命名，都会被判"无可签名资产"而 notice 跳过。
 #   → 想让某个 Release 带签名：手动 dispatch 本工作流并显式给 tag，事后回看资产里确实多出

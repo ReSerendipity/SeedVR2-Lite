@@ -9,7 +9,11 @@
 #     hand for the same tag, and the previous unconditional `gh release edit` + volume
 #     upload overwrote its notes and appended ~5.6 GB of portable volumes (GOTCHAS #113).
 #   - `workflow_dispatch` with `upload_to_release: true` -> PUBLISH: the only path that
-#     creates/edits the Release, uploads the volumes, and GPG-signs SHA256SUMS.txt.
+#     creates/edits the Release and uploads the volumes. GPG signing of SHA256SUMS.txt is
+#     default-on inside build-bundles for BOTH trigger paths (since v29-remediate,
+#     2026-10-15): with GPG secrets configured the signature is produced and shipped with
+#     the bundle assets; without them the build warns loudly and a step-summary banner
+#     marks the release UNSIGNED (no more silent skip).
 #
 # The old Inno Setup exe route (desktop-release.yml) was removed on 2026-08-28 once
 # this path proved out in CI. Rationale: docs/project/PORTABLE_BUNDLES.md (local-only doc).
@@ -86,6 +90,11 @@ jobs:
       # generates a fresh keypair (identity drift across releases - see the
       # prepare step warning).
       MANIFEST_SIGNING_KEY_B64: ${{ secrets.MANIFEST_SIGNING_KEY_B64 }}
+      # GPG detached signing of SHA256SUMS.txt (P1#1, supply-chain): default-on,
+      # absent secrets => explicit UNSIGNED warning + step-summary banner.
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
 
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -212,6 +221,36 @@ jobs:
           Get-ChildItem $env:BUNDLE_DIR -File |
             Select-Object Name, @{n='MB';e={[math]::Round($_.Length/1MB,1)}} | Format-Table -AutoSize
 
+      - name: GPG-sign SHA256SUMS (default-on; loud UNSIGNED banner when secrets absent)
+        shell: pwsh
+        run: |
+          # P1#1 (supply-chain): signing is part of the default build chain for every
+          # trigger. Signature bytes ride all existing delivery channels: release assets
+          # (publish session), workflow artifact (tag push) and provenance attestation.
+          $sums = Join-Path $env:BUNDLE_DIR 'SHA256SUMS.txt'
+          if (-not (Test-Path $sums)) { throw 'SHA256SUMS.txt not found in bundle dir' }
+          if (-not $env:GPG_PRIVATE_KEY) {
+            Write-Host '::warning::GPG secrets are not configured - this build is UNSIGNED. Configure GPG_PRIVATE_KEY / GPG_PASSPHRASE / GPG_KEY_ID or run gpg-signed-release.yml manually.'
+            $banner = '## :warning: UNSIGNED build: GPG secrets absent, SHA256SUMS.txt is NOT signed.'
+            $banner | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+            exit 0
+          }
+          $keyFile = Join-Path $env:RUNNER_TEMP 'signing-key.asc'
+          [IO.File]::WriteAllText($keyFile, $env:GPG_PRIVATE_KEY)
+          gpg --batch --import $keyFile
+          if ($LASTEXITCODE -ne 0) { throw 'gpg key import failed' }
+          $keyArgs = @()
+          if ($env:GPG_KEY_ID) { $keyArgs = @('--local-user', $env:GPG_KEY_ID) }
+          $passFile = Join-Path $env:RUNNER_TEMP 'gpg-pass.txt'
+          [IO.File]::WriteAllText($passFile, $env:GPG_PASSPHRASE)
+          $sig = Join-Path $env:BUNDLE_DIR 'SHA256SUMS.gpg'
+          Get-Content -Raw $passFile | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 @keyArgs --output $sig --detach-sign $sums
+          if ($LASTEXITCODE -ne 0) { throw 'gpg detach-sign failed' }
+          gpg --verify $sig $sums
+          if ($LASTEXITCODE -ne 0) { throw 'gpg verify failed' }
+          Remove-Item $keyFile, $passFile -Force
+          Write-Host ('signed: ' + $sig)
+
       - name: 体积门禁复核
         id: gate
         shell: pwsh
@@ -336,44 +375,6 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "upload failed: $($f.Name)" }
           }
           gh release view $tag --json assets -q '.assets[].name'
-
-  sign-release:
-    name: GPG-sign SHA256SUMS
-    needs: build-bundles
-    if: github.event_name == 'workflow_dispatch' && inputs.upload_to_release
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-      # 本 job 无 checkout，gh CLI 需显式仓库上下文（否则 "failed to run git: not a git repository"）
-      GH_REPO: ${{ github.repository }}
-    steps:
-      - name: Skip when GPG secrets are not configured
-        if: env.GPG_PRIVATE_KEY == ''
-        run: >
-          echo "::notice::GPG secrets are not configured - SHA256SUMS.txt stays unsigned;"
-          "configure GPG_PRIVATE_KEY / GPG_PASSPHRASE / GPG_KEY_ID or run gpg-signed-release.yml manually."
-      - name: Import key, sign and upload SHA256SUMS.gpg
-        if: env.GPG_PRIVATE_KEY != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
-        run: |
-          set -euo pipefail
-          TAG="${{ needs.build-bundles.outputs.tag }}"
-          rm -rf sign-work && mkdir sign-work && cd sign-work
-          gh release download "$TAG" --pattern 'SHA256SUMS.txt'
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
-          KEYID_ARGS=()
-          if [ -n "$GPG_KEY_ID" ]; then KEYID_ARGS=(--local-user "$GPG_KEY_ID"); fi
-          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 "${KEYID_ARGS[@]}" \
-            --output SHA256SUMS.gpg --detach-sign SHA256SUMS.txt <<< "$GPG_PASSPHRASE"
-          gpg --verify SHA256SUMS.gpg SHA256SUMS.txt
-          # .gpg is a derived artifact of the immutable SHA256SUMS.txt: same input always
-          # produces the same signature bytes, so clobbering on re-run is safe.
-          gh release upload "$TAG" SHA256SUMS.gpg --clobber
-          echo "SHA256SUMS.gpg uploaded for $TAG"
 
   # 便携链路端到端自测（评估报告 P2-6）：小夹具 + 1MB 切片上限，等价复现真实构建的
   # 多卷路径（切片/合并可逆、逐卷与逐归档 SHA256、体积门禁、合规剥离、缺卷/篡改拒绝、
