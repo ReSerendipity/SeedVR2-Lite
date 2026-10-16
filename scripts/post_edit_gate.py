@@ -30,6 +30,10 @@ git 钩子只在 commit / push 触发，`ruff` / `pytest` 只在人工敲命令�
 ----
 结果同时写入 ``logs/post-edit-gate.jsonl``（logs/ 已被 .gitignore 排除），让「这次编辑
 到底验过没有」在会话结束后仍可机器核对；标准输出始终保留完整命令与结论，供会话上下文引用。
+每条记录都带 ``branch`` / ``commit``（取不到记 null），使「已通过」能绑定到具体修订；
+``gate-off`` / ``no-python-changes`` / ``no-interpreter`` / ``missing-tools`` 四种提前返回
+同样落账（``note`` 字段标明是哪一种），否则事后只剩「有 PASS 记录」与「什么都没有」两态，
+被跳过与压根没执行看不出来。``--quiet-ledger`` 仍然一个字都不写。
 """
 
 from __future__ import annotations
@@ -283,9 +287,23 @@ def run_step(cmd: Sequence[str], root: Path) -> tuple[int, float]:
     return rc, time.perf_counter() - start
 
 
+def _revision(root: Path) -> tuple[str | None, str | None]:
+    """取当前分支与 HEAD 短哈希，用于把台账绑定到「哪一次提交验过」。
+
+    logs/ 被 .gitignore 排除，本机这份 jsonl 是唯一留痕；没有修订号时「已通过」无法对应到某个
+    commit。git 不可用 / 非仓库一律返回 (None, None) —— 留痕字段缺失绝不能反过来影响判定。
+    """
+    branch = _git_lines(root, "rev-parse", "--abbrev-ref", "HEAD")
+    commit = _git_lines(root, "rev-parse", "--short", "HEAD")
+    return (branch[0] if branch else None, commit[0] if commit else None)
+
+
 def write_ledger(record: dict[str, object], root: Path) -> None:
     """best-effort 台账：写失败只告警，绝不能让留痕逻辑反过来把门禁搞红。"""
     path = root / "logs" / "post-edit-gate.jsonl"
+    branch, commit = _revision(root)
+    record.setdefault("branch", branch)
+    record.setdefault("commit", commit)
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as fh:
@@ -293,6 +311,25 @@ def write_ledger(record: dict[str, object], root: Path) -> None:
     except OSError as exc:  # pragma: no cover - 只可能是磁盘/权限问题
         print(f"[post-edit-gate] 台账写入失败（不影响判定）：{exc}", file=sys.stderr)
     record["_ledger"] = str(path.relative_to(root).as_posix())
+
+
+def note_ledger(
+    root: Path, mode: str, rc: int, note: str, source: str | None = None, files: Sequence[str] = ()
+) -> None:
+    """给「没跑成 / 无需跑 / 被跳过」这些提前返回的路径也落一条台账。
+
+    否则事后只剩两种状态：有一条 PASS 记录，或者什么都没有 ——「被跳过」和「压根没执行」看不出来。
+    """
+    record: dict[str, object] = {
+        "ts": datetime.now().isoformat(timespec="seconds"),
+        "mode": mode,
+        "rc": rc,
+        "note": note,
+    }
+    if source is not None:
+        record["source"] = source
+        record["sources"] = list(files)
+    write_ledger(record, root)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -318,7 +355,7 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         if not args.quiet_ledger:
-            write_ledger({"ts": datetime.now().isoformat(timespec="seconds"), "mode": mode, "rc": RC_SKIP}, root)
+            note_ledger(root, mode, RC_SKIP, "gate-off")
         return RC_SKIP
 
     # pre-commit / 命令行显式传入优先；没传再看 POST_EDIT_FILES，最后看 git 工作区改动。
@@ -331,6 +368,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"{BANNER}\n编辑后验证 (post-edit-gate)  mode={mode}  来源={source_label}\n{BANNER}")
     if not sources:
         print("未检测到改动的 Python 文件 —— 无需 ruff / pytest，直接放行。")
+        if not args.quiet_ledger:
+            note_ledger(root, mode, RC_PASS, "no-python-changes", source_label, list(args.files))
         return RC_PASS
 
     print(f"改动的 Python 文件（{len(sources)}）：\n  " + "\n  ".join(sources))
@@ -339,11 +378,15 @@ def main(argv: list[str] | None = None) -> int:
     if exe is None:
         if not tried:
             print("[post-edit-gate] 跳过：四级回退都没找到 Python，本机无从执行检查；CI 仍会把关。", file=sys.stderr)
+            if not args.quiet_ledger:
+                note_ledger(root, mode, RC_SKIP, "no-interpreter", source_label, sources)
             return RC_SKIP
         print(
             f"[post-edit-gate] 失败：找到的解释器都没装齐 ruff / pytest（试过：{', '.join(tried)}）。", file=sys.stderr
         )
         print(f"            装进项目环境：{tried[0]} -m pip install -r requirements-dev.txt", file=sys.stderr)
+        if not args.quiet_ledger:
+            note_ledger(root, mode, RC_FAIL, "missing-tools", source_label, sources)
         return RC_FAIL
 
     full = mode == "full" or args.full
