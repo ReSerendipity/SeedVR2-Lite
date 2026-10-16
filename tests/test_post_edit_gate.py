@@ -288,3 +288,79 @@ class TestMainOutcomes:
         assert "POST_EDIT_GATE=off" in capsys.readouterr().err
         record = json.loads((fake_repo / "logs" / "post-edit-gate.jsonl").read_text(encoding="utf-8").strip())
         assert record["mode"] == "off"
+
+
+def _read_ledger(root: Path) -> list[dict[str, object]]:
+    path = root / "logs" / "post-edit-gate.jsonl"
+    if not path.exists():
+        return []
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+class TestLedgerRevisionBinding:
+    """台账要能回答「哪一次提交到底验过没有」。
+
+    logs/ 被 .gitignore 排除，本机这份 jsonl 是唯一留痕；记录里没有修订号时，「已通过」无法绑定到
+    某个 commit，而提前返回的三条路径原先根本不落账，于是「被跳过」与「压根没跑」在事后不可区分。
+    """
+
+    @pytest.fixture
+    def wired(self, fake_repo, monkeypatch):
+        _make_source(fake_repo, "app/cache.py")
+        monkeypatch.setattr(post_edit_gate, "resolve_interpreter", lambda *a, **k: ("python", ["python"]))
+        monkeypatch.setattr(post_edit_gate, "index_test_files", lambda root: ["tests/test_cache.py"])
+        monkeypatch.setattr(post_edit_gate, "run_step", lambda cmd, root: (0, 1.0))
+        monkeypatch.delenv("POST_EDIT_GATE", raising=False)
+        return fake_repo
+
+    def test_record_binds_to_branch_and_commit(self, wired, monkeypatch):
+        table = {
+            ("rev-parse", "--abbrev-ref", "HEAD"): ["feat/demo"],
+            ("rev-parse", "--short", "HEAD"): ["abc1234"],
+        }
+        monkeypatch.setattr(post_edit_gate, "_git_lines", lambda root, *args: list(table.get(args, [])))
+        assert post_edit_gate.main(["app/cache.py"]) == 0
+        record = _read_ledger(wired)[-1]
+        assert record["branch"] == "feat/demo"
+        assert record["commit"] == "abc1234"
+
+    def test_git_unavailable_never_breaks_the_gate(self, wired, monkeypatch):
+        """取不到修订号只是少一个字段——留痕逻辑绝不能反过来把门禁搞红。"""
+        monkeypatch.setattr(post_edit_gate, "_git_lines", lambda root, *args: [])
+        assert post_edit_gate.main(["app/cache.py"]) == 0
+        record = _read_ledger(wired)[-1]
+        assert record["branch"] is None and record["commit"] is None
+        assert record["rc"] == 0
+
+    def test_no_python_changes_still_leaves_a_ledger_line(self, fake_repo, monkeypatch):
+        monkeypatch.delenv("POST_EDIT_FILES", raising=False)
+        monkeypatch.setattr(post_edit_gate, "_git_lines", lambda root, *args: [])
+        assert post_edit_gate.main(["README.md"]) == 0
+        record = _read_ledger(fake_repo)[-1]
+        assert record["rc"] == 0
+        assert record["note"] == "no-python-changes"
+
+    def test_missing_interpreter_is_recorded_as_skip(self, fake_repo, monkeypatch):
+        _make_source(fake_repo, "app/cache.py")
+        monkeypatch.setattr(post_edit_gate, "_git_lines", lambda root, *args: [])
+        monkeypatch.setattr(post_edit_gate, "resolve_interpreter", lambda *a, **k: (None, []))
+        assert post_edit_gate.main(["app/cache.py"]) == 0
+        record = _read_ledger(fake_repo)[-1]
+        assert record["rc"] == 0
+        assert record["note"] == "no-interpreter"
+
+    def test_missing_tools_is_recorded_as_failure(self, fake_repo, monkeypatch):
+        _make_source(fake_repo, "app/cache.py")
+        monkeypatch.setattr(post_edit_gate, "_git_lines", lambda root, *args: [])
+        monkeypatch.setattr(post_edit_gate, "resolve_interpreter", lambda *a, **k: (None, ["python", "python3"]))
+        assert post_edit_gate.main(["app/cache.py"]) == 1
+        record = _read_ledger(fake_repo)[-1]
+        assert record["rc"] == 1
+        assert record["note"] == "missing-tools"
+
+    def test_quiet_ledger_writes_nothing_even_on_a_skip(self, fake_repo, monkeypatch):
+        _make_source(fake_repo, "app/cache.py")
+        monkeypatch.setattr(post_edit_gate, "_git_lines", lambda root, *args: [])
+        monkeypatch.setattr(post_edit_gate, "resolve_interpreter", lambda *a, **k: (None, []))
+        assert post_edit_gate.main(["app/cache.py", "--quiet-ledger"]) == 0
+        assert _read_ledger(fake_repo) == []
