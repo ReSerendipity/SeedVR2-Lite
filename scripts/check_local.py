@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """本地提交前检查（跨平台，Python 3.9+）。
 
-快检（默认，秒级）：ruff / black / compileall / 严格 UTF-8 扫描
+快检（默认，秒级）：钩子激活 / ruff / black / compileall / 严格 UTF-8 扫描
 完整检查（--full）：在快检基础上加 pytest 全量（含 --timeout 防挂死）
 
 用法:
@@ -14,6 +14,9 @@
 说明:
     - CI 是唯一权威门禁，本脚本是提交前辅助，防低级错误（lint/格式/编码/语法）
     - 覆盖率门槛不进本地（数值跨平台有差异，以 CI 为准）
+    - 钩子激活检查：.githooks/ 的三层门禁依赖 core.hooksPath 这条**本机**配置，
+      它不随克隆传播；新克隆上没人跑过 install.sh 时 pre-commit / pre-push /
+      commit-msg 全部静默旁路，所以这一项必须能在本地体检里被抓出来
     - 编码扫描对 git ls-files 中所有文本文件做严格 UTF-8 解码，
       可抓"乱码提交"（compileall 只能抓 SyntaxError，抓不到字符串/JSON 里的乱码）
     - --e2e 会先做环境预检（fastapi / playwright 可导入、tests 目录存在），
@@ -50,6 +53,10 @@ TEXT_EXTS = {
     ".xml",
 }
 
+# 与 .githooks/install.sh 写入的值逐字一致（该脚本执行 git config core.hooksPath .githooks）。
+HOOKS_PATH_OPTION = "core.hooksPath"
+EXPECTED_HOOKS_PATH = ".githooks"
+
 
 def run(cmd: list[str], desc: str) -> None:
     print(f"== {desc} ==", flush=True)
@@ -61,6 +68,53 @@ def run(cmd: list[str], desc: str) -> None:
 
 def check_dir(path: str) -> bool:
     return os.path.isdir(path)
+
+
+def _git_probe(args: list[str]) -> subprocess.CompletedProcess[str] | None:
+    """跑一条只读 git 命令；git 本身不可用时返回 None（区别于「命令成功但结果为空」）。"""
+    try:
+        return subprocess.run(
+            ["git", *args],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+    except OSError:
+        return None
+
+
+def hooks_activation() -> None:
+    """确认三层本地钩子已激活：core.hooksPath 必须指向 .githooks。
+
+    .githooks/ 的 pre-commit / pre-push / commit-msg 只在设置过这个**本机** git 配置的
+    工作副本里生效，而它不随克隆传播（.githooks/README.md 末段已自述）。新克隆或新工作树
+    里若没人执行过 `.githooks/install.sh`，编辑后验证与 DCO 硬校验会一起静默旁路——没有任何
+    失败信号。本项把「钩子到底在不在位」变成一条能自检的硬事实。
+    """
+    print("== Git 钩子激活检查（core.hooksPath）==", flush=True)
+    inside = _git_probe(["rev-parse", "--is-inside-work-tree"])
+    if inside is None or inside.returncode != 0:
+        print("  (不是 git 仓库或 git 不可用，跳过)", flush=True)
+        return
+    got = _git_probe(["config", "--get", HOOKS_PATH_OPTION])
+    if got is None or got.returncode not in (0, 1):
+        code = "git 不可用" if got is None else f"exit {got.returncode}"
+        print(f"  (查询 {HOOKS_PATH_OPTION} 失败：{code}，跳过本项)", flush=True)
+        return
+    value = got.stdout.strip()
+    if value == EXPECTED_HOOKS_PATH:
+        print(f"  OK: {HOOKS_PATH_OPTION}={value}（pre-commit / pre-push / commit-msg 在位）", flush=True)
+        return
+    state = "未设置" if not value else f"当前为 {value}"
+    print(
+        f"FAIL: {HOOKS_PATH_OPTION} {state}，期望 {EXPECTED_HOOKS_PATH} —— "
+        f".githooks/ 的 pre-commit / pre-push / commit-msg 一律不会执行，"
+        f"编辑后验证与 DCO 硬校验全部旁路且无失败信号。\n"
+        f"  修复（二选一）：sh .githooks/install.sh 或 git config {HOOKS_PATH_OPTION} {EXPECTED_HOOKS_PATH}",
+        flush=True,
+    )
+    sys.exit(1)
 
 
 def utf8_scan() -> None:
@@ -156,6 +210,7 @@ def main() -> None:
     args = ap.parse_args()
 
     # ---- 快检层（秒级）----
+    hooks_activation()
     run([sys.executable, "-m", "ruff", "check", "."], "ruff check")
     # 格式化检查：优先 ruff format（若仓库用 black 则自动回退）
     fmt = [sys.executable, "-m", "ruff", "format", "--check", "."]
