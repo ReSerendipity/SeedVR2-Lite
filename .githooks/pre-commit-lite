@@ -91,7 +91,8 @@ if [ -n "$STAGED_PY" ]; then
         echo "  [FAIL] GUARD_STRICT=1：无 Python，编辑后验证无法执行视为失败。" >&2
         FAILED=1
     else
-        echo "  [WARN] 未找到 Python，编辑后验证本次未执行 —— 全量门禁由 pre-push / CI 兜底。" >&2
+        echo "  [WARN] 未找到 Python，编辑后验证本次未执行 —— 全量门禁要到 pre-push 或开向 main 的 PR 才接手。" >&2
+        echo "         推功能分支不触发任何 CI（工作流 push 只监听 main/master），装好 Python 或重建 .venv 后请补跑。" >&2
     fi
 fi
 

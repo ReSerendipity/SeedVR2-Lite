@@ -25,6 +25,9 @@ Windows venv 的布局，而且只有"当前目录恰好是主 checkout"时它�
 --------
 - 四级全都找不到解释器：本机没有 Python，钩子无从执行 → 打印原因后放行；类型门禁的
   权威执行点是 ``.github/workflows/ci.yml`` 的 typecheck job，不由本地钩子兜底。
+  但别把它读成「推上去 CI 就会接手」：本仓全部工作流的 ``push`` 触发都限定在
+  ``main`` / ``master``（或 ``v*`` 标签），**推功能分支不产生任何 check run**，
+  typecheck 真正开始跑是在「开向 main 的 PR」或「推 main」那一刻。
 - 找到了 Python 但没有一个装了 mypy：真缺依赖，退出码 1 并给出安装命令，不静默放行。
 - mypy 真的跑了：退出码原样透传，类型错误照样拦。
 """
