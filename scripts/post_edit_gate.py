@@ -21,7 +21,9 @@ git 钩子只在 commit / push 触发，`ruff` / `pytest` 只在人工敲命令�
 三种结局
 --------
 - 四级回退（``.venv/Scripts/python.exe`` → ``.venv/bin/python`` → ``python`` → ``python3``）
-  一个解释器都没有：本机无从执行任何检查，打印原因后放行——权威门禁仍是 ci.yml。
+  一个解释器都没有：本机无从执行任何检查，打印原因后放行。别把它读成「CI 会接手」——
+  本仓全部工作流的 ``push`` 触发都限定在 ``main`` / ``master``（或 ``v*`` 标签），**推功能分支
+  不产生任何 check run**，这组门禁真正开始跑是在「开向 main 的 PR」或「推 main」那一刻。
 - 有解释器但没装 ruff / pytest：真缺依赖，非零退出并给出安装命令，不静默放行
   （口径与 ``scripts/mypy_gate.py`` 一致：缺依赖与缺解释器必须能区分）。
 - 检查真跑了：退出码原样判定，任一环节失败即非零，失败当场暴露而不是拖到 push / CI。
@@ -350,8 +352,11 @@ def main(argv: list[str] | None = None) -> int:
     if mode == "off":
         print(
             f"{BANNER}\n[post-edit-gate] POST_EDIT_GATE=off —— 本次跳过编辑后验证。\n"
-            f"这是紧急出口，等同 git commit --no-verify：全部门禁的权威执行点回到 ci.yml，"
-            f"事后请按本地规范在 REVISION_LOG / GOTCHAS 留痕。\n{BANNER}",
+            f"这是紧急出口，等同 git commit --no-verify：本地这一层本次不再把关。\n"
+            f"注意 CI 不会在此接手——全部工作流的 push 只监听 main/master（或 v* 标签），"
+            f"推功能分支不产生任何 check run；权威门禁要到「开向 main 的 PR」或「推 main」才跑。\n"
+            f"因此请自行补跑：python -X utf8 scripts/post_edit_gate.py --full，"
+            f"并按本地规范在 REVISION_LOG / GOTCHAS 留痕。\n{BANNER}",
             file=sys.stderr,
         )
         if not args.quiet_ledger:
@@ -377,7 +382,12 @@ def main(argv: list[str] | None = None) -> int:
     exe, tried = resolve_interpreter()
     if exe is None:
         if not tried:
-            print("[post-edit-gate] 跳过：四级回退都没找到 Python，本机无从执行检查；CI 仍会把关。", file=sys.stderr)
+            print(
+                "[post-edit-gate] 跳过：四级回退都没找到 Python，本机无从执行检查。\n"
+                "            推功能分支不会触发任何 CI（push 只监听 main/master），"
+                "装好环境后请补跑 --full。",
+                file=sys.stderr,
+            )
             if not args.quiet_ledger:
                 note_ledger(root, mode, RC_SKIP, "no-interpreter", source_label, sources)
             return RC_SKIP

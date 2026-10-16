@@ -106,7 +106,10 @@ grep -rn --include='*.py' -iE 'C:\\Users|/home/|/Users/' .
 | 崩溃预算（X2） | `python scripts/check_crash_budget.py`（默认 7 天窗口 ≤5 次；崩溃数据只在本机，CI 不可代跑，发版前人工执行） | `docs/release-governance.md` §3、`docs/发布检查清单.md` |
 
 - **push 前本地预检**：钩子目录 `.githooks/` 随仓库分发，克隆后执行 `git config core.hooksPath .githooks`
-  启用；`pre-push` 在缺少维护者本地 `precheck.ps1` 时自动退回根目录守卫（提示而非失败），其余门禁由 CI 兜底。
+  启用；`pre-push` 在缺少维护者本地 `precheck.ps1` 时自动退回根目录守卫（提示而非失败）。此时不要把剩下
+  的检查读成「CI 会兜底」：全部工作流的 `push` 触发都限定 `main` / `master`（`portable-release` 只认 `v*` 标签），
+  **推功能分支不产生任何 check run**，CI 真正接手是在「开向 main 的 PR」或「推 main」那一刻；功能分支上的机器
+  把关只剩已激活的本地钩子与 `scripts/check_local.py`（该激活状态可由 `check_local.py` 自检，见其钩子激活检查）。
 - **门禁失败请改代码，不要用 `--no-verify` 绕过**；确需紧急绕过必须由仓库所有者明确授权，并在同一 PR 内说明原因。
 - **CI 通过才算完成**：push ≠ 完成，需盯到终态；`main` 变红且 30-60 分钟内无根因时先 `git revert` 止损。
 - **证据绑定**：文档里出现的可执行路径必须真实存在且同样已分发；追踪文件确需提到未分发的本地文件时，

@@ -12,7 +12,9 @@
                                             # 快检 + E2E 前置检查 + 跑指定 Playwright spec
 
 说明:
-    - CI 是唯一权威门禁，本脚本是提交前辅助，防低级错误（lint/格式/编码/语法）
+    - CI 是最终权威门禁，但它只在「开向 main 的 PR」或「推 main」时运行——本仓全部工作流的
+      push 触发都限定 main/master（或 v* 标签），推功能分支不产生任何 check run。
+      本脚本是提交前辅助，防低级错误（lint/格式/编码/语法）；功能分支上的机器把关只剩本地钩子与本脚本
     - 覆盖率门槛不进本地（数值跨平台有差异，以 CI 为准）
     - 钩子激活检查：.githooks/ 的三层门禁依赖 core.hooksPath 这条**本机**配置，
       它不随克隆传播；新克隆上没人跑过 install.sh 时 pre-commit / pre-push /
