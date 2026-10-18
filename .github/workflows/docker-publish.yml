@@ -1,8 +1,10 @@
 # 镜像构建发布流水线（对应云原生评估报告 P1-4：补齐 12-Factor V 因素）
 #
-# 镜像扫描（云原生评估 P1-2）：push main/tags 后由独立 scan job 对已推送镜像
-# 按 digest 运行 Trivy（CRITICAL/HIGH、ignore-unfixed），**报告不阻断**——
-# CUDA 用户态轮子存量 CVE 较多，先建立可见性，再按趋势收紧 exit-code 门禁。
+# 镜像扫描（云原生评估 P1-2 / 治理规范 §10.4）：push main/tags 后由独立 scan job 对已推送镜像
+# 按 digest 运行 Trivy（CRITICAL/HIGH、ignore-unfixed），**阻断模式**（exit-code: 1）——
+# 2026-10-18 裁决：§10.4 扫描不得停在报告模式。2026-10-14 实测该镜像在门禁口径下零发现
+# （无 CVE 行、无 Total 行），故转阻断无需任何存量豁免条目。
+# 日后确需豁免存量不可修复 CVE 时，按 §10.4 建 .trivyignore.yaml（逐条理由 + expiration）。
 #
 # 触发：
 #   - push tag v*      → 发布版本化镜像（semver / major.minor / commit-sha）
@@ -105,7 +107,7 @@ jobs:
           echo "digest=${{ steps.meta.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
 
   scan:
-    name: Scan image (Trivy, report-only)
+    name: Scan image (Trivy, gate)
     needs: build-push
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
@@ -128,22 +130,23 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Trivy vulnerability scan (report-only, no gate)
+      - name: Trivy vulnerability scan (gate, blocks on findings)
         # tag 必须带 v 前缀（aquasecurity/trivy-action 的发布 tag 均为 v0.x.y，
         # 2026-09-06 实测：`0.28.0` 无此 tag，action 解析失败打红整条 workflow）。
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ${{ steps.img.outputs.ref }}
           format: table
-          # 报告不阻断（评估报告 P1-2 建议：先可见性，后收紧）。收紧时改 '1'
-          # 并按需配 .trivyignore（列出已确认不受影响的 CVE 与豁免理由）。
-          exit-code: '0'
+          # 阻断模式（2026-10-18，§10.4 扫描不得停在报告模式）；实测零发现，故无豁免条目。
+          # 日后需豁免存量不可修复 CVE 时，建 .trivyignore.yaml 并加 trivyignores 输入
+          # （v0.36.0 的输入名是 trivyignores，不是 ignorefile）。
+          exit-code: '1'
           ignore-unfixed: true
           vuln-type: os,library
           severity: CRITICAL,HIGH
 
       - name: Scan summary
         run: |
-          echo "### Trivy 扫描（报告模式）" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Trivy 扫描（阻断模式）" >> "$GITHUB_STEP_SUMMARY"
           echo "image: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.build-push.outputs.digest }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "severity=CRITICAL,HIGH, ignore-unfixed=true, exit-code=0（不阻断）" >> "$GITHUB_STEP_SUMMARY"
+          echo "severity=CRITICAL,HIGH, ignore-unfixed=true, exit-code=1（阻断）" >> "$GITHUB_STEP_SUMMARY"
