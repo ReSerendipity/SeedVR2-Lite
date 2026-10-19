@@ -31,7 +31,7 @@ classifiers = [
     "Topic :: Multimedia :: Video",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-# Runtime uses the project-local .venv created by install.bat / install.sh (unified
+# Runtime uses the project-local .venv created by install.bat / scripts/install.sh (unified
 # with start.bat / precheck.ps1 - maintainer-local, not distributed; bundled WinPython
 # kept as legacy fallback - see docs/project/CONSTRAINTS.md, also maintainer-local).
 # Keep ruff / black / mypy target versions aligned with this value to avoid tool drift.

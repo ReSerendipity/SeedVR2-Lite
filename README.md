@@ -162,7 +162,7 @@ SeedVR2/
 
 **网络绑定警告**：Web UI 默认仅绑定 `127.0.0.1`（`config.yaml` 的 `server.host`）。**严禁改为 `0.0.0.0` 或公网 IP**——本应用不含用户认证与权限隔离，直接暴露将导致任意调用推理 API 占用 GPU、上传恶意文件、下载 outputs/ 与 uploads/ 内容。如需局域网共享，请在反向代理后增加 Basic Auth 并启用 HTTPS。
 
-**合规说明**：使用前请阅读 [USER_AGREEMENT.md](USER_AGREEMENT.md)。模型权重（SeedVR/SeedVR2）为 Apache-2.0；FFmpeg 为本地开发依赖，不随仓库分发（见 [NOTICE](NOTICE)）。对外分发物随附组件的许可与归属清单见 [NOTICE](NOTICE)；输出**画面内无可见标识、文件名沿用输入名**，内容标识走文件元数据与不可感知水印两层（实现与边界见 `docs/AI应用分发安全加固指南.md`）。
+**合规说明**：使用前请阅读 [USER_AGREEMENT.md](docs/USER_AGREEMENT.md)。模型权重（SeedVR/SeedVR2）为 Apache-2.0；FFmpeg 为本地开发依赖，不随仓库分发（见 [NOTICE](NOTICE)）。对外分发物随附组件的许可与归属清单见 [NOTICE](NOTICE)；输出**画面内无可见标识、文件名沿用输入名**，内容标识走文件元数据与不可感知水印两层（实现与边界见 `docs/AI应用分发安全加固指南.md`）。
 
 **第三方声明**：本项目是独立的第三方社区工具，基于字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开源的 SeedVR2 模型（Apache-2.0）构建，与字节跳动及其 Seed 团队无隶属、赞助或官方合作关系；与 seedvr2.com / seedvr2.net 等付费商业站点无任何关系；模型权重仅从官方来源（Hugging Face `ByteDance-Seed/SeedVR2-3B` / `SeedVR2-7B`）获取。
 

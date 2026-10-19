@@ -25,7 +25,7 @@ SeedVR2 的 Web UI **默认仅绑定 `127.0.0.1`**（`config.yaml` 中 `server.h
 
 ## 合规说明
 
-使用本项目请遵守 [USER_AGREEMENT.md](https://github.com/ReSerendipity/SeedVR2-lite/blob/main/USER_AGREEMENT.md)。
+使用本项目请遵守 [USER_AGREEMENT.md](https://github.com/ReSerendipity/SeedVR2-lite/blob/main/docs/USER_AGREEMENT.md)。
 模型权重（SeedVR/SeedVR2）为 Apache 2.0；FFmpeg 为本地开发依赖，不随仓库分发，由用户自行安装。
 
 ## ⚖️ 独立第三方声明

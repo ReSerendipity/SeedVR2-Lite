@@ -9,9 +9,10 @@ echo "  SeedVR2 Video Restoration Toolbox - Setup"
 echo "============================================"
 echo ""
 
-# Detect script directory
+# Detect script directory (scripts/) and repo root (parent)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$REPO_ROOT"
 
 # ============================================================
 # 1. Detect Python interpreter (prefer project-local .venv, then 3.12+)
@@ -19,9 +20,9 @@ cd "$SCRIPT_DIR"
 PYTHON_CMD=""
 
 # 1a. Prefer project-local .venv (consistent with install.bat priority)
-if [ -x "$SCRIPT_DIR/.venv/bin/python" ]; then
-    PYTHON_CMD="$SCRIPT_DIR/.venv/bin/python"
-    echo "[OK] Found project venv: $SCRIPT_DIR/.venv"
+if [ -x "$REPO_ROOT/.venv/bin/python" ]; then
+    PYTHON_CMD="$REPO_ROOT/.venv/bin/python"
+    echo "[OK] Found project venv: $REPO_ROOT/.venv"
 fi
 
 # 1b. Check for python3.12 explicitly
@@ -80,13 +81,13 @@ echo ""
 # ============================================================
 # 2b. Unify on project-local .venv（与 install.bat 同一策略）
 # ============================================================
-if [ ! -x "$SCRIPT_DIR/.venv/bin/python" ]; then
+if [ ! -x "$REPO_ROOT/.venv/bin/python" ]; then
     echo "[Setup] Creating project-local virtual environment .venv ..."
-    if ! "$PYTHON_CMD" -m venv "$SCRIPT_DIR/.venv"; then
+    if ! "$PYTHON_CMD" -m venv "$REPO_ROOT/.venv"; then
         echo "[WARN] Failed to create .venv - continuing with base interpreter"
     else
         echo "[OK] Created .venv - all dependencies will be installed into it"
-        PYTHON_CMD="$SCRIPT_DIR/.venv/bin/python"
+        PYTHON_CMD="$REPO_ROOT/.venv/bin/python"
     fi
 fi
 
@@ -179,17 +180,17 @@ $PYTHON_CMD -m pip install -r requirements.txt --timeout 300 --retries 3 || {
 #    (full protocol lives in maintainer-local AGENTS.md, not distributed with this repo)
 #    commit layer = pre-commit; pre-push layer = precheck.ps1 (maintainer-local; GIT_HOOK_PRE_PUSH.sh)
 # ============================================================
-if command -v git &>/dev/null && [ -d "$SCRIPT_DIR/.git" ]; then
+if command -v git &>/dev/null && [ -d "$REPO_ROOT/.git" ]; then
     if ! "$PYTHON_CMD" -m pre_commit --version &>/dev/null; then
         echo "[SKIP] pre-commit not installed - enable with:"
         echo "       $PYTHON_CMD -m pip install pre-commit && $PYTHON_CMD -m pre_commit install"
     else
         echo "[Setup] Installing git hooks (pre-commit + pre-push fast checks)..."
         "$PYTHON_CMD" -m pre_commit install
-        if [ -f "$SCRIPT_DIR/docs/agents/GIT_HOOK_PRE_PUSH.sh" ]; then
-            mkdir -p "$SCRIPT_DIR/.git/hooks"
-            cp "$SCRIPT_DIR/docs/agents/GIT_HOOK_PRE_PUSH.sh" "$SCRIPT_DIR/.git/hooks/pre-push"
-            chmod +x "$SCRIPT_DIR/.git/hooks/pre-push"
+        if [ -f "$REPO_ROOT/docs/agents/GIT_HOOK_PRE_PUSH.sh" ]; then
+            mkdir -p "$REPO_ROOT/.git/hooks"
+            cp "$REPO_ROOT/docs/agents/GIT_HOOK_PRE_PUSH.sh" "$REPO_ROOT/.git/hooks/pre-push"
+            chmod +x "$REPO_ROOT/.git/hooks/pre-push"
             echo "[OK] pre-push fast checks installed (precheck.ps1)"
         else
             echo "[SKIP] pre-push source is maintainer-local (not shipped in repo) -"
@@ -203,5 +204,5 @@ fi
 echo ""
 echo "============================================"
 echo "  Installation complete!"
-echo "  Run ./start.sh to launch the application"
+echo "  Run ./scripts/start.sh to launch the application"
 echo "============================================"

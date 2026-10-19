@@ -12,8 +12,14 @@ import argparse
 import os
 import sys
 
-# 确保项目根目录在 sys.path 中
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+# 确保项目根目录在 sys.path 中。
+# 开发态：本文件位于 <repo_root>/scripts/start_portable.py，app/ 包在上一级。
+# 打包态：本文件位于 <app_dir>/start_portable.py（app_dir 内即含 app/ Python 包）。
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if os.path.isfile(os.path.join(SCRIPT_DIR, "app", "integrated_app", "app_server.py")):
+    PROJECT_ROOT = SCRIPT_DIR
+else:
+    PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 

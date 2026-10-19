@@ -69,8 +69,9 @@ SeedVR2/
 ├── data/                       # 数据处理与历史数据库
 ├── docs/                       # 项目文档与截图
 ├── tests/                      # 测试套件（pytest + Playwright）
-├── scripts/                    # 辅助脚本（模型下载 / 备份等）
-├── start.bat / start.sh        # 启动脚本
+├── scripts/                    # 辅助脚本（安装/启动/模型下载/备份等）
+├── start.bat                   # Windows 启动脚本
+├── scripts/start.sh            # Linux/macOS 启动脚本
 ├── config.yaml                 # 应用配置文件
 └── pyproject.toml              # 项目元数据与依赖（uv 兼容）
 ```

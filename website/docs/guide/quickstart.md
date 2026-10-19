@@ -23,7 +23,7 @@ cd SeedVR2-lite
 
 **方式 ① 一键脚本（新手推荐）**
 
-- Windows 双击 `install.bat`；Linux/macOS 运行 `./install.sh`
+- Windows 双击 `install.bat`；Linux/macOS 运行 `./scripts/install.sh`
 - 脚本自动检测 Python → 安装 PyTorch（CUDA 版）→ 安装其余依赖
 - 看到 `Installation complete!` 即完成
 
@@ -53,7 +53,7 @@ python scripts/download_model.py --size 3b
 
 ## 第 5 步 · 启动
 
-- Windows 双击运行 `start.bat`；Linux/macOS 运行 `./start.sh`
+- Windows 双击运行 `start.bat`；Linux/macOS 运行 `./scripts/start.sh`
 - 浏览器会自动打开 <http://127.0.0.1:7870>，看到界面即成功
 - 没自动打开？手动访问这个地址即可
 

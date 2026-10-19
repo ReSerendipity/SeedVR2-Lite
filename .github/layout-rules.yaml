@@ -71,11 +71,7 @@ root_allowlist:
   - Dockerfile
   - LICENSE
   - NOTICE
-  - PRIVACY_POLICY.md
   - README.md
-  - SECURITY_MATRIX.md
-  - THIRD_PARTY_NOTICES.md
-  - USER_AGREEMENT.md
   - _archive
   - app
   - assets
@@ -92,7 +88,6 @@ root_allowlist:
   - experiments
   - gitleaks.toml
   - install.bat
-  - install.sh
   - launcher
   - logs
   - model
@@ -106,8 +101,6 @@ root_allowlist:
   - requirements.txt
   - scripts
   - start.bat
-  - start.sh
-  - start_portable.py
   - tests
   - training
   - uv.lock

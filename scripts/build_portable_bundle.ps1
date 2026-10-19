@@ -215,7 +215,7 @@ $BundleAssetsDir = Join-Path $PSScriptRoot 'bundle_assets'
 
 $CoreIncludeDirs = @('app', 'common', 'model_lib', 'configs_3b', 'configs_7b', 'data')
 $CoreIncludeFiles = @('config.yaml', 'pyproject.toml', 'requirements.txt', 'LICENSE', 'NOTICE', 'README.md',
-    'USER_AGREEMENT.md', 'SECURITY.md', 'CHANGELOG.md')
+    'docs/USER_AGREEMENT.md', 'SECURITY.md', 'CHANGELOG.md')
 $CoreExcludePatterns = @(
     '__pycache__\*', '*.pyc', '*.pyo', '.pytest_cache\*',
     'app\integrated_app\data\*', 'logs\*.log', '*.db', '*.db-wal', '*.db-shm',

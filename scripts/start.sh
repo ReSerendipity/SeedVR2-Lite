@@ -12,9 +12,10 @@ echo "  SeedVR2 Video Restoration Toolbox"
 echo "============================================"
 echo ""
 
-# Detect script directory
+# Detect script directory (scripts/) and repo root (parent)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$REPO_ROOT"
 
 # ============================================================
 # 1. Detect Python interpreter (prefer system Python 3.12+)
@@ -47,8 +48,8 @@ fi
 # ============================================================
 if [ -z "$PYTHON_CMD" ]; then
     # Check for .venv
-    if [ -f "$SCRIPT_DIR/.venv/bin/python" ]; then
-        PYTHON_CMD="$SCRIPT_DIR/.venv/bin/python"
+    if [ -f "$REPO_ROOT/.venv/bin/python" ]; then
+        PYTHON_CMD="$REPO_ROOT/.venv/bin/python"
         echo "[OK] Found virtual environment: .venv/bin/python"
     fi
 fi
@@ -66,13 +67,13 @@ if [ -z "$PYTHON_CMD" ]; then
     echo "  Option A - Install system Python:"
     echo "    Ubuntu/Debian: sudo apt-get install -y python3.12 python3.12-venv"
     echo "    macOS: brew install python@3.12"
-    echo "    Then run: ./install.sh"
+    echo "    Then run: ./scripts/install.sh"
     echo ""
     echo "  Option B - Use virtual environment:"
     echo "    python3.12 -m venv .venv"
     echo "    source .venv/bin/activate"
     echo "    pip install -r requirements.txt"
-    echo "    Then re-run: ./start.sh"
+    echo "    Then re-run: ./scripts/start.sh"
     echo ""
     echo "============================================"
     exit 1

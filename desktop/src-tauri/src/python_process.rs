@@ -81,8 +81,16 @@ impl PythonProcess {
             return Err(anyhow!("Python 可执行文件不存在: {}", python_exe.display()));
         }
 
-        // 启动脚本
-        let start_script = self.app_dir.join("start_portable.py");
+        // 启动脚本：开发态位于 <app_dir>/scripts/start_portable.py，打包态位于 <app_dir>/start_portable.py
+        let start_script = {
+            let dev = self.app_dir.join("scripts").join("start_portable.py");
+            let packed = self.app_dir.join("start_portable.py");
+            if dev.exists() {
+                dev
+            } else {
+                packed
+            }
+        };
         if !start_script.exists() {
             return Err(anyhow!("启动脚本不存在: {}", start_script.display()));
         }
@@ -200,11 +208,11 @@ impl PythonProcess {
         #[cfg(windows)]
         {
             let app_dir = resolve_app_dir();
-            let marker = format!("{0}\\start_portable.py", app_dir.display());
-            // PowerShell -like 通配：反斜杠是字面字符，单引号按 PowerShell 规则双写转义
-            let esc = marker.replace('\'', "''");
+            // 命令行可能是 <app_dir>\scripts\start_portable.py（开发态）或 <app_dir>\start_portable.py（打包态），
+            // 以 app_dir 为锚、basename 通配匹配两种布局。
+            let esc = app_dir.display().to_string().replace('\'', "''");
             let ps = format!(
-                "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | Where-Object {{ $_.CommandLine -like '*{esc}*' }} | ForEach-Object {{ Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }}"
+                "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | Where-Object {{ $_.CommandLine -like '*{esc}*start_portable.py*' }} | ForEach-Object {{ Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }}"
             );
             let _ = Command::new("powershell")
                 .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", &ps])
@@ -294,7 +302,7 @@ pub fn resolve_app_dir() -> PathBuf {
         .parent()
         .unwrap()
         .to_path_buf();
-    if dev_app.join("start_portable.py").exists() {
+    if dev_app.join("scripts").join("start_portable.py").exists() {
         return dev_app;
     }
 

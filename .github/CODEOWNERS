@@ -18,7 +18,7 @@ config/ @ReSerendipity
 
 # 安全策略与审查流程
 SECURITY.md @ReSerendipity
-SECURITY_MATRIX.md @ReSerendipity
+docs/SECURITY_MATRIX.md @ReSerendipity
 .github/workflows/ @ReSerendipity
 .github/CODEOWNERS @ReSerendipity
 
