@@ -9,7 +9,7 @@
 #     hand for the same tag, and the previous unconditional `gh release edit` + volume
 #     upload overwrote its notes and appended ~5.6 GB of portable volumes (GOTCHAS #113).
 #   - `workflow_dispatch` with `upload_to_release: true` -> PUBLISH: the only path that
-#     creates/edits the Release, uploads the volumes, and GPG-signs SHA256SUMS.txt.
+#     creates/edits a draft Release and uploads the volumes.
 #
 # The old Inno Setup exe route (desktop-release.yml) was removed on 2026-08-28 once
 # this path proved out in CI. Rationale: docs/project/PORTABLE_BUNDLES.md (local-only doc).
@@ -308,7 +308,7 @@ jobs:
         run: |
           $tag = "${{ steps.ver.outputs.tag }}"
           # ASCII-only title: PS 5.1 decodes this BOM-less step script with the ANSI codepage.
-          gh release create $tag --title "SeedVR2 $tag (portable offline bundles)" --target ${{ github.sha }} 2>$null
+          gh release create $tag --draft --title "SeedVR2 $tag (portable offline bundles)" --target ${{ github.sha }} 2>$null
           if ($LASTEXITCODE -ne 0) { Write-Host "release $tag may already exist, continuing" }
           # -Encoding UTF8 is required: the template holds Chinese and has no BOM.
           $notes = Get-Content -Raw -Encoding UTF8 launcher\release-notes-portable.md
@@ -345,44 +345,6 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "upload failed: $($f.Name)" }
           }
           gh release view $tag --json assets -q '.assets[].name'
-
-  sign-release:
-    name: GPG-sign SHA256SUMS
-    needs: build-bundles
-    if: github.event_name == 'workflow_dispatch' && inputs.upload_to_release
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-      # 本 job 无 checkout，gh CLI 需显式仓库上下文（否则 "failed to run git: not a git repository"）
-      GH_REPO: ${{ github.repository }}
-    steps:
-      - name: Skip when GPG secrets are not configured
-        if: env.GPG_PRIVATE_KEY == ''
-        run: >
-          echo "::notice::GPG secrets are not configured - SHA256SUMS.txt stays unsigned;"
-          "configure GPG_PRIVATE_KEY / GPG_PASSPHRASE / GPG_KEY_ID or run gpg-signed-release.yml manually."
-      - name: Import key, sign and upload SHA256SUMS.gpg
-        if: env.GPG_PRIVATE_KEY != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
-        run: |
-          set -euo pipefail
-          TAG="${{ needs.build-bundles.outputs.tag }}"
-          rm -rf sign-work && mkdir sign-work && cd sign-work
-          gh release download "$TAG" --pattern 'SHA256SUMS.txt'
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
-          KEYID_ARGS=()
-          if [ -n "$GPG_KEY_ID" ]; then KEYID_ARGS=(--local-user "$GPG_KEY_ID"); fi
-          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 "${KEYID_ARGS[@]}" \
-            --output SHA256SUMS.gpg --detach-sign SHA256SUMS.txt <<< "$GPG_PASSPHRASE"
-          gpg --verify SHA256SUMS.gpg SHA256SUMS.txt
-          # .gpg is a derived artifact of the immutable SHA256SUMS.txt: same input always
-          # produces the same signature bytes, so clobbering on re-run is safe.
-          gh release upload "$TAG" SHA256SUMS.gpg --clobber
-          echo "SHA256SUMS.gpg uploaded for $TAG"
 
   # 便携链路端到端自测（评估报告 P2-6）：小夹具 + 1MB 切片上限，等价复现真实构建的
   # 多卷路径（切片/合并可逆、逐卷与逐归档 SHA256、体积门禁、合规剥离、缺卷/篡改拒绝、
