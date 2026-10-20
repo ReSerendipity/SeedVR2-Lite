@@ -203,7 +203,9 @@ def main() -> int:
 
     out_path = ROOT / args.ckpt_out
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    torch.save({"adapter": adapter.state_dict(), "losses": losses}, out_path)
+    torch.save(  # nosemgrep: trailofbits.python.pickles-in-pytorch.pickles-in-pytorch - torch.save 为序列化（非反序列化），不构成 RCE 向量；与 app/integrated_app/optimization/engine/framework_engineering.py:719 同口径
+        {"adapter": adapter.state_dict(), "losses": losses}, out_path
+    )
 
     # 训练产物溯源（数据治理 P2-2）：落盘权重 sidecar，记录来源/种子/超参，
     # 使 checkpoint 能回答"用什么数据、什么配置训出来的"
