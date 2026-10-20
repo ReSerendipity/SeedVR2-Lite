@@ -1,5 +1,9 @@
 {
   "$comment": "幻影引用历史基线：登记「追踪文件指向未随仓库分发的本地文件」中已被认可保留的条目（只防新增，不追历史）。新增条目必须写明理由；能改写为分发版路径或就地补可获取性说明的，优先改写而不是登记。校验：python scripts/check_local_only_refs.py --all。口径见 docs/CODING_STANDARDS.md 第 5 节。",
   "$schema_note": "entries[]: {file: 追踪文件相对路径, ref: 被指向的未分发路径, reason: 保留理由}",
-  "entries": []
+  "entries": [
+    { "file": "CHANGELOG.md", "ref": "docs/repo-analysis", "reason": "CHANGELOG:140 历史条目叙事（机器路径豁免留痕，2026-09），保留" },
+    { "file": "CHANGELOG.md", "ref": "docs/repo-analysis/ComfyUI-Mie-Package-Launcher_技术学习报告.md", "reason": "CHANGELOG:140 历史条目叙事（机器路径豁免留痕，2026-09），保留" },
+    { "file": "docs/DATA_GOVERNANCE_ASSESSMENT.md", "ref": "app/integrated_app/data", "reason": "评估报告文档叙事，描述目录结构事实，保留" }
+  ]
 }

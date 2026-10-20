@@ -396,3 +396,6 @@ service-account.json
 
 # --- 项目结构收敛（§12.2）：local/ 为维护者私有工作区，默认不入库 ---
 /local/
+# --- 2026-10-20 合规审查补缺（repo-audit-20261020）---
+.workbuddy/
+app/integrated_app/data/checkpoints/

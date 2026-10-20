@@ -98,7 +98,7 @@ When distributing this project:
 To track changes in upstream model implementations:
 
 1. Periodically check if new commits exist at upstream repos (if accessible)
-2. Review `docs/repo-analysis/` for technical reports on similar models
+2. Review `docs/repo-analysis/` for technical reports on similar models（维护者本地研究资料，未随仓库分发）
 3. Document any modifications made to adapt model APIs to local pipeline
 
 ### 本地锚定（可验证，MLOps P2-7）
