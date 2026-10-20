@@ -93,7 +93,7 @@ SeedVR2 的 Web UI **默认仅绑定 `127.0.0.1`**。**严禁将 `server.host` �
 3. 端口映射严格限定回环（如 `127.0.0.1:7870:7870`）时，可设 `SEEDVR2_ALLOW_UNAUTHENTICATED=1` 显式豁免。
 
 如需局域网共享，请在反向代理（Nginx/Caddy）后增加 Basic Auth，并启用 HTTPS。容器 / 编排部署参考随仓库分发的
-`docker-compose.yml` 与 `deploy/kubernetes/`（更细的部署手册 `docs/plans/DEPLOYMENT.md` 为维护者本地文件，未随仓库分发）。
+`docker-compose.yml` 与 `deploy/kubernetes/`（更细的部署手册见 `docs/plans/DEPLOYMENT.md`）。
 
 ### 模型来源
 
