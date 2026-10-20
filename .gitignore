@@ -111,14 +111,6 @@ test-report.md
 test_report_v*.md
 
 # ---------------------------------------------------------------------------
-# UI / UX audit artifacts (dated directories + per-audit screenshots)
-# NOTE: docs/screenshots/current/light/ is REFERENCED by README and
-#       must stay tracked. Only dogfood leftovers and dated audit dumps go.
-# ---------------------------------------------------------------------------
-docs/ui-ux-audit-*/
-docs/screenshots/dogfood/
-
-# ---------------------------------------------------------------------------
 # In-repo test reports / dogfood runners (not part of the product)
 # ---------------------------------------------------------------------------
 tests/USER_BEHAVIOR_TEST_REPORT.md
@@ -169,27 +161,11 @@ tests/wcag-reports/
 # Reports / analyses / study notes (not part of the product)
 # ---------------------------------------------------------------------------
 CLEANUP_REPORT.md
-docs/SECURITY_AUDIT_REPORT.md
-docs/SECURITY_AUDIT_REPORT_v2_EXECUTION_CHECKLIST.md
-docs/UX-UI*评估报告*.md
-docs/config_review.md
-docs/design-style-analysis-*.md
-docs/model_algorithm_analysis.md
-docs/repo-analysis/
-docs/seedvr2-design-analysis.md
-docs/seedvr2-ui-audit-report.md
-docs/similar-repos-analysis.md
 
 # ---------------------------------------------------------------------------
 # Dev-only content (not needed to clone-and-run the app)
 # ---------------------------------------------------------------------------
 GITIGNORE_UPDATE.md
-docs/CONSTRAINTS.md
-docs/OPTIMIZATION_GUIDE.md
-docs/PROJECT_CONTEXT.md
-docs/winpython-migration-plan.md
-docs/workflows/
-docs/prototypes/
 history_scan.sh
 remove_tracked_sample_seedvr2.sh
 /verify_engine.py
@@ -230,16 +206,6 @@ examples/
 perf/benchmark/BENCHMARK_GUIDE.md
 perf/monitoring_plan.md
 tests/reports/
-docs/ARCHITECTURE.md
-docs/COMPLIANCE_CHECKLIST.md
-docs/DEPLOYMENT.md
-docs/LOGGING_AUDIT_REPORT.md
-docs/SageAttention调研备忘.md
-docs/TEST_SYSTEM_AUDIT_REPORT.md
-docs/全功能实施指南.md
-docs/功能实现状态分析报告.md
-docs/测试体系完整性评估报告.md
-docs/项目健康度评估报告.md
 # ffprobe runtime binary (local only, keep out of repo)
 bin/ffprobe.exe
 
@@ -273,17 +239,11 @@ demo/docs/
 AGENTS.md
 # CONTRIBUTING.md 继承自 org 级 ReSerendipity/.github，仓库内副本仅本地保留（2026-09-10）
 CONTRIBUTING.md
-docs/FILEMAP.md
-docs/README.md
+# docs/_devarchive/：一次性开发脚本归档（含历史 .py 探针/迁移脚本，非产品文档）。
+# 按 §12.1 docs/ 纯入库原则本应迁出，但其中 .py 有存量 lint/black 问题，
+# 迁出到 _archive/ 或 local/ 属后续迁移工作，本 PR 仅解除 docs/ 文档级忽略。
 docs/_devarchive/
 # docs/adr/：2026-10-15 起解除忽略（v29-remediate 批次1，架构 P1#2）——ADR 属团队级可回溯资产入库（0001-0004 + README）。
-docs/plans/
-docs/project/
-docs/reports/
-docs/superpowers/
-docs/INSTALLER-LESSONS.md
-docs/整理记录_20260823.md
-docs/六大项目文档整理与核对.md
 
 # 本地预检脚本（不入库）
 precheck.ps1
@@ -304,9 +264,6 @@ data/perf_out/
 # coverage XML 产物（CI coverage gate 用，属运行时生成）
 /coverage.xml
 
-# ── 自进化协议子文档（AGENTS.md 瘦身下沉内容，仅本地保留，2026-09-03）──
-docs/agents/
-
 # ── SeedVR2 Tauri 桌面壳：构建产物与临时输出（仅本地，2026-09-04）──
 # 依赖与编译产物不入库；源码（src-tauri/src、capabilities、*.rs、Cargo.toml、
 # tauri.conf.json、icons、desktop/src、package.json）正常纳入版本控制。
@@ -322,8 +279,6 @@ desktop/src-tauri/gen/schemas/
 # 冒烟测试/编译检查的临时输出（本次开发过程产物，非源码）
 desktop/src-tauri/*.txt
 desktop/**/*.log
-# Tauri 迁移指导与 AI-2 交付/交接文档（流程/规划文档，仅本地保留，按 LOCAL_RULES §4）
-docs/tauri-migration/
 
 # Tauri 更新签名私钥（绝不可提交，泄露则攻击者可伪造更新包）
 desktop/tauri.key
@@ -359,9 +314,6 @@ backups/
 # perf/benchmark/ 等 33 个「仅本地保留」路径，属机器专属配置；入库会被
 # pre-commit 的幻影引用门禁（scripts/check_local_only_refs.py）拒绝。
 .zcodeignore
-# docs/RELEASE_PROFILE.md：含本机绝对路径与 precheck.ps1（维护者本地）引用的项目档案，
-# 与 docs/ARCHITECTURE.md、docs/COMPLIANCE_CHECKLIST.md 同类，按「干净交付」留在本地。
-docs/RELEASE_PROFILE.md
 
 # --- 敏感信息防泄露（Git 版本控制安全工程与防泄露最佳实践指南 v1.1 第二章/第八章）---
 .env
