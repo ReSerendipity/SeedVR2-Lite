@@ -16,7 +16,7 @@
 ### 报告渠道
 
 - **邮箱**：请发送邮件至 `security@reserendipity.dev`（加密通信优先）
-- **GitHub Security Advisory**：推荐使用 GitHub 的 [私密漏洞报告功能](https://github.com/ReSerendipity/SeedVR2-lite/security/advisories/new)
+- **GitHub Security Advisory**：推荐使用 GitHub 的 [私密漏洞报告功能](https://github.com/ReSerendipity/SeedVR2-Lite/security/advisories/new)
 - **邮件主题**：`[SECURITY] SeedVR2 - <简短描述>`
 
 ### 报告内容

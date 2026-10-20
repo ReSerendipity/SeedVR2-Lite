@@ -196,7 +196,7 @@ jobs:
           # "Invalid empty pathname"（编码缺陷），改用 Python tarfile（UTF-8 安全）解压。
           @'
           import tarfile
-          prefix = "SeedVR2-lite-main/"
+          prefix = "SeedVR2-Lite-main/"
           t = tarfile.open("src.tgz", "r:gz")
           n = 0
           for m in t.getmembers():
