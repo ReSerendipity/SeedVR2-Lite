@@ -34,7 +34,7 @@ rotary-embedding-torch==0.9.1
 opencv-python==5.0.0.93
 imageio==2.38.1
 imageio-ffmpeg==0.6.0
-pillow==12.3.0
+pillow==13.0.0
 
 # Database
 aiosqlite==0.22.1
