@@ -77,7 +77,7 @@ dependencies = [
 # 开发 / 测试 / 工具依赖（与 requirements-dev.txt 保持一致）
 [dependency-groups]
 dev = [
-    "black==26.5.1",
+    "black==26.10.1",
     "mypy==2.3.0",
     "ruff==0.16.2",
     "pytest>=8.0",
