@@ -25,4 +25,8 @@ concurrency:
 jobs:
   self-purify:
     name: 自净化检查（非阻塞）
-    uses: ReSerendipity/.github/.github/workflows/self-purify.yml@051227229483b9efe65f57a6a81ddcd10cf950fc # pinned 2026-10-22
+    uses: ReSerendipity/.github/.github/workflows/self-purify.yml@14c77b5417fe8093612fba40926f772d60a48b6c # pinned 2026-10-24
+    with:
+      # 仓级豁免（2026-10-24）：docs/plans 与 docs/project 为本仓随仓库分发的公开文档层，
+      # 已在 governance/GOVERNANCE-EXCLUSIONS.md §七 登记；豁免仅限受限目录，家族基线不放宽。
+      extra_exempt_regex: '^docs/(plans|project)/'
