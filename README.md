@@ -172,7 +172,6 @@ docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-lite:1.6.1
 
 参与贡献请遵循上述[组织级贡献指南](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md)（Conventional Commits + DCO 签名）。Issue 与 Discussion 请在仓库内发起；安全问题请按仓库安全政策私下报告，勿公开提 issue。
 
-- 模拟演示站（无需 GPU/模型）：<https://reserendipity.github.io/SeedVR2-Lite/>
 - Releases（桌面版 / 便携包 / 增量更新）：<https://github.com/ReSerendipity/SeedVR2-Lite/releases>
 
 ### 许可证
@@ -331,7 +330,6 @@ Please read [USER_AGREEMENT.md](docs/USER_AGREEMENT.md) before use. This is an i
 
 Follow the [org-level contributing guide](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md) (Conventional Commits + DCO sign-off). Open issues and discussions in the repository; report security problems privately per the security policy rather than in a public issue.
 
-- Mock demo (no GPU/model needed): <https://reserendipity.github.io/SeedVR2-Lite/>
 - Releases (desktop / portable bundle / incremental updates): <https://github.com/ReSerendipity/SeedVR2-Lite/releases>
 
 ### License
