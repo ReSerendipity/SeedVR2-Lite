@@ -63,10 +63,6 @@ SeedVR2-Lite 把字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开源
 
 ![系统状态](docs/assets/readme-seedvr2-lite-5-system-status.png)
 
-**设置页** —— 模型路径、服务端口、语言等偏好设置。
-
-![设置页](docs/assets/readme-seedvr2-lite-6-settings.png)
-
 **整体架构** —— 浏览器/桌面壳 → FastAPI 后端 → 扩散推理引擎（DiT + Video VAE + Block Swap），本地存储模型、历史与输出。
 
 ![架构图](docs/assets/readme-seedvr2-lite-7-architecture.svg)
@@ -165,12 +161,18 @@ docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-lite:1.6.1
 
 使用前请阅读 [USER_AGREEMENT.md](docs/USER_AGREEMENT.md)。本项目是独立第三方社区工具，与字节跳动及其 Seed 团队无隶属、赞助或官方合作关系，也与 seedvr2.com 等付费商业站点无关；模型权重仅从官方来源（Hugging Face `ByteDance-Seed/SeedVR2-3B` / `SeedVR2-7B`）获取。组件许可与归属清单见 [NOTICE](NOTICE)。
 
+### 文档与治理
+
+- **文档站**：完整安装/使用/模型选型文档见 <https://reserendipity.github.io/SeedVR2-Lite/docs/>；仓库内另有 [用户手册](docs/用户手册.md) 与 [开发者指南](docs/开发者指南.md)。
+- **治理规范**：组织级治理与贡献约定见 [ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance) 与 [贡献指南](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md)。
+- **架构决策（ADR）**：关键技术选型记录于 [`docs/adr/`](docs/adr/)。
+- **发布治理**：版本发布、增量更新与回滚见 [release-governance](docs/release-governance.md)、[发布检查清单](docs/发布检查清单.md)、[增量更新发布手册](docs/增量更新发布手册.md) 与 [rollback_sop](docs/rollback_sop.md)；版本与变更见 [CHANGELOG.md](CHANGELOG.md)。
+
 ### 贡献与支持
 
-参与贡献请遵循[组织级贡献指南](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md)（Conventional Commits + DCO 签名）。Issue 与 Discussion 请在仓库内发起；安全问题请按仓库安全政策私下报告，勿公开提 issue。
+参与贡献请遵循上述[组织级贡献指南](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md)（Conventional Commits + DCO 签名）。Issue 与 Discussion 请在仓库内发起；安全问题请按仓库安全政策私下报告，勿公开提 issue。
 
 - 模拟演示站（无需 GPU/模型）：<https://reserendipity.github.io/SeedVR2-Lite/>
-- 完整文档站：<https://reserendipity.github.io/SeedVR2-Lite/docs/>
 - Releases（桌面版 / 便携包 / 增量更新）：<https://github.com/ReSerendipity/SeedVR2-Lite/releases>
 
 ### 许可证
@@ -219,10 +221,6 @@ The supported distribution is a **Tauri v2 desktop build** (offline bundle, extr
 **System status** — real-time GPU/VRAM/utilization, system memory, model load state and runtime info.
 
 ![System status](docs/assets/readme-seedvr2-lite-5-system-status.png)
-
-**Settings** — model paths, server port, language and other preferences.
-
-![Settings](docs/assets/readme-seedvr2-lite-6-settings.png)
 
 **Architecture** — browser/desktop shell → FastAPI backend → diffusion engine (DiT + Video VAE + Block Swap), with local model/history/output storage.
 
@@ -322,12 +320,18 @@ Environment variables: see `.env.example`; a common one is `PYTORCH_CUDA_ALLOC_C
 
 Please read [USER_AGREEMENT.md](docs/USER_AGREEMENT.md) before use. This is an independent third-party community tool with no affiliation to ByteDance or its Seed team, and no relation to commercial sites such as seedvr2.com; weights are fetched only from official sources (Hugging Face `ByteDance-Seed/SeedVR2-3B` / `SeedVR2-7B`). Third-party licenses and attributions are listed in [NOTICE](NOTICE).
 
+### Documentation & governance
+
+- **Docs site**: full install / usage / model-selection docs at <https://reserendipity.github.io/SeedVR2-Lite/docs/>; in-repo [user manual](docs/用户手册.md) and [developer guide](docs/开发者指南.md).
+- **Governance**: org-level governance and contribution conventions live in [ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance) and the [contributing guide](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md).
+- **Architecture decisions (ADR)**: key design records are under [`docs/adr/`](docs/adr/).
+- **Release governance**: versioning, incremental updates and rollback are covered by [release-governance](docs/release-governance.md), the [release checklist](docs/发布检查清单.md), the [incremental-update manual](docs/增量更新发布手册.md) and [rollback_sop](docs/rollback_sop.md); see [CHANGELOG.md](CHANGELOG.md) for versions and changes.
+
 ### Contributing & support
 
 Follow the [org-level contributing guide](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md) (Conventional Commits + DCO sign-off). Open issues and discussions in the repository; report security problems privately per the security policy rather than in a public issue.
 
 - Mock demo (no GPU/model needed): <https://reserendipity.github.io/SeedVR2-Lite/>
-- Full documentation: <https://reserendipity.github.io/SeedVR2-Lite/docs/>
 - Releases (desktop / portable bundle / incremental updates): <https://github.com/ReSerendipity/SeedVR2-Lite/releases>
 
 ### License
