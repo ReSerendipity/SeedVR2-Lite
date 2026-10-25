@@ -131,7 +131,7 @@ start.bat
 | SeedVR2-7B | FP8 | 12 GB | ~12 GB |
 | SeedVR2-7B-Sharp | FP16 | 24 GB | ~20 GB |
 
-> FP8 当前仅作权重存储格式，推理仍按 FP16/FP32 加载，故与 FP16 速度基本一致；真正影响速度的是 BlockSwap、输出分辨率与帧数。完整显存对比见[文档站](https://reserendipity.github.io/SeedVR2-Lite/docs/)。
+> FP8 当前仅作权重存储格式，推理仍按 FP16/FP32 加载，故与 FP16 速度基本一致；真正影响速度的是 BlockSwap、输出分辨率与帧数。完整显存对比见仓内 [用户手册](docs/用户手册.md)。
 
 ### 使用示例
 
@@ -163,7 +163,7 @@ docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-lite:1.6.1
 
 ### 文档与治理
 
-- **文档站**：完整安装/使用/模型选型文档见 <https://reserendipity.github.io/SeedVR2-Lite/docs/>；仓库内另有 [用户手册](docs/用户手册.md) 与 [开发者指南](docs/开发者指南.md)。
+- **文档**：仓内 [用户手册](docs/用户手册.md) 与 [开发者指南](docs/开发者指南.md)。
 - **治理规范**：组织级治理与贡献约定见 [ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance) 与 [贡献指南](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md)。
 - **架构决策（ADR）**：关键技术选型记录于 [`docs/adr/`](docs/adr/)。
 - **发布治理**：版本发布、增量更新与回滚见 [release-governance](docs/release-governance.md)、[发布检查清单](docs/发布检查清单.md)、[增量更新发布手册](docs/增量更新发布手册.md) 与 [rollback_sop](docs/rollback_sop.md)；版本与变更见 [CHANGELOG.md](CHANGELOG.md)。
@@ -289,7 +289,7 @@ Model precision (`.safetensors`):
 | SeedVR2-7B | FP8 | 12 GB | ~12 GB |
 | SeedVR2-7B-Sharp | FP16 | 24 GB | ~20 GB |
 
-> FP8 is currently a weight storage format only; inference still runs at FP16/FP32, so speed is essentially the same as FP16. What actually affects speed is BlockSwap, output resolution and frame count. See the [docs site](https://reserendipity.github.io/SeedVR2-Lite/docs/) for the full VRAM table.
+> FP8 is currently a weight storage format only; inference still runs at FP16/FP32, so speed is essentially the same as FP16. What actually affects speed is BlockSwap, output resolution and frame count. See the in-repo [user manual](docs/用户手册.md) for the full VRAM table.
 
 ### Usage examples
 
@@ -321,7 +321,7 @@ Please read [USER_AGREEMENT.md](docs/USER_AGREEMENT.md) before use. This is an i
 
 ### Documentation & governance
 
-- **Docs site**: full install / usage / model-selection docs at <https://reserendipity.github.io/SeedVR2-Lite/docs/>; in-repo [user manual](docs/用户手册.md) and [developer guide](docs/开发者指南.md).
+- **Docs**: in-repo [user manual](docs/用户手册.md) and [developer guide](docs/开发者指南.md).
 - **Governance**: org-level governance and contribution conventions live in [ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance) and the [contributing guide](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md).
 - **Architecture decisions (ADR)**: key design records are under [`docs/adr/`](docs/adr/).
 - **Release governance**: versioning, incremental updates and rollback are covered by [release-governance](docs/release-governance.md), the [release checklist](docs/发布检查清单.md), the [incremental-update manual](docs/增量更新发布手册.md) and [rollback_sop](docs/rollback_sop.md); see [CHANGELOG.md](CHANGELOG.md) for versions and changes.
