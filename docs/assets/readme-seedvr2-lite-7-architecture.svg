@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#8a7a5c"/>
+    </marker>
+    <style>
+      .box { fill:#f7f3ea; stroke:#c9bda3; stroke-width:1.4; rx:10; }
+      .boxd { fill:#eef3ec; stroke:#7a9b72; stroke-width:1.4; rx:10; }
+      .boxt { fill:#fbf6ef; stroke:#b99a6a; stroke-width:1.4; rx:10; }
+      .ttl { font-size:19px; font-weight:700; fill:#3a3428; }
+      .lbl { font-size:14px; fill:#5a5344; }
+      .sub { font-size:12px; fill:#8a8172; }
+      .lnk { stroke:#8a7a5c; stroke-width:1.6; fill:none; }
+    </style>
+  </defs>
+
+  <!-- title -->
+  <text x="600" y="38" text-anchor="middle" class="ttl" font-size="22">SeedVR2-Lite 架构 / Architecture</text>
+  <text x="600" y="60" text-anchor="middle" class="sub">独立运行的 Web 工具链：浏览器 UI → FastAPI 后端 → 扩散推理引擎（不依赖 ComfyUI）</text>
+
+  <!-- Browser / Web UI -->
+  <rect x="60" y="100" width="260" height="120" class="boxd"/>
+  <text x="190" y="128" text-anchor="middle" class="ttl">浏览器 Web UI</text>
+  <text x="190" y="152" text-anchor="middle" class="lbl">Jinja2 模板 + HTMX</text>
+  <text x="190" y="172" text-anchor="middle" class="sub">首页 / 修复工作台 / 历史记录</text>
+  <text x="190" y="190" text-anchor="middle" class="sub">系统状态 / 设置 · 5 种语言</text>
+
+  <!-- Desktop shell -->
+  <rect x="60" y="250" width="260" height="90" class="boxt"/>
+  <text x="190" y="278" text-anchor="middle" class="ttl" font-size="17">Tauri v2 桌面壳（可选）</text>
+  <text x="190" y="300" text-anchor="middle" class="sub">原生窗口 · 系统托盘 · 增量更新</text>
+  <text x="190" y="318" text-anchor="middle" class="sub">与 Web UI 共享同一 Python 后端</text>
+
+  <!-- FastAPI backend -->
+  <rect x="400" y="140" width="300" height="150" class="boxd"/>
+  <text x="550" y="170" text-anchor="middle" class="ttl">FastAPI + Uvicorn 后端</text>
+  <text x="550" y="194" text-anchor="middle" class="lbl">路由 / 中间件 / 限流 · SSE 实时推送</text>
+  <text x="550" y="214" text-anchor="middle" class="sub">单文件修复 · 文件夹批量扫描</text>
+  <text x="550" y="232" text-anchor="middle" class="sub">断点续跑（data/checkpoints/）</text>
+  <text x="550" y="250" text-anchor="middle" class="sub">VRAM 预检 &amp; 参数推荐</text>
+  <text x="550" y="272" text-anchor="middle" class="sub">仅绑定 127.0.0.1 · Basic Auth 可选</text>
+
+  <!-- Inference engine -->
+  <rect x="760" y="100" width="380" height="200" class="box"/>
+  <text x="950" y="130" text-anchor="middle" class="ttl">扩散推理引擎（PyTorch / CUDA）</text>
+  <text x="950" y="156" text-anchor="middle" class="lbl">MM-DiT（Window Attention + RoPE）</text>
+  <text x="950" y="176" text-anchor="middle" class="sub">Video VAE（SD3 架构，时间分块）</text>
+  <text x="950" y="200" text-anchor="middle" class="lbl">GPU Block Swap：Transformer 块动态换入换出</text>
+  <text x="950" y="222" text-anchor="middle" class="sub">3B / 7B / 7B-Sharp · FP16 / FP8 / 量化变体</text>
+  <text x="950" y="244" text-anchor="middle" class="sub">单步扩散修复：视频 &amp; 图像超分辨率</text>
+  <text x="950" y="272" text-anchor="middle" class="sub" fill="#a05a5a">仅 NVIDIA CUDA · 不支持纯 CPU 推理</text>
+
+  <!-- arrows top row -->
+  <line x1="320" y1="160" x2="398" y2="190" class="lnk" marker-end="url(#arrow)"/>
+  <line x1="320" y1="295" x2="400" y2="250" class="lnk" marker-end="url(#arrow)"/>
+  <line x1="700" y1="200" x2="758" y2="190" class="lnk" marker-end="url(#arrow)"/>
+
+  <!-- storage row -->
+  <rect x="60" y="430" width="230" height="110" class="boxt"/>
+  <text x="175" y="458" text-anchor="middle" class="ttl" font-size="16">模型权重 model/</text>
+  <text x="175" y="482" text-anchor="middle" class="sub">.safetensors · ema_vae</text>
+  <text x="175" y="500" text-anchor="middle" class="sub">pos/neg 文本嵌入</text>
+  <text x="175" y="518" text-anchor="middle" class="sub">portable / shared 双模式</text>
+
+  <rect x="330" y="430" width="230" height="110" class="boxd"/>
+  <text x="445" y="458" text-anchor="middle" class="ttl" font-size="16">SQLite 历史库</text>
+  <text x="445" y="482" text-anchor="middle" class="sub">任务记录 / 统计 / 回收站</text>
+  <text x="445" y="504" text-anchor="middle" class="sub">uploads/ · outputs/</text>
+
+  <rect x="600" y="430" width="230" height="110" class="box"/>
+  <text x="715" y="458" text-anchor="middle" class="ttl" font-size="16">FFmpeg（可选）</text>
+  <text x="715" y="482" text-anchor="middle" class="sub">视频编解码</text>
+  <text x="715" y="504" text-anchor="middle" class="sub">因许可证不随包分发</text>
+
+  <rect x="870" y="430" width="270" height="110" class="boxt"/>
+  <text x="1005" y="458" text-anchor="middle" class="ttl" font-size="16">显存分层策略</text>
+  <text x="1005" y="482" text-anchor="middle" class="sub">FP16 → FP8 → FP8 + BlockSwap</text>
+  <text x="1005" y="504" text-anchor="middle" class="sub">8 GB 显存可跑 3B FP8</text>
+
+  <!-- arrows backend to storage -->
+  <line x1="500" y1="290" x2="200" y2="428" class="lnk" marker-end="url(#arrow)"/>
+  <line x1="560" y1="290" x2="450" y2="428" class="lnk" marker-end="url(#arrow)"/>
+  <line x1="620" y1="290" x2="715" y2="428" class="lnk" marker-end="url(#arrow)"/>
+  <line x1="900" y1="300" x2="1000" y2="428" class="lnk" marker-end="url(#arrow)"/>
+
+  <!-- bottom note -->
+  <rect x="60" y="590" width="1080" height="90" fill="#fbf6ef" stroke="#d8c9a8" stroke-width="1.2" rx="10"/>
+  <text x="80" y="618" class="lbl" font-weight="700">数据流 / Data flow</text>
+  <text x="80" y="640" class="sub">上传图片或视频 → 后端按分辨率/显存选择参数组合 → DiT 单步扩散推理 + Video VAE 解码 → 写回 outputs/ 与 SQLite 历史库 → 浏览器对比下载。</text>
+  <text x="80" y="660" class="sub">Local-first：数据不出本机；Web 服务默认仅监听 127.0.0.1，不依赖 ComfyUI 或外部推理服务。</text>
+</svg>

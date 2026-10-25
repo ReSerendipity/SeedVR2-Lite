@@ -1,187 +1,339 @@
+<div align="center">
+
 # SeedVR2-Lite
 
-> 治理规范：[ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance)
+**基于 SeedVR2 扩散模型的视频与图像超分辨率修复工具箱 —— 独立运行、一键修复，无需 ComfyUI。**
 
-![Version](https://img.shields.io/badge/version-1.6.1-blue?style=for-the-badge) ![License](https://img.shields.io/badge/license-Apache%202.0-green?style=for-the-badge) ![Python](https://img.shields.io/badge/python-3.12+-yellow?style=for-the-badge&logo=python&logoColor=white) ![GPU](https://img.shields.io/badge/GPU-NVIDIA%20CUDA-76B900?style=for-the-badge&logo=nvidia&logoColor=white) ![Models](https://img.shields.io/badge/model-3B%20%7C%207B%20%7C%207B--Sharp-ff69b4?style=for-the-badge) [![CI](https://github.com/ReSerendipity/SeedVR2-Lite/actions/workflows/ci.yml/badge.svg)](https://github.com/ReSerendipity/SeedVR2-Lite/actions) [![gitleaks](https://img.shields.io/badge/secret%20scan-gitleaks%20passing-0080FF?style=for-the-badge)](https://github.com/ReSerendipity/SeedVR2-Lite/actions/workflows/gitleaks.yml)
+A standalone video & image super-resolution toolkit powered by SeedVR2 diffusion models. One-click restoration via Web UI — no ComfyUI required.
 
-**基于 SeedVR2 扩散模型的视频与图像超分辨率修复工具箱 — 独立运行、一键修复，无需 ComfyUI**
+[![CI](https://github.com/ReSerendipity/SeedVR2-Lite/actions/workflows/ci.yml/badge.svg)](https://github.com/ReSerendipity/SeedVR2-Lite/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/ReSerendipity/SeedVR2-Lite?logo=github)](https://github.com/ReSerendipity/SeedVR2-Lite/releases/latest)
+[![Python](https://img.shields.io/badge/Python-3.12+-blue?logo=python&logoColor=white)](pyproject.toml)
+[![CUDA](https://img.shields.io/badge/GPU-NVIDIA%20CUDA-76B900?logo=nvidia&logoColor=white)](#系统要求与兼容性)
+[![License](https://img.shields.io/badge/License-Apache%202.0-green)](LICENSE)
+[![Last commit](https://img.shields.io/github/last-commit/ReSerendipity/SeedVR2-Lite)](https://github.com/ReSerendipity/SeedVR2-Lite/commits/main)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](#-贡献与支持)
 
-> SeedVR2-Lite: a standalone video & image super-resolution toolkit powered by SeedVR2 diffusion models. One-click restoration via Web UI — no ComfyUI required.
+**[中文](#中文) · [English](#english)**
 
-## 它能做什么
+> 治理规范 / Governance：[ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance)
 
-- **视频与图像修复**：超分辨率、细节增强，本地推理、数据不出机器
-- **零依赖开箱即用**：桌面完整包解压即用（含便携 Python、CUDA 版 torch 与 3B MXFP8 模型），网页版/便携包解压即用
-- **三档模型可选**：3B / 7B / 7B-Sharp，支持 FP16 / FP8 及 INT8-convrot / MXFP8 / NVFP4 量化变体
-- **显存友好**：GPU Block Swap 动态换入换出 Transformer 块，FP8 + BlockSwap 可在更低显存上跑大模型
-- **批量与断点**：单文件修复 / 文件夹批量扫描，批量任务支持断点续跑
-- **多语言界面**：中文、繁体中文、英文、日文、法文
+</div>
 
-## 快速体验
+---
 
-| 想做什么 | 入口 |
-|---|---|
-| 在线体验界面（无需 GPU / 模型） | [模拟演示站](https://reserendipity.github.io/SeedVR2-Lite/) |
-| 从零开始安装运行（保姆级教程） | [完整文档站](https://reserendipity.github.io/SeedVR2-Lite/docs/) |
-| 下载桌面版 / 便携包 | [GitHub Releases](https://github.com/ReSerendipity/SeedVR2-Lite/releases) |
-| 模型格式 / 直链 / 显存对比 | [模型选型](#模型选型) |
+## 中文
 
-## 桌面版（对外分发，推荐）
+### 项目简介
 
-对外正式分发方式为桌面版：Tauri v2 原生窗口 + 7z 分卷离线完整包，解压即用、无需安装程序。
+SeedVR2-Lite 把字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开源的 [SeedVR2](https://huggingface.co/ByteDance-Seed) 单步扩散修复模型，包装成一个**独立运行的本地 Web 应用**：上传一张图片或一段视频，即可完成超分辨率与细节增强，数据全程不出本机。它不依赖 ComfyUI，也不需要任何外部推理服务。
 
-- **离线完整包**：[Releases v1.6.0](https://github.com/ReSerendipity/SeedVR2-Lite/releases/tag/v1.6.0) 的 `SeedVR2-Desktop-v1.6.0-win-x64.7z.001/.002/.003` 三个分卷 + `manifest.json` + `SHA256SUMS.txt` + `unpack_desktop.ps1` + `portable_bundle_lib.ps1`，下载后执行 `powershell -ExecutionPolicy Bypass -File .\unpack_desktop.ps1 -TargetDir D:\SeedVR2`，解压即用——已含全部依赖与 3B MXFP8 模型，无需联网
-- **原生体验**：独立窗口、系统托盘（显示/隐藏/检查更新/退出）、Windows Toast 通知、文件拖拽、窗口状态记忆
-- **增量更新**：托盘「检查更新」自动下载应用代码更新包（约 1.4 MB）→ 校验 → 原子换载 → 重启，失败自动回滚
-- **单实例与崩溃恢复**：重复启动自动聚焦已有窗口；Python 后端意外退出自动重启
-- **免安装**：解压目录可整体拷贝/移动，无安装卸载程序、无注册表遗留
+对外正式分发为 **Tauri v2 桌面版**（离线完整包解压即用）；开发者也可以直接用源码或便携分卷包在浏览器中运行。当前稳定版本为 **v1.6.1**。
 
-> 桌面版与网页版共享同一套 Python 后端与模型。当前稳定版 **v1.6.1**（[Releases](https://github.com/ReSerendipity/SeedVR2-Lite/releases/latest)）。
->
-> **取包提醒**：`/releases/latest` 只有增量更新包，首次安装不在那里。按用途取包：
->
-> | 你要什么 | 去哪儿拿 |
-> |---|---|
-> | 首次安装桌面版（完整包 3 个分卷，约 4.8 GB） | [v1.6.0](https://github.com/ReSerendipity/SeedVR2-Lite/releases/tag/v1.6.0)：`SeedVR2-Desktop-v1.6.0-win-x64.7z.001/.002/.003` + `manifest.json` + `SHA256SUMS.txt(.gpg)` + `unpack_desktop.ps1` + `portable_bundle_lib.ps1` |
-> | 已装用户走托盘「检查更新」（约 1.4 MB） | [`/releases/latest`](https://github.com/ReSerendipity/SeedVR2-Lite/releases/latest)：`app-v1.6.1.zip`（+ `.sha256`） |
-> | 便携分卷包（`core` / `torch` / `model-*`，约 5.6 GB） | [v1.5.6](https://github.com/ReSerendipity/SeedVR2-Lite/releases/tag/v1.5.6)：5 个分卷 + `manifest.json` + `SHA256SUMS.txt(.gpg)` + 两个解包脚本。代码等同 v1.5.7，**不含**其后合入主干的修复（见下节说明） |
+### 核心特性
 
-## 网页版 / 便携包（开发与内部使用）
+- **视频与图像修复**：基于单步扩散模型的超分辨率与细节增强，本地推理、数据不出机器。
+- **三档模型**：3B / 7B / 7B-Sharp，支持 FP16 / FP8 及 MXFP8 / NVFP4 / INT8-convrot 量化变体（`.safetensors`，不兼容 GGUF）。
+- **显存友好**：GPU Block Swap 在推理时动态换入换出 Transformer 块；3B FP8 可在 8 GB 显存起步运行。
+- **批量与断点续跑**：单文件修复 + 文件夹批量扫描，批量任务在 `data/checkpoints/` 记录进度，中断后可续跑。
+- **开箱即用的桌面版**：Tauri 原生窗口、系统托盘、Windows Toast 通知、文件拖拽、单实例与崩溃自动恢复、托盘增量更新。
+- **多语言与实时监控**：界面支持简体中文、繁体中文、英文、日文、法文；GPU/显存/内存与任务进度经 SSE 实时推送。
 
-不想装 Python、不想配环境时，可用便携分卷包（已含便携 Python、全部依赖与 3B FP8 模型）或直接源码运行：
+### 界面展示
 
-> **资产位置与基线**：便携分卷包公开挂在 [v1.5.6](https://github.com/ReSerendipity/SeedVR2-Lite/releases/tag/v1.5.6)（该 tag 当初误发到增量通道，现作为便携包入口保留；`/releases/latest` 指向的 v1.5.7 只有 1.4 MB 增量包，不含分卷）。该包代码等同 **v1.5.7**，因此**不含**其后合入主干的修复——其中与安全相关的是 i18n 语言代码可越出 `locales/` 读取任意 `.json`（`POST /api/system/locale` 的 `locale` 字段此前无校验）与 checkpoint 任务 ID 的 sink 侧加固。应用只绑 `127.0.0.1` 且有 basic auth / CSRF / 限流，暴露面有限，但对外的正式分发仍建议用上一节的桌面版。
+> 以下截图均取自真实 Web UI（浅色主题）。
 
-源码运行（不依赖分卷包）：`python -m venv .venv` → `.venv\Scripts\pip install -r requirements.txt`（torch 需装 CUDA 版，命令见[完整文档站](https://reserendipity.github.io/SeedVR2-Lite/docs/)）→ `.venv\Scripts\python app/integrated_app/app_server.py`，浏览器打开 <http://127.0.0.1:7870>。
+**首页仪表盘** —— 一句话定位、入口卡片、当前模型与 GPU 状态、最近任务列表。
 
-便携分卷包步骤：
+![首页仪表盘](docs/assets/readme-seedvr2-lite-1-home.png)
 
-1. 从 [Releases](https://github.com/ReSerendipity/SeedVR2-Lite/releases) 下载 `core` / `torch` / `model-shared` / `model-fp8` 四个组件的**全部** `.00N` 分卷，外加 `manifest.json`、`SHA256SUMS.txt`、`unpack_portable_bundle.ps1`、`portable_bundle_lib.ps1`（合计约 5.6 GB）
-2. 放进同一文件夹，执行 `powershell -ExecutionPolicy Bypass -File .\unpack_portable_bundle.ps1 -TargetDir D:\SeedVR2`
-3. 双击 `SeedVR2-Portable\start-portable.bat`，浏览器打开 <http://127.0.0.1:7870>
+**修复工作台** —— 左侧拖拽上传图片/视频，右侧参数面板选择模型、输出分辨率与 VAE，一键「上传并修复」。
 
-要求：Windows x64 + NVIDIA 显卡（显存 ≥ 8 GB）+ 磁盘 ≥ 15 GB。图片修复开箱即用；视频修复需自行安装 FFmpeg 并加入 PATH（许可证原因不随包分发，见 [NOTICE](NOTICE)）。
+![修复工作台](docs/assets/readme-seedvr2-lite-2-workbench.png)
 
-## 界面预览
+**高级参数** —— 展开 DiT 配置（最大分辨率、色彩校正、块交换数量、批处理大小），并可一键「VRAM 预检 & 推荐参数」。
 
-*浅色主题 — 首页仪表盘 / 修复工作台 / 历史记录 / 系统状态 / 模型设置 / 多语言切换*
+![高级参数](docs/assets/readme-seedvr2-lite-3-params.png)
 
-![首页浅色](docs/screenshots/current/light/01-home-full.png)
-![修复浅色](docs/screenshots/current/light/02-restore-single-default.png)
-![历史记录浅色](docs/screenshots/current/light/06-history-table-view.png)
-![系统状态浅色](docs/screenshots/current/light/08-system-status-full.png)
-![设置浅色](docs/screenshots/current/light/09-settings-full.png)
-![多语言切换浅色](docs/screenshots/current/light/11-locale-dropdown-open.png)
+**历史记录** —— 表格视图管理已完成任务，支持状态筛选与结果回看。
 
-## 快速上手（约 5 分钟）
+![历史记录](docs/assets/readme-seedvr2-lite-4-history.png)
 
-目标：一台 Windows 电脑，从空白到打开网页完成第一次修复，无需编程基础。
+**系统状态** —— GPU/显存/利用率、系统内存、模型加载状态与运行信息实时监控。
 
-1. **安装 Python 3.12+**：<https://www.python.org/downloads/>，安装时勾选 "Add python.exe to PATH"
-2. **获取代码**：`git clone https://github.com/ReSerendipity/SeedVR2-Lite.git`（或页面 `Code → Download ZIP`）
-3. **安装依赖**：Windows 双击 `install.bat`；或开发者用 `uv sync`（读取 `pyproject.toml`，自动创建 .venv 并安装 CUDA PyTorch；驱动较旧时改 `pyproject.toml` 中 `[[tool.uv.index]]` 的 url 为 `cu121` / `cu132` 后重跑）
-4. **下载模型**：`python scripts/download_model.py --size 3b`（3B + VAE + 文本嵌入，约 20 GB；7B 用 `--size 7b`，7B-Sharp 用 `--size 7b_sharp`）
-5. **启动**：双击 `start.bat`，浏览器自动打开 <http://127.0.0.1:7870>
-6. **开始修复**：进入「修复工作台」上传图片/视频 → 开始修复；「系统状态」页实时查看 GPU 占用与进度
+![系统状态](docs/assets/readme-seedvr2-lite-5-system-status.png)
 
-> 大陆网络下载慢：先执行 `set HF_ENDPOINT=https://hf-mirror.com` 再重跑下载脚本。
+**整体架构** —— 浏览器/桌面壳 → FastAPI 后端 → 扩散推理引擎（DiT + Video VAE + Block Swap），本地存储模型、历史与输出。
 
-## 模型选型
+![架构图](docs/assets/readme-seedvr2-lite-7-architecture.svg)
 
-**格式**：`.safetensors`（非 GGUF / PTH）。精度支持 **FP16**（全精度，画质最佳）、**FP8**（E4M3FN，省显存）及 **INT8-convrot / MXFP8 / NVFP4** 三种 Comfy-Org 量化变体（加载期反量化，2026-09-02 真机验证）；不兼容 GGUF / INT4（修复类扩散模型中会明显损伤画质）。
+### 快速开始
 
-| 模型 | 精度 | 最低显存 | 约内存 | 效果 |
-|---|---|---|---|---|
-| SeedVR2-3B | FP16 | 16 GB | ~12 GB | 最佳 |
-| SeedVR2-3B | FP8 | 8 GB | ~8 GB | 略降 |
-| SeedVR2-7B | FP16 | 24 GB | ~20 GB | 最佳 |
-| SeedVR2-7B | FP8 | 12 GB | ~12 GB | 略降 |
-| SeedVR2-7B-Sharp | FP16 | 24 GB | ~20 GB | 最佳（细节增强） |
-| SeedVR2-7B-Sharp | FP8 | 12 GB | ~12 GB | 略降 |
+> 推荐普通用户直接下载[桌面版离线完整包](https://github.com/ReSerendipity/SeedVR2-Lite/releases)，解压即用。以下为从源码运行的路径。
 
-配套必需文件（所有模型共用）：`ema_vae_fp16.safetensors`（视频 VAE）、`pos_emb.pt` / `neg_emb.pt`（文本嵌入）。完整下载方式、直链与量化变体说明见 [文档站](https://reserendipity.github.io/SeedVR2-Lite/docs/)。
+**1. 环境**
 
-**选型建议**：显存 ≤ 12 GB 选 3B FP8（最低 8 GB）或 7B FP8 + BlockSwap；16–24 GB 选 3B FP16 或 7B FP8；≥ 24 GB 选 7B-Sharp FP16。
+- Windows x64、NVIDIA CUDA GPU（必须，不支持纯 CPU 推理）、Python 3.12+。
+- 磁盘预留 ≥ 15 GB；视频修复需自行安装 FFmpeg 并加入 PATH（因许可证原因不随包分发，见 [NOTICE](NOTICE)）。
 
-> FP8 当前仅作权重存储格式，推理仍按 FP16/FP32 加载，故 FP8 与 FP16 推理速度基本相同；真正影响速度的是 BlockSwap（降低 20–70%）、分辨率（2048² 比 1024² 慢 3–4 倍）与帧数。
+**2. 安装依赖**
 
-## 环境要求
+```bash
+git clone https://github.com/ReSerendipity/SeedVR2-Lite.git
+cd SeedVR2-Lite
+
+# Windows 一键安装（推荐）
+install.bat
+
+# 或开发者用 uv（自动创建 .venv 并安装 CUDA 版 PyTorch）
+uv sync
+# 驱动较旧时，改 pyproject.toml 中 [[tool.uv.index]] 的 url 为 cu121 / cu132 后重跑
+```
+
+**3. 下载模型**
+
+```bash
+python scripts/download_model.py --size 3b      # 3B + VAE + 文本嵌入，约 20 GB
+# 7B：--size 7b ；7B-Sharp：--size 7b_sharp
+```
+
+大陆网络下载慢时先设置镜像：`set HF_ENDPOINT=https://hf-mirror.com` 再重跑下载脚本。权重必须放在 `model/` **根目录**（不要建子文件夹）。
+
+**4. 启动**
+
+```bash
+start.bat
+# 或：python app/integrated_app/app_server.py
+```
+
+浏览器打开 <http://127.0.0.1:7870>（端口被占用时自动顺延，以日志打印的地址为准）。
+
+**5. 最小验证**
+
+进入「修复工作台」上传一张图片 → 点击「上传并修复」→ 在「系统状态」页看到 GPU 占用上升、「历史记录」中出现一条已完成任务，即说明推理链路打通。
+
+### 系统要求与兼容性
 
 | 项目 | 要求 |
 |---|---|
-| 操作系统 | Windows（推荐） |
-| GPU | NVIDIA CUDA GPU（必须，不支持 CPU 推理） |
-| Python | 系统 Python 3.12+（推荐），或自行下载 WinPython 3.12 解压到项目根目录 `WPy64-312101/`（可运行 `scripts\setup_winpython.py` 自动配置） |
+| 操作系统 | Windows（推荐；源码/Linux 可经 Docker 运行） |
+| GPU | NVIDIA CUDA GPU（必须） |
+| Python | 3.12+（或使用桌面版内置便携 Python） |
+| 显存 | 3B FP8 最低 8 GB；3B FP16 约 16 GB；7B FP8 约 12 GB；7B FP16 约 24 GB |
+| 磁盘 | ≥ 15 GB |
 
-### 常见问题
+模型精度对照（`.safetensors`）：
 
-| 问题 | 解决 |
-|---|---|
-| 模型文件未找到 | 权重必须放 `model/` **根目录**（不要建子文件夹），文件名与下载脚本输出一致 |
-| `install.bat` 装 PyTorch 失败 | 手动执行 `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128`（按 `nvidia-smi` 换成对应 CUDA 版本） |
-| 显存不足（OOM） | 改用 FP8 模型 / 开启 BlockSwap / 降低输出分辨率 |
-| 端口被占用 | 应用自动寻找下一个可用端口，以日志打印地址为准 |
-| HuggingFace 下载慢 | 设置 `HF_ENDPOINT=https://hf-mirror.com` 后重跑下载脚本 |
+| 模型 | 精度 | 最低显存 | 约内存 |
+|---|---|---|---|
+| SeedVR2-3B | FP16 | 16 GB | ~12 GB |
+| SeedVR2-3B | FP8 | 8 GB | ~8 GB |
+| SeedVR2-7B | FP8 | 12 GB | ~12 GB |
+| SeedVR2-7B-Sharp | FP16 | 24 GB | ~20 GB |
 
-## 技术特点
+> FP8 当前仅作权重存储格式，推理仍按 FP16/FP32 加载，故与 FP16 速度基本一致；真正影响速度的是 BlockSwap、输出分辨率与帧数。完整显存对比见[文档站](https://reserendipity.github.io/SeedVR2-Lite/docs/)。
 
-| 特性 | 说明 |
-|---|---|
-| 单步扩散修复 | 基于扩散模型的单步推理，高效完成视频与图像超分辨率修复 |
-| 独立运行 | 脱离 ComfyUI，FastAPI + Jinja2 提供完整 Web UI |
-| 多模型配置 | 3B / 7B / 7B-Sharp × FP16 / FP8，含 Comfy-Org 量化变体 |
-| DiT 架构 | MM-DiT（多模态 Diffusion Transformer）+ Window Attention + RoPE |
-| Video VAE | 基于 SD3 架构，支持时间分块与内存优化 |
-| GPU Block Swap | 推理时 GPU/CPU 动态换入换出 Transformer 块，大幅降低显存需求 |
-| 批量处理 | 单文件上传修复 + 文件夹批量扫描，支持断点续跑（`data/checkpoints/`） |
-| VRAM 预检 | 按输入分辨率/模型/显存自动推荐参数组合（FP16 → FP8 → FP8+BlockSwap） |
-| 多语言界面 | 中文、繁体中文、英文、日文、法文（`app/integrated_app/locales/`，三层回退） |
-| 实时监控 | GPU 状态、系统内存、任务进度 SSE 实时推送 |
+### 使用示例
 
-### 其他
+```bash
+# Docker 本地构建运行
+docker build -t seedvr2 .
+docker run --gpus all -p 7870:7870 seedvr2
 
-- **模型共享**：`config.yaml` 的 `model.model_source_mode` 支持 `portable`（项目内 `model/`，默认）与 `shared`（外部共享目录）两种模式
-- **环境变量**：根目录 `.env`（模板见 `.env.example`），常用 `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`
-- **Docker（本地构建）**：`docker build -t seedvr2 . && docker run --gpus all -p 7870:7870 seedvr2`
-- **Docker（GHCR 镜像）**：`docker pull ghcr.io/reserendipity/seedvr2-lite:<版本>`（镜像随 `v*` 标签发布，如 `v1.5.7` 对应 tag `1.5.7`），再 `docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-lite:<版本>`
-
-## 项目结构（概览）
-
-```
-SeedVR2/
-├── app/integrated_app/   # 核心应用（FastAPI、引擎、路由、模板、static、locales、middleware）
-├── common/               # 通用工具库（扩散调度、分布式、种子）
-├── model_lib/            # 模型定义（dit / dit_v2 / video_vae_v3）
-├── configs_3b/  configs_7b/   # 3B / 7B 模型配置
-├── model/                # 预训练模型存放目录
-├── docs/  website/  demo/     # 文档 / VitePress 文档站源码 / 在线模拟演示
-├── scripts/  launcher/  perf/ # 辅助脚本 / 便携启动器 / 性能基准
-├── tests/                # 测试套件（pytest + Playwright）
-└── config.yaml  pyproject.toml
+# 或使用随 v* 标签发布的 GHCR 镜像
+docker pull ghcr.io/reserendipity/seedvr2-lite:1.6.1
+docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-lite:1.6.1
 ```
 
-## 安全与合规
+环境变量模板见 `.env.example`，常用 `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`。
 
-**网络绑定警告**：Web UI 默认仅绑定 `127.0.0.1`（`config.yaml` 的 `server.host`），且默认未启用用户认证。**严禁改为 `0.0.0.0` 或公网 IP**——默认配置下直接暴露，将导致任意调用推理 API 占用 GPU、上传恶意文件、下载 outputs/ 与 uploads/ 内容。应用自带 Basic Auth（可按需开启）与请求限流（默认 30 次/分钟）；如需局域网共享，请开启 Basic Auth 并在反向代理后启用 HTTPS。
+### 常见问题（FAQ）
 
-**合规说明**：使用前请阅读 [USER_AGREEMENT.md](docs/USER_AGREEMENT.md)。模型权重（SeedVR/SeedVR2）为 Apache-2.0；FFmpeg 为本地开发依赖，不随仓库分发（见 [NOTICE](NOTICE)）。对外分发物随附组件的许可与归属清单见 [NOTICE](NOTICE)；输出**画面内无可见标识、文件名沿用输入名**，内容标识走文件元数据与不可感知水印两层（实现与边界见 `docs/AI应用分发安全加固指南.md`）。
+- **模型文件未找到？** 权重必须放 `model/` 根目录，文件名与下载脚本输出一致，不要自行建子文件夹或改名。
+- **显存不足（OOM）？** 改用 FP8 模型、开启 GPU BlockSwap、或降低输出分辨率；工作台的「VRAM 预检 & 推荐参数」会自动给出组合。
+- **`install.bat` 装 PyTorch 失败？** 手动执行 `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128`，按 `nvidia-smi` 换成对应 CUDA 版本。
+- **视频修复没有输出？** 需自行安装 FFmpeg 并加入 PATH（图片修复开箱即用）。
+- **HuggingFace 下载慢？** 设置 `HF_ENDPOINT=https://hf-mirror.com` 后重跑下载脚本。
 
-**第三方声明**：本项目是独立的第三方社区工具，基于字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开源的 SeedVR2 模型（Apache-2.0）构建，与字节跳动及其 Seed 团队无隶属、赞助或官方合作关系；与 seedvr2.com / seedvr2.net 等付费商业站点无任何关系；模型权重仅从官方来源（Hugging Face `ByteDance-Seed/SeedVR2-3B` / `SeedVR2-7B`）获取。
+### 安全与合规
 
-## 技术栈
+> **网络绑定警告**：Web UI 默认仅绑定 `127.0.0.1`（`config.yaml` 的 `server.host`），默认未开启认证。**严禁改为 `0.0.0.0` 或公网 IP**，否则任何人都可调用推理 API、上传恶意文件或下载 outputs/uploads。如需局域网共享，请开启 Basic Auth 并在反向代理后启用 HTTPS。
 
-| 层级 | 技术 |
+使用前请阅读 [USER_AGREEMENT.md](docs/USER_AGREEMENT.md)。本项目是独立第三方社区工具，与字节跳动及其 Seed 团队无隶属、赞助或官方合作关系，也与 seedvr2.com 等付费商业站点无关；模型权重仅从官方来源（Hugging Face `ByteDance-Seed/SeedVR2-3B` / `SeedVR2-7B`）获取。组件许可与归属清单见 [NOTICE](NOTICE)。
+
+### 文档与治理
+
+- **文档站**：完整安装/使用/模型选型文档见 <https://reserendipity.github.io/SeedVR2-Lite/docs/>；仓库内另有 [用户手册](docs/用户手册.md) 与 [开发者指南](docs/开发者指南.md)。
+- **治理规范**：组织级治理与贡献约定见 [ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance) 与 [贡献指南](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md)。
+- **架构决策（ADR）**：关键技术选型记录于 [`docs/adr/`](docs/adr/)。
+- **发布治理**：版本发布、增量更新与回滚见 [release-governance](docs/release-governance.md)、[发布检查清单](docs/发布检查清单.md)、[增量更新发布手册](docs/增量更新发布手册.md) 与 [rollback_sop](docs/rollback_sop.md)；版本与变更见 [CHANGELOG.md](CHANGELOG.md)。
+
+### 贡献与支持
+
+参与贡献请遵循上述[组织级贡献指南](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md)（Conventional Commits + DCO 签名）。Issue 与 Discussion 请在仓库内发起；安全问题请按仓库安全政策私下报告，勿公开提 issue。
+
+- 模拟演示站（无需 GPU/模型）：<https://reserendipity.github.io/SeedVR2-Lite/>
+- Releases（桌面版 / 便携包 / 增量更新）：<https://github.com/ReSerendipity/SeedVR2-Lite/releases>
+
+### 许可证
+
+本项目采用 [Apache License 2.0](LICENSE) 开源协议。Copyright 2024-2026 ReSerendipity。
+
+---
+
+## English
+
+### Introduction
+
+SeedVR2-Lite packages the [SeedVR2](https://huggingface.co/ByteDance-Seed) one-step diffusion restoration model (jointly open-sourced by ByteDance's Seed team and NTU S-Lab) into a **standalone local web app**: upload an image or video and get super-resolution / detail enhancement on the spot, with all data staying on your machine. It does **not** depend on ComfyUI or any external inference service.
+
+The supported distribution is a **Tauri v2 desktop build** (offline bundle, extract-and-run); developers can also run it from source or via the portable bundle in a browser. Current stable release: **v1.6.1**.
+
+### Highlights
+
+- **Video & image restoration**: local super-resolution and detail enhancement via a one-step diffusion model; data never leaves the machine.
+- **Three model tiers**: 3B / 7B / 7B-Sharp, with FP16 / FP8 and MXFP8 / NVFP4 / INT8-convrot quantized variants (`.safetensors`; GGUF is not supported).
+- **VRAM friendly**: GPU Block Swap dynamically swaps Transformer blocks in/out during inference; 3B FP8 starts from 8 GB VRAM.
+- **Batch & resumable**: single-file repair plus folder batch scanning, with progress persisted under `data/checkpoints/`.
+- **Extract-and-run desktop**: native Tauri window, system tray, Windows toast notifications, drag & drop, single-instance + auto-restart, tray-based incremental updates.
+- **i18n & live monitoring**: UI in Simplified/Traditional Chinese, English, Japanese and French; GPU/VRAM/memory and task progress streamed over SSE.
+
+### Screenshots
+
+> All screenshots are taken from the real web UI (light theme).
+
+**Home dashboard** — tagline, entry cards, current model/GPU status and recent tasks.
+
+![Home dashboard](docs/assets/readme-seedvr2-lite-1-home.png)
+
+**Restore workbench** — drag & drop upload on the left; model / output resolution / VAE panel on the right, with one-click "upload & restore".
+
+![Restore workbench](docs/assets/readme-seedvr2-lite-2-workbench.png)
+
+**Advanced parameters** — DiT config (max resolution, color correction, block-swap count, batch size) plus a one-click "VRAM preflight & recommendation".
+
+![Advanced parameters](docs/assets/readme-seedvr2-lite-3-params.png)
+
+**History** — table view of completed tasks with status filters and result review.
+
+![History](docs/assets/readme-seedvr2-lite-4-history.png)
+
+**System status** — real-time GPU/VRAM/utilization, system memory, model load state and runtime info.
+
+![System status](docs/assets/readme-seedvr2-lite-5-system-status.png)
+
+**Architecture** — browser/desktop shell → FastAPI backend → diffusion engine (DiT + Video VAE + Block Swap), with local model/history/output storage.
+
+![Architecture](docs/assets/readme-seedvr2-lite-7-architecture.svg)
+
+### Quick start
+
+> Regular users should download the [desktop offline bundle](https://github.com/ReSerendipity/SeedVR2-Lite/releases) and extract it. Below is the from-source path.
+
+**1. Requirements**
+
+- Windows x64, an NVIDIA CUDA GPU (required; pure CPU inference is not supported), Python 3.12+.
+- ≥ 15 GB disk; video restoration requires FFmpeg on PATH (not bundled for licensing reasons, see [NOTICE](NOTICE)).
+
+**2. Install dependencies**
+
+```bash
+git clone https://github.com/ReSerendipity/SeedVR2-Lite.git
+cd SeedVR2-Lite
+
+# Windows one-click (recommended)
+install.bat
+
+# Or with uv (creates .venv and installs CUDA PyTorch)
+uv sync
+# For older drivers, change the [[tool.uv.index]] url in pyproject.toml to cu121 / cu132 and rerun
+```
+
+**3. Download weights**
+
+```bash
+python scripts/download_model.py --size 3b      # 3B + VAE + text embeddings, ~20 GB
+# 7B: --size 7b ; 7B-Sharp: --size 7b_sharp
+```
+
+Slow downloads in mainland China: set `set HF_ENDPOINT=https://hf-mirror.com` first, then rerun. Weights must sit in the `model/` **root** (no subfolders).
+
+**4. Launch**
+
+```bash
+start.bat
+# or: python app/integrated_app/app_server.py
+```
+
+Open <http://127.0.0.1:7870> (auto-increments if busy; use the address printed in the log).
+
+**5. Minimal verification**
+
+In the workbench, upload an image → click "upload & restore" → on the "System status" page you should see GPU usage rise and a completed task appear in "History". That confirms the inference pipeline works.
+
+### Requirements & compatibility
+
+| Item | Requirement |
 |---|---|
-| 推理框架 | PyTorch (CUDA)、自定义 DiT、Video VAE (SD3) |
-| 后端 | Python 3.12、FastAPI、Uvicorn |
-| 前端 | Jinja2 模板、HTMX、原生 CSS/JS |
-| 数据 | SQLite（历史记录）、SSE 实时推送 |
-| 工具链 | Ruff、Black、Mypy、Pytest、Playwright |
+| OS | Windows (recommended; Linux via Docker from source) |
+| GPU | NVIDIA CUDA GPU (required) |
+| Python | 3.12+ (or the portable Python bundled in the desktop build) |
+| VRAM | 3B FP8 from 8 GB; 3B FP16 ~16 GB; 7B FP8 ~12 GB; 7B FP16 ~24 GB |
+| Disk | ≥ 15 GB |
 
-## 贡献
+Model precision (`.safetensors`):
 
-参与贡献请遵循 [组织级贡献指南](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md)（Conventional Commits + DCO 签名）。
+| Model | Precision | Min VRAM | RAM (approx.) |
+|---|---|---|---|
+| SeedVR2-3B | FP16 | 16 GB | ~12 GB |
+| SeedVR2-3B | FP8 | 8 GB | ~8 GB |
+| SeedVR2-7B | FP8 | 12 GB | ~12 GB |
+| SeedVR2-7B-Sharp | FP16 | 24 GB | ~20 GB |
 
-## 许可证
+> FP8 is currently a weight storage format only; inference still runs at FP16/FP32, so speed is essentially the same as FP16. What actually affects speed is BlockSwap, output resolution and frame count. See the [docs site](https://reserendipity.github.io/SeedVR2-Lite/docs/) for the full VRAM table.
 
-本项目采用 [Apache License 2.0](LICENSE) 开源协议。版权所有 Copyright 2024-2026 ReSerendipity。
+### Usage examples
+
+```bash
+# Build & run locally with Docker
+docker build -t seedvr2 .
+docker run --gpus all -p 7870:7870 seedvr2
+
+# Or use the GHCR image published with v* tags
+docker pull ghcr.io/reserendipity/seedvr2-lite:1.6.1
+docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-lite:1.6.1
+```
+
+Environment variables: see `.env.example`; a common one is `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`.
+
+### FAQ
+
+- **Model not found?** Weights must be in the `model/` root with the exact filenames printed by the download script; do not create subfolders or rename files.
+- **Out-of-memory (OOM)?** Switch to an FP8 model, enable GPU BlockSwap, or lower the output resolution; the workbench's "VRAM preflight" recommends a combination automatically.
+- **`install.bat` fails to install PyTorch?** Run `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128`, adjusting the CUDA suffix to match `nvidia-smi`.
+- **No output for videos?** Install FFmpeg and put it on PATH (image restoration works out of the box).
+- **Slow HuggingFace download?** Set `HF_ENDPOINT=https://hf-mirror.com` and rerun the download script.
+
+### Security & compliance
+
+> **Network binding warning**: the web UI binds to `127.0.0.1` only (`server.host` in `config.yaml`) and ships without authentication by default. **Never change it to `0.0.0.0` or a public IP** — otherwise anyone can invoke the inference API, upload malicious files, or download outputs/uploads. For LAN sharing, enable Basic Auth and put the app behind an HTTPS reverse proxy.
+
+Please read [USER_AGREEMENT.md](docs/USER_AGREEMENT.md) before use. This is an independent third-party community tool with no affiliation to ByteDance or its Seed team, and no relation to commercial sites such as seedvr2.com; weights are fetched only from official sources (Hugging Face `ByteDance-Seed/SeedVR2-3B` / `SeedVR2-7B`). Third-party licenses and attributions are listed in [NOTICE](NOTICE).
+
+### Documentation & governance
+
+- **Docs site**: full install / usage / model-selection docs at <https://reserendipity.github.io/SeedVR2-Lite/docs/>; in-repo [user manual](docs/用户手册.md) and [developer guide](docs/开发者指南.md).
+- **Governance**: org-level governance and contribution conventions live in [ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance) and the [contributing guide](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md).
+- **Architecture decisions (ADR)**: key design records are under [`docs/adr/`](docs/adr/).
+- **Release governance**: versioning, incremental updates and rollback are covered by [release-governance](docs/release-governance.md), the [release checklist](docs/发布检查清单.md), the [incremental-update manual](docs/增量更新发布手册.md) and [rollback_sop](docs/rollback_sop.md); see [CHANGELOG.md](CHANGELOG.md) for versions and changes.
+
+### Contributing & support
+
+Follow the [org-level contributing guide](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md) (Conventional Commits + DCO sign-off). Open issues and discussions in the repository; report security problems privately per the security policy rather than in a public issue.
+
+- Mock demo (no GPU/model needed): <https://reserendipity.github.io/SeedVR2-Lite/>
+- Releases (desktop / portable bundle / incremental updates): <https://github.com/ReSerendipity/SeedVR2-Lite/releases>
+
+### License
+
+Released under the [Apache License 2.0](LICENSE). Copyright 2024-2026 ReSerendipity.
