@@ -42,6 +42,8 @@ tests/blob-report/
 # Auto-captured screenshots (output of tests/capture-screenshots.js)
 /screenshots/
 /screenshots-new/
+# 截图归档为本地暂存，不入库；README 展示图统一放 docs/assets/readme-*（治理 §8.1）
+docs/screenshots/
 *.tmp
 *.bak
 *.orig
