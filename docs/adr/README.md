@@ -11,6 +11,7 @@
 | [0002](0002-test-layering-actual.md) | 测试分层实测（pytest specs + Playwright） | Implemented | 2026-08-27 |
 | [0003](0003-tauri-desktop-shell-migration.md) | 对外分发形态采用 Tauri v2 桌面壳（追溯） | Implemented | 2026-10-15 |
 | [0004](0004-incremental-updater-trust-root.md) | 应用代码增量更新器与分层发布信任根（追溯） | Implemented | 2026-10-15 |
+| [0005](0005-event-bus-vs-progress-listeners.md) | 事件总线不引入 VOSR2 的 EventBus（保留双层结构） | Implemented | 2026-10-28 |
 
 ## 何时必须写 ADR（满足任一即写）
 
