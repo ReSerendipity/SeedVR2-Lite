@@ -1154,8 +1154,13 @@ class SeedVR2Engine(
                 "offload_device": vae_cfg.get("offload_device", "cpu"),
                 "cache_model": vae_cfg.get("cache_model", True),
                 "auto_tile_size": vae_cfg.get("auto_tile_size", True),
-                "gaussian_blend": vae_cfg.get("gaussian_blend", True),
-                "groupnorm_accumulate": vae_cfg.get("groupnorm_accumulate", True),
+                # 2026-10-28：移除 gaussian_blend / groupnorm_accumulate 两个键。
+                # 它们此前被读进本字典但没有任何消费方（_vae_pipeline 只读
+                # encode/decode_tiled、tile_size/overlap、auto_tile_size、offload、
+                # cache），日志却打印 gaussian_blend=True —— 让用户以为混合可切换。
+                # tile 接缝由上游 tiled_decode 的 raised-cosine 斜坡融合负责
+                # （model_lib/video_vae_v3/modules/attn_video_vae.py 的 tiled_decode），
+                # 不存在"关掉混合"的开关。详见 docs/adr/0006。
             }
         self._vae_tiled_config = vae_tiled_config
         logger.info(

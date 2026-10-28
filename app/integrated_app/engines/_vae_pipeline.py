@@ -296,8 +296,13 @@ class _VAEPipelineMixin:
         #     apply_accumulated_stats() 因此是空操作；
         #   - TiledVAEHook 找的 vae._internal_tile_state 在 VAE 上不存在，
         #     _last_tile_outputs 恒为 None，Gaussian 混合分支永不执行。
-        # tile 接缝目前由 VAE 自带的余弦斜坡融合（attn_video_vae.tiled_decode）负责，
-        # 移除死代码只影响日志真实性，不改变输出。
+        # tile 接缝由 VAE 自带的 raised-cosine 斜坡融合负责：见
+        # model_lib/video_vae_v3/modules/attn_video_vae.py 的 tiled_decode
+        # （ramp_cache = 0.5 - 0.5*cos(t*pi)，按 count 归一化叠加）。
+        # 2026-10-28 复核：该融合确实生效（下方 decode 调用传 tiled=True 且
+        # tile_overlap>0 时即走此路径），因此不存在"关掉混合"的开关，也不该
+        # 再叠一层 Gaussian —— 那只会替换掉已验证的融合并加大上游同步成本。
+        # 详见 docs/adr/0006。
 
         if isinstance(scale, list):
             scale = torch.tensor(scale, device=self.device, dtype=dtype)
