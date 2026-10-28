@@ -1,6 +1,6 @@
 {
-  "version": "1.6.1",
-  "release_date": "2026-10-02",
+  "version": "1.7.0",
+  "release_date": "2026-10-28",
   "minimum_shell_version": "1.0.0",
-  "changelog": "修复标题字体切换器选了没反应（--sv-font/--sv-font-display 变量名错位回归）；修复历史统计不排除回收站记录（删除后统计卡数字不再回落）；修复 start.bat --dev 无法启动（新增 dev_runner 专设开发入口，uvicorn --reload 可用）。"
+  "changelog": "新增 Ctrl+V 粘贴上传（截图直接入队，五语言提示）；新增服务端输出长边硬上限 inference.max_output_side（默认 6144，超限前置拒绝并给出可用上限）；移除 gaussian_blend / groupnorm_accumulate 两个无消费方的配置键（接缝融合一直由上游余弦斜坡负责，见 ADR-0006）；记录事件总线不引入 VOSR2 EventBus 的决策（ADR-0005）。"
 }

@@ -4,15 +4,19 @@
 > `docs/reports/`、`docs/_devarchive/`、`examples/`、`precheck.ps1` 均为维护者本地文件，未随仓库分发；
 > 对外可执行的禁区与门禁口径见 `docs/CODING_STANDARDS.md` 第 5 节。历史记录按原样保留，不改写。
 
-## [Unreleased]
+## [1.7.0] - 2026-10-28（未发版）
 
 ### Added
 
+* **Ctrl+V 粘贴上传**：从截图工具/网页复制图片后在工作台直接粘贴即入队，省掉「保存到磁盘再选文件」。`app.js` 新增 `setupPasteUpload`，三类情况不接管（焦点在输入框/可编辑区、上传区不可见、剪贴板无图片）；剪贴板图片常无文件名（Firefox 甚至给 `image.png`），统一重命名为 `pasted-<时间戳>.<ext>` 否则后端按扩展名拒收；与拖拽/点选复用同一套回调，两条路径行为不分叉。五套语言包补 `restore.pasted`。（`a3c5f8c`）
+* **服务端输出长边硬上限 `inference.max_output_side`**（默认 6144，0=不限制）：`resolution` 由客户端决定、`max_resolution` 只是请求侧上限，此前传 `resolution=20000` 没有任何拦截点——请求被接受、加载模型、必然 OOM 且已烧掉几十分钟 GPU。现在依赖解析阶段即 400 并给出可用上限；`max_resolution` 超限只钳位不拒绝；两倍模式算出的分辨率同样受约束（与既有 8MP 像素上限互补）。（`91773a6`）
 * **history schema v5 输入分布台账**：history 表新增 `input_width` / `input_height` / `input_duration_sec`（v4→v5 幂等迁移，迁移前自动备份），单文件与批量入口均经媒体几何探测落账（探测失败留 0，fail-open）；`.gitignore` 增加 `perf/results/`（perf_monitor 台账目录）。（`8cc6298`）
 * **训练 smoke 种子固定 + 权重/ckpt sidecar 溯源 + 量化基线定期化**：`train_minimal_lora` 接入 `common.seed.set_seed` + `--seed`（默认 42），结果与 sidecar 记录种子；checkpoint 落盘写 weight_sidecar（training 段含来源/超参），`download_model` 校验后写权重 sidecar（幂等）；`gpu-smoke.yml` 量化质量基线纳入 schedule 定期执行并归档 artifact；`download_model` 增加双命名族并存警告。（`861398e`）
 
 ### Changed
 
+* **移除 `gaussian_blend` / `groupnorm_accumulate` 两个无消费方的配置键**：二者被读进 `_vae_tiled_config` 却无人消费，日志仍打印 `gaussian_blend=True`，让用户以为混合可切换。复核确认 tile 接缝一直由上游 `tiled_decode` 的 raised-cosine 斜坡融合负责（`ramp = 0.5-0.5*cos(t*pi)`，按 count 归一化），不存在"关掉混合"的开关；因此不引入 VOSR2 的 Gaussian 实现（替换已验证的融合属高风险无收益，且需 monkey-patch 上游）。决策与证据见 `docs/adr/0006-gaussian-blend-not-adopted.md`，附 5 条语义哨兵测试。（`3851184`）
+* **事件总线不引入 VOSR2 的 `EventBus`（ADR-0005）**：本仓 `services/task_events.py` 的 `TaskEventBus` 已具备按 `task_id` 分片、每队列 64 条背压、最终态缓存 + 60s TTL、跨线程发布；VOSR2 的全局单总线缺分片与背压，在本仓的批量/多标签/桌面壳场景会串台与无界增长。反向建议一并记录。见 `docs/adr/0005-event-bus-vs-progress-listeners.md`。（`6c61a2c`）
 * **权重双命名族与完整性自检差异注释**：`config.yaml` model 段注释说明 `ema_` 前缀族与裸名族互不兼容、`sha256_*_alt` 用途与下载路由，及 `integrity_enforce=false` 仅为本地开发默认值、发布构建期注入 `true` 的差异；仅注释变更。（`b2823e0`）
 * **治理文件同步**：`CODEOWNERS` 修正死规则（路径改指 `app/integrated_app/security` 等、新增 `model_lib/` 禁区、删除失效条目）；`SECURITY_MATRIX.md` 代码审查行状态按实际同步。（`2c44d34`）
 
