@@ -244,6 +244,7 @@
     "zoom_out": "縮小",
     "fit_window": "ウィンドウに合わせる",
     "clear_image": "画像をクリア",
+    "pasted": "クリップボードから画像を読み込みました",
     "change_file": "ファイルを変更",
     "batch_title": "一括処理",
     "folder_mode": "フォルダモード",

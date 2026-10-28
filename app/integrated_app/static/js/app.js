@@ -825,6 +825,52 @@ const SeedVR2 = (() => {
         });
     }
 
+    /**
+     * @function setupPasteUpload
+     * @description Ctrl+V 从剪贴板直接粘贴图片到上传区（移植自 VOSR2-Lite）。
+     *   剪贴板截图通常没有文件名（Firefox 甚至给 image.png），这里统一补一个带
+     *   合法扩展名的名字，否则后端按扩展名校验时会拒绝。
+     *   三类情况不接管：焦点在输入框/可编辑区（用户在粘文字）、上传区不可见
+     *   （批量模式或非工作台页）、剪贴板里没有图片。
+     * @param {HTMLElement} zone - 上传区域DOM元素
+     * @param {HTMLInputElement} fileInput - 文件输入input元素
+     * @param {Object} [callbacks] - 与 setupUploadZone 相同的回调，另支持 onPasted
+     * @returns {void}
+     */
+    function setupPasteUpload(zone, fileInput, callbacks = {}) {
+        if (!zone || !fileInput || typeof document === 'undefined') return;
+
+        document.addEventListener('paste', (e) => {
+            const target = e.target;
+            if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' ||
+                target.isContentEditable)) return;
+            // 上传区不可见时不接管（offsetParent 为 null 表示被 display:none 隐藏）
+            if (!zone.isConnected || zone.offsetParent === null) return;
+
+            const items = (e.clipboardData && e.clipboardData.items) || [];
+            let file = null;
+            for (const item of items) {
+                if (item.kind === 'file' && item.type && item.type.indexOf('image/') === 0) {
+                    file = item.getAsFile();
+                    if (file) break;
+                }
+            }
+            if (!file) return;
+
+            const ext = (file.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
+            const named = new File([file], 'pasted-' + Date.now() + '.' + ext, { type: file.type });
+
+            const dt = new DataTransfer();
+            dt.items.add(named);
+            fileInput.files = dt.files;
+
+            e.preventDefault();
+            zone.classList.add('has-file');
+            if (callbacks.onFileSelected) callbacks.onFileSelected(named);
+            if (callbacks.onPasted) callbacks.onPasted(named);
+        });
+    }
+
     // ===== 全局 SSE 连接 =====
     /**
      * @var {EventSource|null} globalEventSource
@@ -3758,6 +3804,7 @@ const SeedVR2 = (() => {
         openModal,
         /** @type {Function} 设置上传区域 */
         setupUploadZone,
+        setupPasteUpload,
         /** @type {Function} 启动修复进度SSE */
         startRestoreProgressSSE,
         /** @type {Function} 取消修复任务 */

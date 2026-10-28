@@ -244,6 +244,7 @@
     "zoom_out": "Zoom arrière",
     "fit_window": "Ajuster à la fenêtre",
     "clear_image": "Effacer l'image",
+    "pasted": "Image collée depuis le presse-papiers",
     "change_file": "Changer de Fichier",
     "batch_title": "Traitement par Lots",
     "folder_mode": "Mode dossier",

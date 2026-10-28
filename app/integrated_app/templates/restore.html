@@ -1147,7 +1147,7 @@ document.addEventListener('DOMContentLoaded', () => {
     })();
 
     // 上传区
-    SeedVR2.setupUploadZone(els.uploadZone, els.fileInput, {
+    const restoreFileHandlers = {
         onFileSelected: (file) => {
             els.fileInfo.style.display = 'flex';
             const isImage = file.type.startsWith('image/');
@@ -1258,7 +1258,16 @@ document.addEventListener('DOMContentLoaded', () => {
             resetResolutionState();
             updateStartButton();
         },
-    });
+    };
+
+    SeedVR2.setupUploadZone(els.uploadZone, els.fileInput, restoreFileHandlers);
+
+    // Ctrl+V 粘贴上传（移植自 VOSR2-Lite）：复用同一套选择回调，仅补一条提示。
+    // 视频无法从剪贴板取得，故实际只对图片生效。
+    SeedVR2.setupPasteUpload(els.uploadZone, els.fileInput,
+        Object.assign({}, restoreFileHandlers, {
+            onPasted: () => SeedVR2.toast(I['restore.pasted'] || '已从剪贴板载入图片', 'info'),
+        }));
 
     // 清除图片按钮
     const btnClearImage = document.getElementById('btnClearImage');

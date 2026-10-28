@@ -249,6 +249,7 @@
     "zoom_out": "縮小",
     "fit_window": "適應視窗",
     "clear_image": "清除圖片",
+    "pasted": "已從剪貼簿載入圖片",
     "change_file": "更換檔案",
     "batch_title": "批次處理",
     "folder_mode": "資料夾模式",

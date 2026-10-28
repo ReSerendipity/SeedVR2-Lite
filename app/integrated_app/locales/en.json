@@ -244,6 +244,7 @@
     "zoom_out": "Zoom Out",
     "fit_window": "Fit to Window",
     "clear_image": "Clear Image",
+    "pasted": "Image pasted from clipboard",
     "change_file": "Change File",
     "batch_title": "Batch Processing",
     "folder_mode": "Folder mode",
