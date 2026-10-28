@@ -23,9 +23,10 @@ import math
 import os
 from collections.abc import Sequence
 
-from fastapi import Form, HTTPException
+from fastapi import Depends, Form, HTTPException
 
 from app.integrated_app.config_models import UnifiedRestoreParams
+from app.integrated_app.dependencies import get_config
 from app.integrated_app.exceptions import TaskQueueFullError
 from app.integrated_app.model_registry import model_registry
 from app.integrated_app.security.magic_check import validate_upload_magic
@@ -220,6 +221,7 @@ def parse_unified_params(
     enable_debug: bool = Form(False),
     double_res: bool = Form(False),
     output_format: str = Form(""),  # 输出格式："png"/"jpg"/"webp"/"bmp"/"tiff"，空串表示自动匹配输入
+    config: dict = Depends(get_config),
 ) -> UnifiedRestoreParams:
     """解析统一修复表单参数，返回结构化 Pydantic 模型。
 
@@ -309,7 +311,55 @@ def parse_unified_params(
     logger.info(
         f"[restore/params] output_format={output_format!r} double_res={double_res} resolution={resolution} task_type={task_type}"
     )
+    enforce_max_output_side(_params, config)
     return _params
+
+
+def resolve_max_output_side(config: dict | None) -> int:
+    """读取服务端输出长边硬上限（像素）；0 表示不限制，配置非法时退回默认 6144。"""
+    raw = ((config or {}).get("inference", {}) or {}).get("max_output_side", 6144)
+    try:
+        return max(0, int(raw))
+    except (TypeError, ValueError):
+        logger.warning("[restore/params] inference.max_output_side 配置非法(%r)，按默认 6144 处理", raw)
+        return 6144
+
+
+def enforce_max_output_side(params: UnifiedRestoreParams, config: dict | None) -> None:
+    """服务端输出长边硬上限校验（就地修正 max_resolution，超限直接拒绝）。
+
+    与 ``max_resolution`` 的分工：后者是请求侧的长边上限（0=不限，客户端决定），
+    本函数读的是 ``inference.max_output_side`` —— 服务端兜底，挡住
+    「客户端传 resolution=20000」这类必然 OOM 且会长时间占用 GPU 的请求。
+    对齐 VOSR2-Lite 的同名配置项。
+
+    Args:
+        params: 已解析的请求参数（可能被就地钳位 max_resolution）。
+        config: 应用配置字典。
+
+    Raises:
+        HTTPException: 请求分辨率超过服务端上限时返回 400，并给出可用上限。
+    """
+    cap = resolve_max_output_side(config)
+    if cap <= 0:
+        return
+
+    if params.resolution > cap:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"输出分辨率 {params.resolution}px 超过服务端上限 {cap}px：请把分辨率调到 "
+                f"{cap} 以内（config.yaml 的 inference.max_output_side，0 表示不限制）"
+            ),
+        )
+
+    if params.max_resolution > cap:
+        logger.warning(
+            "[restore/params] max_resolution=%d 超过服务端上限 %d，已钳位到上限",
+            params.max_resolution,
+            cap,
+        )
+        params.max_resolution = cap
 
 
 DOUBLE_RES_MAX_PIXELS = 8_000_000
@@ -326,6 +376,7 @@ def enforce_double_resolution_if_enabled(
     raw_params: UnifiedRestoreParams,
     detected_type: str | None,
     input_path: str | None,
+    max_output_side: int = 0,
 ) -> None:
     """两倍模式后端强制校验 —— 就地修改 raw_params.resolution。
 
@@ -393,9 +444,18 @@ def enforce_double_resolution_if_enabled(
                 )
                 target_res = capped_res
 
+    # 服务端硬上限：两倍模式算出的分辨率同样受 inference.max_output_side 约束
+    # （8MP 像素上限管的是显存峰值，本上限管的是单边尺寸，两者互补）
+    if max_output_side > 0 and target_res > max_output_side:
+        logger.warning(
+            "[double_res] 目标分辨率 %d 超过服务端上限 %d，已钳位到上限",
+            target_res,
+            max_output_side,
+        )
+        target_res = max_output_side
+
     original_res = raw_params.resolution
     raw_params.resolution = target_res
-
     # 同步覆写 4 个 VAE tile 参数，与前端自动填值规则保持一致：
     #   tile_size = short_edge × 100%    (向下取整到整数，且不小于 64)
     #   tile_overlap = short_edge × 50%  (且必须 ≤ tile_size // 2，避免 VAE 分块重叠越界)

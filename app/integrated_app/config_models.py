@@ -477,6 +477,14 @@ class InferenceConfig(BaseModel):
     """内存使用率阈值 (0.5-0.99)，超过此值终止推理，防止系统卡死"""
     memory_min_available_gb: float = Field(2.0, ge=0.5, le=64.0)
     """绝对可用内存下限 (GB)，低于此值同样终止推理"""
+    max_output_side: int = Field(6144, ge=0)
+    """输出长边服务端硬上限（像素），0 表示不限制。
+
+    与 ``max_resolution`` 的区别：后者是**请求侧**的长边上限（0=不限，由客户端
+    决定）；本字段是**服务端**兜底，请求里的 resolution / 两倍模式算出的分辨率
+    一旦超过它就直接拒绝。用于挡住「客户端传 resolution=20000」这类必然 OOM
+    且会占用 GPU 数小时的请求（对齐 VOSR2-Lite 的 inference.max_output_side）。
+    """
 
 
 class RuntimeSseConfig(BaseModel):

@@ -43,6 +43,9 @@ inference:
   latent_noise_scale: 0.0
   max_resolution: 0
   memory_min_available_gb: 2.0
+  # 输出长边服务端硬上限（像素）：请求里的 resolution 超过它直接 400，
+  # 两倍模式算出的分辨率超过它则钳位。0 = 不限制。
+  max_output_side: 6144
   memory_threshold: 0.95
   offload_device: cpu
   prepend_frames: 0

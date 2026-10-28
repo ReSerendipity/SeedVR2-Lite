@@ -302,7 +302,9 @@ async def upload_and_restore(
     # 当 double_res=True 且输入是图片时，忽略任何客户端传入的分辨率，
     # 用 Pillow 重新读取真实宽高并按 short_edge × 2 覆写 raw_params.resolution。
     # 输入非图片或解析失败时 fail-safe 保留原数值，不抛异常打断任务。
-    common.enforce_double_resolution_if_enabled(raw_params, detected_type, input_path)
+    common.enforce_double_resolution_if_enabled(
+        raw_params, detected_type, input_path, common.resolve_max_output_side(config)
+    )
 
     # ============== 磁盘空间预检（成本治理 P0-1） ==============
     # 输出目录所在磁盘剩余空间不足时拒绝任务（DiskSpaceError → 全局处理器 507），
