@@ -17,11 +17,12 @@
 | 组件 | 内容 | 分卷数 |
 |---|---|:---:|
 | `core` | 应用代码 + 便携 Python 3.12 解释器（已预装全部非 torch 依赖）+ `start-portable.bat` | 1 |
-| `torch` | PyTorch / TorchVision 的 CUDA 13.2（cu132）wheel + TorchAudio 2.11.0（PyPI CPU 轮，与 cu132 搭配正常），含传递依赖 | 2 |
+| `torch` | PyTorch / TorchVision 的 CUDA 13.2（cu132）wheel + TorchAudio 2.11.0（PyPI CPU 轮，与 cu132 搭配正常），含传递依赖 | 1 |
 | `model-shared` | `ema_vae_fp16.safetensors` + `pos_emb.pt` + `neg_emb.pt` | 1 |
 | `model-fp8` | `seedvr2_3b_mxfp8.safetensors`（内置主模型，MXFP8 量化） | 2 |
 
 准确的文件名、分卷数量、SHA256 与**各组件版本号**以本次 Release 里的 `manifest.json` / `SHA256SUMS.txt` 为准。
+> 上表分卷数按本次构建实测填写（2026-10-28：torch 依赖集缩小，由 2 卷降为 1 卷）。分卷数随依赖体积变化，发版前必须对照当次 `manifest.json` 复核本表。
 `manifest.json` 中每个组件带 `version` 字段：`core`/`torch` 跟随应用版本与 torch 钉版，`model-*` 是权重内容哈希——**权重没变，版本号就不变**。
 
 ## 安装步骤
