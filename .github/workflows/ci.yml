@@ -133,6 +133,12 @@ jobs:
           python -m pytest tests/test_api_contract.py -q
           python scripts/audit_api_consistency.py all
 
+      - name: Service layer boundary (services/ must not depend on web framework)
+        # 架构约束承接（Better Harness finding service-layer-rule-has-no-check）：
+        # services/__init__.py 与 restore_service.py 明文规定服务层不得依赖请求/响应对象，
+        # 此前这条约束只靠人工遵守，任何一次反向 import 都不会让门禁变红。
+        run: python scripts/check_service_layer.py
+
       - name: Black (format check)
         run: python -m black --check .
 

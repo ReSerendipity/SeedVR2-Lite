@@ -63,6 +63,18 @@ repos:
         verbose: true
         stages: [pre-commit]
 
+  # 服务层边界：把 services/__init__.py「架构约束」里那条明文禁令接到最早的提交门禁点上——
+  # 此前根目录结构、本机绝对路径、幻影引用都有专门脚本承接，唯独这条只靠人工遵守。
+  # 口径与退出码见 scripts/check_service_layer.py；CI 侧同步步在 ci.yml 的 quality-gate。
+  - repo: local
+    hooks:
+      - id: service-layer-boundary
+        name: Service layer boundary (services/ must not depend on web framework)
+        entry: python scripts/check_service_layer.py
+        language: system
+        pass_filenames: false
+        files: ^app/integrated_app/services/.*\.py$
+
   - repo: local
     hooks:
       - id: structure-guard

@@ -4,6 +4,7 @@
   "entries": [
     { "file": "CHANGELOG.md", "ref": "docs/repo-analysis", "reason": "CHANGELOG:140 历史条目叙事（机器路径豁免留痕，2026-09），保留" },
     { "file": "CHANGELOG.md", "ref": "docs/repo-analysis/ComfyUI-Mie-Package-Launcher_技术学习报告.md", "reason": "CHANGELOG:140 历史条目叙事（机器路径豁免留痕，2026-09），保留" },
-    { "file": "docs/DATA_GOVERNANCE_ASSESSMENT.md", "ref": "app/integrated_app/data", "reason": "评估报告文档叙事，描述目录结构事实，保留" }
+    { "file": "docs/DATA_GOVERNANCE_ASSESSMENT.md", "ref": "app/integrated_app/data", "reason": "评估报告文档叙事，描述目录结构事实，保留" },
+    { "file": "docs/agent-contract.md", "ref": "AGENTS.md", "reason": "本仓副本由组织仓 governance/templates/agent-contract.md 逐字节生成，仓内不可就地改写；根 AGENTS.md 被 .gitignore 241 行以「仅本地保留」明示排除，契约第 14 行的「（若有）」本身已声明可缺。待组织模板补上可获取性说明后撤销本条（Better Harness 2026-10-29T1419 / local-ref-gate-blind-in-ci）" }
   ]
 }

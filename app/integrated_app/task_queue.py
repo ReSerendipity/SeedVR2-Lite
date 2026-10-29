@@ -22,6 +22,7 @@ import logging
 from collections.abc import Awaitable, Callable
 
 from app.integrated_app.exceptions import TaskQueueFullError
+from app.integrated_app.middleware.request_id import set_request_id
 
 logger = logging.getLogger(__name__)
 
@@ -212,6 +213,10 @@ class TaskQueue:
 
             self._current_task_id = task_id
             self._current_cancel_callback = on_cancel
+            # worker 上下文建立于应用启动期，不继承任何 HTTP 请求的 ContextVar；这里按
+            # task_id 发布一个稳定标识（同 app_server 后台线程的 bg-<线程名> 口径），
+            # 使任务内所有日志可用同一个键串起来（评估 P1：失败归因需要可关联标识）。
+            set_request_id(f"task-{task_id}")
             try:
                 coro = coro_factory()
                 self._current_task = asyncio.create_task(coro)

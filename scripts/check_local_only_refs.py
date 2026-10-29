@@ -126,6 +126,21 @@ MARKERS = (
 DECLARATION_ANCHOR = "本地未分发引用"
 CONTEXT_LINES = 2
 
+# 「本机独有资产」名单：这些名字被 .gitignore 以裸文件名排除（无斜线，任意深度命中）。
+# 原有判据的 ignored 集合取自 `git ls-files --others --ignored`，它只列本机磁盘上真实存在
+# 的路径——于是目标在本机不存在时（恰好就是 CI 与全新克隆的情形）这条引用查不出来，门禁
+# 会绿着放过它自己要防的那类幻影引用。本名单不依赖磁盘存在性，本机与 CI 两侧口径一致。
+# 新增条目必须先确认它在 .gitignore 里确是裸文件名排除（tests/test_local_ref_gate.py 有对照用例）。
+LOCAL_ONLY_NAMES = frozenset(
+    {
+        "AGENTS.md",
+        "CONTRIBUTING.md",
+        "LOCAL_RULES.md",
+        "FIX_LOG.md",
+        "precheck.ps1",
+    }
+)
+
 
 def _git_lines(*args):
     """跑 git 并按 NUL 切分（-z 关掉 core.quotepath，避免中文路径被八进制转义）。"""
@@ -200,6 +215,11 @@ def declared_refs(lines):
     return {d for d in declared if d and " " not in d}
 
 
+def _norm_rel(cand: str) -> str:
+    """统一成仓根相对形式，保证本机与干净检出两种环境下回报的 ref 完全一致。"""
+    return cand[2:] if cand.startswith("./") else cand
+
+
 def hits_local_only(rel, token, tracked, ignored):
     """token 是否指向「本机有、克隆没有」的未分发文件。
 
@@ -209,8 +229,21 @@ def hits_local_only(rel, token, tracked, ignored):
     if is_artifact(token):
         return None
     cands = resolve_candidates(rel, token)
-    if not cands or any(c in tracked for c in cands):
+    if cands and any(c in tracked for c in cands):
         return None
+
+    # 本机独有名单兜底：名单里的名字被 .gitignore 以裸文件名排除，在任何环境都不随仓库
+    # 分发。而上面的 resolve_candidates 只保留磁盘上存在的路径、ignored 也只列本机磁盘上
+    # 存在的忽略项——目标在本机不存在时（CI 与全新克隆正是这种状态）整条引用会被无声放过，
+    # 门禁只在维护者本机有效。此判据不依赖磁盘存在性，两侧口径一致。
+    tok = _norm_rel(token.rstrip("/"))
+    bare = tok.split("/")[-1]
+    if bare in LOCAL_ONLY_NAMES:
+        for cand in cands:
+            if cand not in tracked and not is_artifact(cand):
+                return _norm_rel(cand)
+        return None if cands else tok
+
     for cand in cands:
         if is_artifact(cand):
             continue

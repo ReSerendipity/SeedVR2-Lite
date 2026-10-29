@@ -1404,7 +1404,7 @@ async def process_batch_background(
                     if attempt < max_retries and not is_ram_exhaustion(last_error):
                         task_item["status"] = "retrying"
                         logger.warning(
-                            f"批量处理 {media_type} {i+1}/{len(media_files)} 第{attempt+1}次失败，重试中：{media_path}, {last_error}"
+                            f"批量处理 {batch_id} {media_type} {i+1}/{len(media_files)} 第{attempt+1}次失败，重试中：{media_path}, {last_error}"
                         )
                         # OOM 坏案例降级（P0-2）：重试前分类失败并调整参数
                         if apply_oom_degradation(current_config, config, last_error, attempt + 1, app_config):
@@ -1446,7 +1446,7 @@ async def process_batch_background(
                 if attempt < max_retries and not is_ram_exhaustion(last_error):
                     task_item["status"] = "retrying"
                     logger.warning(
-                        f"批量处理 {media_type} {i+1}/{len(media_files)} 第{attempt+1}次异常，重试中：{media_path}, {e}"
+                        f"批量处理 {batch_id} {media_type} {i+1}/{len(media_files)} 第{attempt+1}次异常，重试中：{media_path}, {e}"
                     )
                     # OOM 坏案例降级（P0-2）：重试前分类异常并调整参数
                     if apply_oom_degradation(current_config, config, last_error, attempt + 1, app_config):
@@ -1476,7 +1476,9 @@ async def process_batch_background(
                         # 评估 P2-2：RAM 守卫属资源耗尽，跳过重试并计入熔断
                         logger.error(f"批量处理遇系统内存耗尽，跳过该文件重试：{media_path}")
                         oom_breaker.record_failure(is_oom=True)
-                    logger.error(f"批量处理 {media_type} {i+1}/{len(media_files)} 最终失败：{media_path}, {e}")
+                    logger.error(
+                        f"批量处理 {batch_id} {media_type} {i+1}/{len(media_files)} 最终失败：{media_path}, {e}"
+                    )
 
         # P1-7：每个文件处理完成后立即落库（原实现攒到批末一次性插入，
         # 崩溃即丢失整批账目；逐文件插入在 WAL 单写者模型下开销可忽略）

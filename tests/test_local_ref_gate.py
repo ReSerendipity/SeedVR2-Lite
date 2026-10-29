@@ -7,7 +7,7 @@ docs/CODING_STANDARDS.md 第 5 节。
 这里锁定的是判定的纯逻辑部分（取词 / 产物豁免 / 声明块解析 / 多义路径消歧），
 使门禁本身有回归保护——门禁一旦被改松，幻影引用就会重新长回来。
 
-本地未分发引用：AGENTS.md、docs/agents/、docs/project/、docs/README.md
+本地未分发引用：AGENTS.md、precheck.ps1、docs/agents/、docs/project/、docs/README.md
 （本文件是门禁的回归测试，上面这些路径是**用例里的夹具字符串**，不是供人打开的引用；
 按门禁自身口径，被测试的行为必须能出现在测试里，故用文件级声明收编而非改写用例）
 """
@@ -197,3 +197,50 @@ class TestLocalOnlyResolution:
         assert "scripts/check_local_only_refs.py" in tracked
         assert "docs/CODING_STANDARDS.md" in tracked
         assert _gate.ignored_paths() is not None
+
+
+class TestLocalOnlyNamesWithoutDisk:
+    """本机独有名单兜底判据：不依赖目标在磁盘上存在。
+
+    回归的是 Better Harness finding `local-ref-gate-blind-in-ci`：原有判据的 candidates
+    与 ignored 两个集合都只收「磁盘上真实存在」的路径，于是干净检出 / CI 里目标不存在时
+    整条引用被无声放过（本机报红、CI 报绿的分裂），门禁抓不到它自己要防的那类幻影引用。
+    """
+
+    def test_flagged_when_target_absent_like_clean_checkout(self, git_repo):
+        assert git_repo.is_dir()
+        tracked = _gate.tracked_files()
+        (git_repo / "AGENTS.md").unlink()  # 模拟 CI / 全新克隆：本机根本没有这个文件
+        ignored = _gate.ignored_paths()
+        assert "AGENTS.md" not in ignored
+        assert _gate.hits_local_only("docs/DOD.md", "AGENTS.md", tracked, ignored) == "AGENTS.md"
+
+    def test_tracked_explanation_still_wins(self, git_repo):
+        """同名存在已跟踪解释时不得报——避免把合法引用刷成假阳性。"""
+        assert git_repo.is_dir()
+        assert _gate.hits_local_only("docs/DOD.md", "AGENTS.md", {"AGENTS.md"}, set()) is None
+
+    def test_dot_slash_prefix_is_normalised(self, git_repo):
+        """回报形式与本机 / CI 无关：./precheck.ps1 归一成 precheck.ps1，两侧口径一致。"""
+        assert git_repo.is_dir()
+        assert _gate.hits_local_only(".githooks/pre-push", "./precheck.ps1", set(), set()) == "precheck.ps1"
+
+    def test_unknown_path_outside_the_list_stays_quiet(self, git_repo):
+        """名单外的陌生路径仍不报（沿用既有的「不做无据推断」口径）。"""
+        assert git_repo.is_dir()
+        assert _gate.hits_local_only("docs/DOD.md", "no/such/file.md", set(), set()) is None
+
+    def test_local_only_names_are_all_bare_gitignore_patterns(self):
+        """名单必须与 .gitignore 的裸文件名排除保持一致，防止凭空扩名单。"""
+        ignore_text = (_REPO_ROOT / ".gitignore").read_text(encoding="utf-8", errors="replace")
+        bare = {
+            line.strip()
+            for line in ignore_text.splitlines()
+            if line.strip()
+            and not line.lstrip().startswith("#")
+            and not line.lstrip().startswith("!")
+            and "/" not in line
+            and "*" not in line
+        }
+        missing = sorted(_gate.LOCAL_ONLY_NAMES - bare)
+        assert not missing, f"名单里这些名字并非 .gitignore 裸文件名排除项：{missing}"

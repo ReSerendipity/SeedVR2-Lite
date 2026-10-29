@@ -99,6 +99,7 @@ grep -rn --include='*.py' -iE 'C:\\Users|/home/|/Users/' .
 | API 一致性 | `python scripts/audit_api_consistency.py all` | `ci.yml` |
 | 端到端 UI（3 浏览器矩阵） | `cd tests && npx playwright test --project=chromium-desktop`（CI 另跑 firefox / webkit；本地需先起 `app_server.py`） | `e2e.yml` —— **main 必需检查**；PR 触发刻意不带 `paths` 过滤，被过滤掉的 workflow 不产生 check run，必需检查会永远停在 Expected |
 | 根目录结构 | `python .github/scripts/check_layout.py` | `structure-guard.yml`、pre-commit |
+| 服务层边界 | `python scripts/check_service_layer.py`（`services/` 不得 import Web 框架的请求/响应对象，口径见 `app/integrated_app/services/__init__.py`） | `ci.yml`、pre-commit |
 | 路径可移植性 | `python scripts/check_no_hardcoded_paths.py --all` | `.githooks/pre-commit` |
 | 引用可用性 | `python scripts/check_local_only_refs.py --all` | `structure-guard.yml`、`docs-consistency.yml`、`.githooks/pre-commit` |
 | 规范引用幻影 | `python scripts/check_spec_refs.py`（依赖仓外家族 auditor，缺失时自动 skip） | `docs-consistency.yml`、`structure-guard.yml` |

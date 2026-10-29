@@ -112,6 +112,22 @@ start.bat
 
 进入「修复工作台」上传一张图片 → 点击「上传并修复」→ 在「系统状态」页看到 GPU 占用上升、「历史记录」中出现一条已完成任务，即说明推理链路打通。
 
+#### 交付前检查（改动代码后）
+
+上面的「最小验证」是需要 GPU 的人工冒烟；**改完代码要跑的机器检查**在下面（完整命令矩阵与覆盖率阈值口径见
+[docs/CODING_STANDARDS.md](docs/CODING_STANDARDS.md) 第 5.2 节）：
+
+```bash
+git config core.hooksPath .githooks        # 克隆后执行一次，提交/推送即自动接上门禁
+python -m pytest -q --ignore=tests/perf --cov=app/integrated_app --cov-report=term
+python -m pytest tests/test_api_contract.py -q
+ruff check . && black --check . && mypy app/integrated_app
+python .github/scripts/check_layout.py
+```
+
+`pytest` 的覆盖率门槛为 55%（`pyproject.toml` 的 `fail_under` 与 CI Coverage Gate 同值）；
+纯文档改动可只跑最后一条结构守卫。
+
 ### 系统要求与兼容性
 
 | 项目 | 要求 |
