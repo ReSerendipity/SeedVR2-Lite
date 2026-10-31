@@ -143,9 +143,25 @@ foreach ($f in @('start_portable.py')) {
 # pyproject.toml 必须跟包：app/integrated_app/version.py 的版本来源是
 # `parents[2]/pyproject.toml`，在安装态 parents[2] 正好是 <安装根>\app，少了它
 # 后端会把 app_version 报成 unknown（下载页、关于页都会显示 unknown）。
+# downloads_catalog.json 同理：后端 _catalog_path() = PROJECT_ROOT/downloads_catalog.json
+# （安装态 = <安装根>\app），必须落在数据卷根；源码态种子在仓库 app\ 下。
 foreach ($f in @('config.yaml', 'version.json', 'pyproject.toml', 'README.md', 'LICENSE', 'NOTICE', 'CHANGELOG.md', 'requirements.txt')) {
     $src = Join-Path $Root $f
     if (Test-Path -LiteralPath $src) { Copy-Item -LiteralPath $src -Destination $appDir -Force }
+}
+# downloads_catalog.json 的种子在仓库 app\ 下（与后端源码态 PROJECT_ROOT 同级），
+# 但要拷到数据卷根（安装态 PROJECT_ROOT 这一级），不能随 app 包多套一层。
+$catalogSeed = Join-Path $Root 'app\downloads_catalog.json'
+if (Test-Path -LiteralPath $catalogSeed) {
+    Copy-Item -LiteralPath $catalogSeed -Destination (Join-Path $appDir 'downloads_catalog.json') -Force
+}
+# 完整性公钥必须进卷：上面 ExcludeFiles 风格的 *.pem 排除（若走 robocopy /XF）会把
+# manifest_signing_public_key.pem 一并剔掉 → 自检无法验签（Image 仓 enforce 下拒绝启动）。
+# 私钥是 dotfile（.manifest_signing_key 等），仍被排除。
+$pubKey = Join-Path $Root 'app\integrated_app\security\manifest_signing_public_key.pem'
+if (Test-Path -LiteralPath $pubKey) {
+    New-Item -ItemType Directory -Path (Join-Path $appDir 'app\integrated_app\security') -Force | Out-Null
+    Copy-Item -LiteralPath $pubKey -Destination (Join-Path $appDir 'app\integrated_app\security\manifest_signing_public_key.pem') -Force
 }
 foreach ($d in @('data', 'logs', 'outputs')) {
     New-Item -ItemType Directory -Path (Join-Path $appDir $d) -Force | Out-Null
