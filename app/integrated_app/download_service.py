@@ -31,7 +31,8 @@ import time
 import urllib.error
 import urllib.request
 import zipfile
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from app.integrated_app.version import get_app_version
 
@@ -268,9 +269,7 @@ def _download_file(
 
 
 # ------------------------------------------------------------ 环境包安装 ----
-def install_runtime(
-    on_progress: ProgressCb | None = None, should_cancel: Callable[[], bool] | None = None
-) -> dict:
+def install_runtime(on_progress: ProgressCb | None = None, should_cancel: Callable[[], bool] | None = None) -> dict:
     """下载环境包并把 torch 离线装进当前解释器（bootstrap/ 自身）。"""
     catalog = runtime_catalog()
     if not catalog:
@@ -303,8 +302,10 @@ def install_runtime(
         _download_file(
             url,
             dest,
-            on_progress=lambda _s, r, _m, i=index: report(  # type: ignore[misc]
-                "download", (i + r) / total_vols, f"下载 {name}"
+            # i/n 都用默认参数绑定循环变量（B023）：闭包晚绑定会在多分卷并发回调时
+            # 引用最后一轮的 name/index，进度会串卷。
+            on_progress=lambda _s, r, _m, i=index, n=name: report(  # type: ignore[misc]
+                "download", (i + r) / total_vols, f"下载 {n}"
             ),
             should_cancel=should_cancel,
         )
@@ -520,9 +521,7 @@ class DownloadManager:
                 return existing
             task = DownloadTask(component, kind, target)
             self._tasks[component] = task
-        thread = threading.Thread(
-            target=task.run, args=(config,), name=f"download-{component}", daemon=True
-        )
+        thread = threading.Thread(target=task.run, args=(config,), name=f"download-{component}", daemon=True)
         thread.start()
         return task
 
@@ -559,9 +558,7 @@ def build_status(config: dict) -> dict:
         "mode": _current_mode(),
         # 「能跑推理」= 环境装好了（RUNTIME.json）+ 至少一个权重就位；
         # 只看 python.exe 会把引导态误判为就绪。
-        "ready": bool(
-            runtime["installed"] and runtime["compatible"] and any(m["present"] for m in models)
-        ),
+        "ready": bool(runtime["installed"] and runtime["compatible"] and any(m["present"] for m in models)),
         "runtime": runtime,
         "models": models,
         "model_root": model_root(config),

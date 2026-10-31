@@ -158,6 +158,7 @@ from app.integrated_app.model_registry import model_registry  # noqa: E402
 # 用户永远装不上环境。模型管理器背后是推理引擎，引擎顶层 `import torch`，所以这里
 # 用可选导入：失败时降级为 None，引擎类路由会在路由发现阶段被跳过（routes/__init__
 # 对每个路由模块单独 try/except），下载管理页与静态资源照常工作。
+_MODEL_MANAGER_UNAVAILABLE: Exception | None
 try:  # noqa: SIM105 - 需要保留异常对象用于日志
     from app.integrated_app.model_manager import ModelManager  # noqa: E402
 except Exception as _model_manager_exc:  # noqa: BLE001
@@ -960,9 +961,7 @@ def create_app(config: dict | None = None) -> FastAPI:
     # 这里补一个极简健康端点，只在真正缺失时注册（有完整实现时不覆盖）；且只在
     # ModelManager 不可用（即确实处于引导态）时兜底——完整装态下若因路由懒加载
     # 导致此刻看不到该路径，也不能让极简版去顶替带自检信息的完整实现。
-    if ModelManager is None and not any(
-        getattr(route, "path", "") == "/api/system/health" for route in app.routes
-    ):
+    if ModelManager is None and not any(getattr(route, "path", "") == "/api/system/health" for route in app.routes):
 
         @app.get("/api/system/health")
         async def _minimal_health():  # noqa: ANN202 - FastAPI 端点不需要显式返回类型
