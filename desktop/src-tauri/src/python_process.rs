@@ -9,8 +9,39 @@ use std::os::windows::process::CommandExt;
 
 use crate::port_manager::find_free_port;
 
+/// 从 HTTP 响应头里取 CSRF token：优先响应头 `X-CSRF-Token`（家族部分仓由中间件直接下发），
+/// 回退解析 `Set-Cookie: csrf_token=...`（部分仓的 CSRF 中间件只种 cookie，不发头）。
+fn extract_csrf_token(headers: &str) -> Option<String> {
+    let mut cookie_token: Option<String> = None;
+    for line in headers.lines() {
+        let lower = line.to_ascii_lowercase();
+        if let Some(rest) = lower.strip_prefix("x-csrf-token:") {
+            let idx = line.len() - rest.len();
+            let value = line[idx..].trim();
+            if !value.is_empty() {
+                return Some(value.to_string());
+            }
+        }
+        if lower.starts_with("set-cookie:") && lower.contains("csrf_token=") {
+            // 形如：Set-Cookie: csrf_token=<value>; Path=/; SameSite=Strict
+            let after = &line[line.find("csrf_token=")? + "csrf_token=".len()..];
+            let value = after.split(';').next().unwrap_or("").trim();
+            if !value.is_empty() {
+                cookie_token = Some(value.to_string());
+            }
+        }
+    }
+    cookie_token
+}
+
 /// 请求 Python 服务本机优雅关闭（桌面端 B-5）。
-/// 用裸 TcpStream 发 HTTP POST，避免为 reqwest 引入 blocking 依赖。
+///
+/// 自适应 CSRF：先 GET `/api/system/health` 取 token，再以 double-submit（cookie + 头同值）
+/// POST `/api/system/shutdown`；取不到 token 时按「CSRF 关闭」直接 POST。
+///
+/// 为什么要自适应：家族四仓实现分叉——Image 强制带 token（CSRF 默认开）、SeedVR2/TTS/VOSR2
+/// 直接裸 POST（CSRF 默认关）。任一固定写法在另一种配置下都会静默失效（403 → 退化成
+/// taskkill，优雅关闭形同虚设）。统一为自适应后，四仓同一份实现即可覆盖两种配置。
 fn request_graceful_shutdown(port: u16) -> bool {
     use std::io::{Read, Write};
     use std::net::TcpStream;
@@ -19,18 +50,46 @@ fn request_graceful_shutdown(port: u16) -> bool {
     let Ok(addr) = format!("127.0.0.1:{port}").parse::<std::net::SocketAddr>() else {
         return false;
     };
-    let Ok(mut stream) = TcpStream::connect_timeout(&addr, Duration::from_millis(800)) else {
+
+    // 1) GET 健康检查，顺带取 CSRF token（中间件在安全方法响应上补种）
+    let token = {
+        let Ok(mut s) = TcpStream::connect_timeout(&addr, Duration::from_millis(800)) else {
+            return false;
+        };
+        let _ = s.set_read_timeout(Some(Duration::from_millis(1500)));
+        let req = format!(
+            "GET /api/system/health HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nConnection: close\r\n\r\n"
+        );
+        if s.write_all(req.as_bytes()).is_err() {
+            return false;
+        }
+        let mut buf = Vec::new();
+        if s.read_to_end(&mut buf).is_err() {
+            return false;
+        }
+        let head = String::from_utf8_lossy(&buf);
+        let headers = head.split("\r\n\r\n").next().unwrap_or("");
+        extract_csrf_token(headers)
+    };
+
+    // 2) POST 关闭端点（有 token 走 double-submit，无 token 裸 POST）
+    let Ok(mut s) = TcpStream::connect_timeout(&addr, Duration::from_millis(800)) else {
         return false;
     };
-    let req = format!(
-        "POST /api/system/shutdown HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
-    );
-    if stream.write_all(req.as_bytes()).is_err() {
+    let _ = s.set_read_timeout(Some(Duration::from_millis(1500)));
+    let req = match token {
+        Some(tok) => format!(
+            "POST /api/system/shutdown HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nCookie: csrf_token={tok}\r\nX-CSRF-Token: {tok}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+        ),
+        None => format!(
+            "POST /api/system/shutdown HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+        ),
+    };
+    if s.write_all(req.as_bytes()).is_err() {
         return false;
     }
-    let _ = stream.set_read_timeout(Some(Duration::from_millis(1500)));
     let mut buf = [0u8; 128];
-    let _ = stream.read(&mut buf);
+    let _ = s.read(&mut buf);
     true
 }
 
@@ -255,12 +314,62 @@ pub fn emit_startup_status(app: &AppHandle, message: &str, error: Option<String>
     });
 }
 
-/// 解析运行时目录：优先侧载 runtime，开发模式回退项目 .venv，再退系统 Python
+/// 环境安装成功后由后端写入解释器目录的元信息文件名（与
+/// `app/integrated_app/download_service.py::RUNTIME_META_NAME` 必须一致）。
+const RUNTIME_META_FILE: &str = "RUNTIME.json";
+
+/// 当前 Python 运行时的形态（决定壳把用户带到哪个页面）
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PythonMode {
+    /// 完整运行时（含 torch）：直接进首页
+    Full,
+    /// 瘦包引导解释器（无 torch）：必须先装环境，进下载管理页
+    Bootstrap,
+    /// 开发态：跟首页
+    Dev,
+}
+
+/// 判定运行时形态。
+///
+/// 判据必须是「环境安装流程写下的元信息」`RUNTIME.json`，不能只看
+/// `site-packages/torch`：WinPython 完整版自带 CPU 版 torch（CUDA 不可用），
+/// 只看 torch 目录会把「未装环境」误判成 Full —— 用户直接进首页，永远看不到
+/// 下载管理页，也就永远装不上真正的 CUDA 环境。
+pub fn detect_python_mode(app_dir: &Path) -> PythonMode {
+    let bootstrap = app_dir.join("bootstrap");
+    if bootstrap.join("python.exe").exists() {
+        if bootstrap.join(RUNTIME_META_FILE).exists() {
+            return PythonMode::Full;
+        }
+        return PythonMode::Bootstrap;
+    }
+    let runtime = app_dir.join("runtime");
+    if runtime.join("python.exe").exists() {
+        return PythonMode::Full;
+    }
+    PythonMode::Dev
+}
+
+/// 启动后导航到哪个入口路径（空串 = 站点根）
+pub fn startup_entry(mode: PythonMode) -> &'static str {
+    match mode {
+        PythonMode::Bootstrap => "downloads",
+        PythonMode::Full | PythonMode::Dev => "",
+    }
+}
+
+/// 解析运行时目录：优先侧载 runtime，其次瘦包引导解释器 bootstrap，开发模式回退项目 .venv，再退系统 Python
 pub fn resolve_runtime_dir(app_dir: &Path) -> PathBuf {
     // 1. 打包后：应用目录下的 runtime/
     let bundled = app_dir.join("runtime");
     if bundled.join("python.exe").exists() {
         return bundled;
+    }
+
+    // 1b. 瘦包：应用目录下的 bootstrap/（只有 Web 依赖、无 torch；环境装进它自己）
+    let bootstrap = app_dir.join("bootstrap");
+    if bootstrap.join("python.exe").exists() {
+        return bootstrap;
     }
 
     // 2. 开发模式 A：app_dir 即项目根（resolve_app_dir 的开发分支），.venv 在其下
@@ -307,4 +416,94 @@ pub fn resolve_app_dir() -> PathBuf {
     }
 
     dev_app
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn extract_token_prefers_header() {
+        let headers = "HTTP/1.1 200 OK\r\nX-CSRF-Token: abc.def\r\nSet-Cookie: csrf_token=zzz; Path=/";
+        assert_eq!(extract_csrf_token(headers).as_deref(), Some("abc.def"));
+    }
+
+    #[test]
+    fn extract_token_falls_back_to_cookie() {
+        let headers = "HTTP/1.1 200 OK\r\nset-cookie: csrf_token=nonce.sig; Path=/; SameSite=Strict\r\n";
+        assert_eq!(extract_csrf_token(headers).as_deref(), Some("nonce.sig"));
+    }
+
+    #[test]
+    fn extract_token_returns_none_when_absent() {
+        let headers = "HTTP/1.1 200 OK\r\ncontent-type: application/json";
+        assert_eq!(extract_csrf_token(headers), None);
+    }
+
+    fn make_app_dir(tag: &str, bootstrap: bool) -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!("seedvr2-mode-{tag}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        if bootstrap {
+            let boot = dir.join("bootstrap");
+            std::fs::create_dir_all(&boot).unwrap();
+            std::fs::write(boot.join("python.exe"), b"stub").unwrap();
+        }
+        dir
+    }
+
+    #[test]
+    fn mode_is_bootstrap_when_bootstrap_has_no_meta() {
+        let app = make_app_dir("boot", true);
+        assert_eq!(detect_python_mode(&app), PythonMode::Bootstrap);
+        assert_eq!(startup_entry(detect_python_mode(&app)), "downloads");
+        assert_eq!(resolve_runtime_dir(&app), app.join("bootstrap"));
+        let _ = std::fs::remove_dir_all(&app);
+    }
+
+    #[test]
+    fn mode_is_full_when_bootstrap_has_runtime_meta() {
+        let app = make_app_dir("boot-meta", true);
+        std::fs::write(app.join("bootstrap").join(RUNTIME_META_FILE), b"{}").unwrap();
+        assert_eq!(detect_python_mode(&app), PythonMode::Full);
+        assert_eq!(startup_entry(detect_python_mode(&app)), "");
+        let _ = std::fs::remove_dir_all(&app);
+    }
+
+    #[test]
+    fn mode_is_bootstrap_with_bundled_torch_but_no_meta() {
+        // 回归：WinPython 完整版自带 CPU 版 torch。只看 site-packages/torch
+        // 会把「未装环境」判成 Full，用户永远看不到下载管理页。
+        let app = make_app_dir("boot-cpu-torch", true);
+        let site = app.join("bootstrap").join("Lib").join("site-packages").join("torch");
+        std::fs::create_dir_all(&site).unwrap();
+        assert_eq!(detect_python_mode(&app), PythonMode::Bootstrap);
+        assert_eq!(startup_entry(detect_python_mode(&app)), "downloads");
+        let _ = std::fs::remove_dir_all(&app);
+    }
+
+    #[test]
+    fn mode_is_full_when_runtime_dir_present() {
+        let app = make_app_dir("rt", false);
+        let runtime = app.join("runtime");
+        std::fs::create_dir_all(&runtime).unwrap();
+        std::fs::write(runtime.join("python.exe"), b"stub").unwrap();
+        assert_eq!(detect_python_mode(&app), PythonMode::Full);
+        assert_eq!(resolve_runtime_dir(&app), runtime);
+        let _ = std::fs::remove_dir_all(&app);
+    }
+
+    #[test]
+    fn mode_is_dev_without_any_runtime() {
+        let app = make_app_dir("dev", false);
+        assert_eq!(detect_python_mode(&app), PythonMode::Dev);
+        assert_eq!(startup_entry(detect_python_mode(&app)), "");
+        let _ = std::fs::remove_dir_all(&app);
+    }
+
+    #[test]
+    fn extract_token_ignores_other_cookies() {
+        let headers = "HTTP/1.1 200 OK\r\nset-cookie: theme=dark; Path=/\r\n";
+        assert_eq!(extract_csrf_token(headers), None);
+    }
 }

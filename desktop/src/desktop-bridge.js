@@ -476,7 +476,10 @@
     wireEvents();
     wireDrag();
     initUpdateWindow();
-    installTitleBar();
+    // 自绘标题栏已停用（2026-10-31）：壳改回原生 decorations(true)，窗口控制由
+    // 系统标题栏承担。installTitleBar 保留但不再调用——它的注入条会被页面自己的
+    // 导航栏盖住（绘制层级随页面 CSS 漂移），正是三个窗口按钮「看不见」的根因。
+    // if (false) installTitleBar();
     // 主应用页面才挂任务生命周期观察器
     if (document.getElementById("restoreUploadZone") || document.getElementById("btnStartRestore")) {
       watchTaskLifecycle();

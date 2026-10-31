@@ -38,9 +38,21 @@ pub struct AppPaths {
 }
 
 /// 主窗口导航到后端应用地址
+///
+/// 入口由运行时形态决定：瘦包引导态（无 torch）直接落到下载管理页，
+/// 否则进首页。判定在 python_process::detect_python_mode，靠 RUNTIME.json。
 fn navigate_to_app(app: &AppHandle, port: u16) {
     if let Some(win) = app.get_webview_window(window::MAIN_LABEL) {
-        let url = format!("http://127.0.0.1:{}/", port);
+        let app_dir = python_process::resolve_app_dir();
+        let entry = python_process::startup_entry(python_process::detect_python_mode(&app_dir));
+        let url = if entry.is_empty() {
+            format!("http://127.0.0.1:{}/", port)
+        } else {
+            format!("http://127.0.0.1:{}/{}", port, entry)
+        };
+        if !entry.is_empty() {
+            log::info!("引导态：导航入口 '{entry}'");
+        }
         match url.parse() {
             Ok(url) => {
                 let _ = win.navigate(url);
