@@ -152,7 +152,10 @@
     function renderStatus() {
         var data = state.status;
         if (!data) return;
-        var modeLabel = t('downloads.mode_' + data.mode, data.mode);
+        // i18n 键必须静态可扫描（test_i18n_completeness 会抓模板里的字面量键），
+        // 键名不能在运行时拼接——扫描器会把动态拼出的半截键当缺失键报错。
+        var modeKey = data.mode === 'bootstrap' ? 'downloads.mode_bootstrap' : 'downloads.mode_full';
+        var modeLabel = t(modeKey, data.mode);
         setText('dlMode', modeLabel);
         var modeEl = document.getElementById('dlMode');
         if (modeEl) modeEl.classList.toggle('is-ready', !!data.ready);
