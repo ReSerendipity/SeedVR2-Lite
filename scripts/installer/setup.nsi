@@ -5,7 +5,7 @@ Unicode true
 !include "LogicLib.nsh"
 
 Name "SeedVR2 桌面版"
-OutFile "SeedVR2-Setup-v1.5.4.exe"
+OutFile "SeedVR2-Setup-v${APP_VERSION}.exe"
 InstallDir "$LOCALAPPDATA\Programs\SeedVR2"
 InstallDirRegKey HKCU "Software\SeedVR2" "InstallDir"
 RequestExecutionLevel user
@@ -13,7 +13,12 @@ SetCompressor /SOLID lzma
 CRCCheck on
 BrandingText "SeedVR2"
 
-!define APP_VERSION "1.5.4"
+; 版本号：发布时用 -DAPP_VERSION=<pyproject.toml 的 version> 显式传入；下面的默认值只在
+; 脱离参数编译时兜底，务必与 pyproject.toml / scripts/installer/version.json 保持一致
+; （历史上就因为这里停在 1.5.4，装完提示「已是最新版本 1.5.4」而实际代码是 1.7.0）。
+!ifndef APP_VERSION
+  !define APP_VERSION "1.7.0"
+!endif
 !define DATA_PREFIX "SeedVR2-Data.7z"
 !define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\SeedVR2"
 ; 图标路径相对 setup.nsi 所在目录（scripts/installer/），克隆后无需改路径即可编译；
@@ -61,36 +66,33 @@ Section "SeedVR2 桌面版" SEC_APP
   RMDir /r "$TOOLSDIR"
   CreateDirectory "$TOOLSDIR"
   SetOutPath "$TOOLSDIR"
-  File "${SRC_7ZA}"
+  ; 统一嵌入名为 7za.exe：编译机上的 7-Zip 可能是 7z.exe，也可能是独立的 7za.exe，
+  ; 下面 ExecWait 只认 7za.exe。不改名会出现「文件在但进程起不来、错误码空串」的
+  ; 静默失败（VOSR2-Lite 0.2.1 真机踩过）。
+  File /oname=7za.exe "${SRC_7ZA}"
   File "killseedvr2.ps1"
 
   !insertmacro KillRunning
 
   ; 校验数据分卷存在
   ${IfNot} ${FileExists} "$EXEDIR\${DATA_PREFIX}.001"
-    MessageBox MB_ICONSTOP "缺少数据分卷 ${DATA_PREFIX}.001。`n请确认 setup.exe 与 3 个数据分卷（.001/.002/.003）位于同一目录。"
+    MessageBox MB_ICONSTOP "缺少数据分卷 ${DATA_PREFIX}.001。`n请确认 setup.exe 与数据分卷（.001/.002/...）位于同一目录。"
     Abort
   ${EndIf}
 
   ; 创建安装目录并解压数据分卷
-  SetOutPath "$INSTDIR"
-  DetailPrint "正在解压数据分卷（约 5GB，视磁盘速度需 3-10 分钟，请勿关闭窗口）..."
+  DetailPrint "正在解压数据分卷（约 1.3GB，视磁盘速度需 1-3 分钟，请勿关闭窗口）..."
   ExecWait '"$TOOLSDIR\7za.exe" x "$EXEDIR\${DATA_PREFIX}.001" -o"$INSTDIR" -y -bso0 -bsp0' $0
   ${If} $0 != 0
-    MessageBox MB_ICONSTOP "数据解压失败（7za 错误码 $0）。`n请检查：1) 磁盘空间是否充足（需约 12GB）；2) 数据分卷是否完整（SHA256 校验见随附说明）。"
+    MessageBox MB_ICONSTOP "数据解压失败（7za 错误码 $0）。`n请检查：1) 磁盘空间是否充足（需约 4GB）；2) 数据分卷是否完整（SHA256 校验见随附说明）。"
     Abort
   ${EndIf}
 
-  ; 数据卷为旧基线（含旧壳/旧样式/旧版本号），此处用安装器内嵌文件覆盖为最新（壳更新无需重打 5GB 数据卷）
+  ; 只覆盖壳：app 代码（style.css / version.json / pyproject.toml / task.py）
+  ; 在数据卷里已是同一次构建的版本，安装器再覆盖会把它们退回旧版本
+  ; ——1.7.0 装完显示 1.5.4 就是这么来的。换壳无需重打数据卷。
   SetOutPath "$INSTDIR"
   File "SeedVR2.exe"
-  SetOutPath "$INSTDIR\app\app\integrated_app\static\css"
-  File "style.css"
-  SetOutPath "$INSTDIR\app"
-  File "version.json"  SetOutPath "$INSTDIR\app"
-  File "pyproject.toml"
-  SetOutPath "$INSTDIR\app\app\integrated_app\routes\restore"
-  File "task.py"
 
 
 

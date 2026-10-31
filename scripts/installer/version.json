@@ -1,6 +1,6 @@
 {
-    "changelog": "修复版本号显示（pyproject 同步 1.5.4）；修复失败弹窗显示具体错误原因（SSE 下发 error 详情）；壳更新已含 native-tls 网络通道",
-    "version": "1.5.4",
-    "release_date": "2026-09-08",
-    "minimum_shell_version": "1.0.0"
+  "version": "1.7.0",
+  "release_date": "2026-10-28",
+  "minimum_shell_version": "1.0.0",
+  "changelog": "新增 Ctrl+V 粘贴上传（截图直接入队，五语言提示）；新增服务端输出长边硬上限 inference.max_output_side（默认 6144，超限前置拒绝并给出可用上限）；移除 gaussian_blend / groupnorm_accumulate 两个无消费方的配置键（接缝融合一直由上游余弦斜坡负责，见 ADR-0006）；记录事件总线不引入 VOSR2 EventBus 的决策（ADR-0005）。"
 }

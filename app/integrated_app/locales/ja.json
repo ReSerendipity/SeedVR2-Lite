@@ -8,7 +8,8 @@
     "restore": "修復",
     "history": "履歴",
     "system": "システム状態",
-    "settings": "概要"
+    "settings": "概要",
+    "downloads": "ダウンロード"
   },
   "home": {
     "hero_title": "すべてのフレームに、",
@@ -630,5 +631,32 @@
     "double_res_hint_default": "画像または動画アップロード後、解像度は短辺×2で自動計算されます（このモードでは手動編集無効）",
     "double_res_applied": "解像度とタイルパラメータを短辺×2で自動設定しました",
     "initializing": "初期化中"
+  },
+  "downloads": {
+    "title": "ダウンロード管理",
+    "subtitle": "ランタイムとモデル",
+    "loading": "読み込み中…",
+    "refresh": "更新",
+    "mode_bootstrap": "ブートストラップモード",
+    "mode_full": "フルランタイム",
+    "mode_system": "システム Python",
+    "ready": "準備完了",
+    "not_ready": "未準備",
+    "runtime": "実行環境",
+    "runtime_desc": "PyTorch（CUDA）入りの Python ランタイム。スリム版には含まれないため、推論前にここでインストールしてください。",
+    "status": "状態",
+    "installed": "インストール済み",
+    "not_installed": "未インストール",
+    "install": "インストール",
+    "cancel": "キャンセル",
+    "uninstall": "アンインストール",
+    "size": "サイズ",
+    "path": "パス",
+    "models": "モデル重み",
+    "models_desc": "重みをダウンロードすると修復を開始できます。同じサイズの複数精度を共存できます。",
+    "no_models": "重みが未設定です",
+    "confirm_uninstall": "これらのファイルを削除しますか？",
+    "confirm_uninstall_runtime": "ランタイムをアンインストールしますか？推論には再インストールが必要です。",
+    "error": "エラー"
   }
 }

@@ -8,7 +8,8 @@
     "restore": "Restaurer",
     "history": "Historique",
     "system": "État Système",
-    "settings": "À propos"
+    "settings": "À propos",
+    "downloads": "Téléchargements"
   },
   "home": {
     "hero_title": "Chaque image,",
@@ -630,5 +631,32 @@
     "double_res_hint_default": "Après envoi d'une image ou d'une vidéo, la résolution est calculée automatiquement en petit-côté × 2 (modification manuelle désactivée dans ce mode)",
     "double_res_applied": "Résolution et paramètres de tuile pré-remplis à petit-côté × 2",
     "initializing": "Initialisation"
+  },
+  "downloads": {
+    "title": "Téléchargements",
+    "subtitle": "Environnement et modèles",
+    "loading": "Chargement…",
+    "refresh": "Actualiser",
+    "mode_bootstrap": "Mode bootstrap",
+    "mode_full": "Runtime complet",
+    "mode_system": "Python système",
+    "ready": "Prêt",
+    "not_ready": "Non prêt",
+    "runtime": "Environnement d'exécution",
+    "runtime_desc": "Runtime Python avec PyTorch (CUDA). Le paquet allégé ne l'inclut pas — installez-le ici avant l'inférence.",
+    "status": "État",
+    "installed": "Installé",
+    "not_installed": "Non installé",
+    "install": "Installer",
+    "cancel": "Annuler",
+    "uninstall": "Désinstaller",
+    "size": "Taille",
+    "path": "Chemin",
+    "models": "Poids des modèles",
+    "models_desc": "Téléchargez les poids pour commencer. Plusieurs précisions par taille peuvent coexister.",
+    "no_models": "Aucun poids configuré",
+    "confirm_uninstall": "Supprimer ces fichiers ?",
+    "confirm_uninstall_runtime": "Désinstaller le runtime ? Une réinstallation sera nécessaire.",
+    "error": "Erreur"
   }
 }

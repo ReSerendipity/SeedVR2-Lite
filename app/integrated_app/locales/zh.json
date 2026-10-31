@@ -8,7 +8,8 @@
     "restore": "修复",
     "history": "历史记录",
     "system": "系统状态",
-    "settings": "关于"
+    "settings": "关于",
+    "downloads": "下载管理"
   },
   "home": {
     "hero_title": "让每一帧画面，",
@@ -630,5 +631,32 @@
     "double_res_hint_default": "上传图片或视频后将按短边×2自动计算（两倍模式下不可手动修改）",
     "double_res_applied": "已按短边×2自动填充分辨率和分块参数",
     "initializing": "初始化中"
+  },
+  "downloads": {
+    "title": "下载管理",
+    "subtitle": "运行时与模型",
+    "loading": "载入中…",
+    "refresh": "刷新",
+    "mode_bootstrap": "引导模式",
+    "mode_full": "完整运行时",
+    "mode_system": "系统 Python",
+    "ready": "已就绪",
+    "not_ready": "尚未就绪",
+    "runtime": "运行环境",
+    "runtime_desc": "含 PyTorch（CUDA）的 Python 运行时；瘦包不带，需在此安装后才能推理。",
+    "status": "状态",
+    "installed": "已安装",
+    "not_installed": "未安装",
+    "install": "安装",
+    "cancel": "取消",
+    "uninstall": "卸载",
+    "size": "体积",
+    "path": "路径",
+    "models": "模型权重",
+    "models_desc": "下载后即可开始修复；同一尺寸的多个精度可共存。",
+    "no_models": "未配置权重",
+    "confirm_uninstall": "确认删除这些文件？",
+    "confirm_uninstall_runtime": "确认卸载运行环境？卸载后需重新安装才能推理。",
+    "error": "出错"
   }
 }

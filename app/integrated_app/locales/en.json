@@ -8,7 +8,8 @@
     "restore": "Restore",
     "history": "History",
     "system": "System Status",
-    "settings": "About"
+    "settings": "About",
+    "downloads": "Downloads"
   },
   "home": {
     "hero_title": "Every frame,",
@@ -630,5 +631,32 @@
     "double_res_hint_default": "After uploading an image or video, resolution will be auto-computed as short-edge × 2 (manual edit disabled in this mode)",
     "double_res_applied": "Resolution and tile parameters auto-filled at short-edge × 2",
     "initializing": "Initializing"
+  },
+  "downloads": {
+    "title": "Downloads",
+    "subtitle": "Runtime & models",
+    "loading": "Loading…",
+    "refresh": "Refresh",
+    "mode_bootstrap": "Bootstrap mode",
+    "mode_full": "Full runtime",
+    "mode_system": "System Python",
+    "ready": "Ready",
+    "not_ready": "Not ready",
+    "runtime": "Runtime",
+    "runtime_desc": "Python runtime with PyTorch (CUDA). The slim package ships without it — install it here before running inference.",
+    "status": "Status",
+    "installed": "Installed",
+    "not_installed": "Not installed",
+    "install": "Install",
+    "cancel": "Cancel",
+    "uninstall": "Uninstall",
+    "size": "Size",
+    "path": "Path",
+    "models": "Model weights",
+    "models_desc": "Download weights to start restoring. Multiple precisions per size can coexist.",
+    "no_models": "No weights configured",
+    "confirm_uninstall": "Delete these files?",
+    "confirm_uninstall_runtime": "Uninstall the runtime? You must reinstall it before running inference.",
+    "error": "Error"
   }
 }

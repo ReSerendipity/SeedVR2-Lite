@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}SeedVR2 - {{ t('downloads.title') }}{% endblock %}
+
+{% block content %}
+<div class="sv-page-head">
+    <span class="sv-eyebrow sv-anim-rise">{{ t('downloads.subtitle') }}</span>
+    <h1 class="sv-serif-title sv-anim-rise sv-anim-d1">{{ t('downloads.title') }}</h1>
+</div>
+
+<!-- 状态条：当前跑在引导解释器还是完整运行时 -->
+<div class="sv-card sv-anim-rise sv-anim-d2" id="dlSummary">
+    <div class="sv-card-body dl-summary">
+        <div class="dl-summary-main">
+            <span class="dl-badge" id="dlMode">—</span>
+            <span class="dl-summary-text" id="dlReadyText">{{ t('downloads.loading') }}</span>
+        </div>
+        <button class="sv-btn sv-btn-ghost sv-btn-sm" id="dlRefresh" type="button">
+            <i class="bi bi-arrow-clockwise"></i> {{ t('downloads.refresh') }}
+        </button>
+    </div>
+</div>
+
+<!-- 运行环境 -->
+<div class="sv-card sv-anim-rise sv-anim-d3" id="dlRuntimeCard">
+    <div class="sv-card-body">
+        <div class="dl-section-head">
+            <div>
+                <h2 class="dl-section-title">{{ t('downloads.runtime') }}</h2>
+                <p class="dl-section-desc">{{ t('downloads.runtime_desc') }}</p>
+            </div>
+            <div class="dl-actions">
+                <button class="sv-btn sv-btn-primary sv-btn-sm" id="dlInstallRuntime" type="button">
+                    <i class="bi bi-download"></i> {{ t('downloads.install') }}
+                </button>
+                <button class="sv-btn sv-btn-outline sv-btn-sm dl-hidden" id="dlCancelRuntime" type="button">
+                    <i class="bi bi-x-circle"></i> {{ t('downloads.cancel') }}
+                </button>
+                <button class="sv-btn sv-btn-danger sv-btn-sm dl-hidden" id="dlUninstallRuntime" type="button">
+                    <i class="bi bi-trash3"></i> {{ t('downloads.uninstall') }}
+                </button>
+            </div>
+        </div>
+        <dl class="dl-kv">
+            <dt>{{ t('downloads.status') }}</dt><dd id="dlRuntimeStatus">—</dd>
+            <dt>{{ t('downloads.size') }}</dt><dd id="dlRuntimeSize">—</dd>
+            <dt>Python</dt><dd id="dlRuntimePython">—</dd>
+            <dt>torch</dt><dd id="dlRuntimeTorch">—</dd>
+            <dt>CUDA</dt><dd id="dlRuntimeCuda">—</dd>
+            <dt>{{ t('downloads.path') }}</dt><dd class="dl-mono" id="dlRuntimePath">—</dd>
+        </dl>
+        <div class="sv-progress dl-hidden" id="dlRuntimeProgress">
+            <div class="sv-progress-bar" id="dlRuntimeBar" style="width:0%"></div>
+        </div>
+        <p class="dl-progress-text dl-hidden" id="dlRuntimeProgressText"></p>
+    </div>
+</div>
+
+<!-- 模型权重 -->
+<div class="sv-card sv-anim-rise sv-anim-d3" id="dlModelsCard">
+    <div class="sv-card-body">
+        <div class="dl-section-head">
+            <div>
+                <h2 class="dl-section-title">{{ t('downloads.models') }}</h2>
+                <p class="dl-section-desc">{{ t('downloads.models_desc') }}</p>
+            </div>
+        </div>
+        <ul class="dl-model-list" id="dlModelList">
+            <li class="dl-model-item dl-muted">{{ t('downloads.loading') }}</li>
+        </ul>
+        <p class="dl-hint" id="dlModelRoot"></p>
+    </div>
+</div>
+
+<style>
+.dl-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.dl-summary-main { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dl-badge {
+    display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px;
+    background: var(--sv-primary-dim); color: var(--sv-text); border: 1px solid var(--sv-border);
+}
+.dl-badge.is-ready { background: var(--sv-success); color: #fff; border-color: transparent; }
+.dl-summary-text { color: var(--sv-text-muted); font-size: 14px; }
+.dl-section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.dl-section-title { font-size: 16px; margin: 0 0 4px; }
+.dl-section-desc { margin: 0; font-size: 13px; color: var(--sv-text-muted); }
+.dl-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.dl-kv { display: grid; grid-template-columns: 110px 1fr; gap: 6px 14px; margin: 0; font-size: 13px; }
+.dl-kv dt { color: var(--sv-text-muted); }
+.dl-kv dd { margin: 0; }
+.dl-mono { font-family: var(--sv-font-mono, monospace); font-size: 12px; word-break: break-all; }
+.dl-model-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.dl-model-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 12px; border: 1px solid var(--sv-border); border-radius: var(--sv-radius);
+    background: var(--sv-bg-elevated, transparent);
+}
+.dl-model-meta { display: flex; flex-direction: column; gap: 2px; }
+.dl-model-name { font-size: 14px; }
+.dl-model-sub { font-size: 12px; color: var(--sv-text-muted); }
+.dl-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.dl-dot.on { background: var(--sv-success); }
+.dl-dot.off { background: var(--sv-text-muted); opacity: .4; }
+.dl-muted { color: var(--sv-text-muted); font-size: 13px; }
+.dl-hint { margin: 12px 0 0; font-size: 12px; color: var(--sv-text-muted); font-family: var(--sv-font-mono, monospace); }
+.dl-hidden { display: none !important; }
+.dl-progress-text { margin: 8px 0 0; font-size: 12px; color: var(--sv-text-muted); }
+</style>
+{% endblock %}
+
+{% block scripts %}
+{# 内联脚本必须带 CSP nonce：base.html 的 meta CSP 在 nonce 存在时不再含 'unsafe-inline'，
+   缺了它浏览器会静默拦下整段脚本——页面能打开、文案停在被服务端渲染的「载入中…」，
+   控制台无报错、后端访问日志里也看不到 /api/downloads/* 请求（真机踩过）。 #}
+<script nonce="{{ csp_nonce | default('') }}">
+(function () {
+    'use strict';
+    var t = function (key, fallback) {
+        return (window.__I18N__ && window.__I18N__[key]) || fallback || key;
+    };
+    var POLL_MS = 1000;
+    var pollTimer = null;
+    var busy = false;
+
+    function api(path, options) {
+        return fetch(path, Object.assign({ headers: { 'Content-Type': 'application/json' } }, options || {}))
+            .then(function (resp) { return resp.json().catch(function () { return {}; }); });
+    }
+
+    function humanSize(bytes) {
+        if (!bytes) return '—';
+        var units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        var i = 0, value = bytes;
+        while (value >= 1024 && i < units.length - 1) { value /= 1024; i++; }
+        return value.toFixed(value >= 10 || i === 0 ? 0 : 1) + ' ' + units[i];
+    }
+
+    function setText(id, text) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = text;
+    }
+
+    function show(id, visible) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        if (visible) el.classList.remove('dl-hidden');
+        else el.classList.add('dl-hidden');
+    }
+
+    var state = { status: null, tasks: [] };
+
+    function renderStatus() {
+        var data = state.status;
+        if (!data) return;
+        var modeLabel = t('downloads.mode_' + data.mode, data.mode);
+        setText('dlMode', modeLabel);
+        var modeEl = document.getElementById('dlMode');
+        if (modeEl) modeEl.classList.toggle('is-ready', !!data.ready);
+        setText('dlReadyText', data.ready ? t('downloads.ready', 'Ready') : t('downloads.not_ready', 'Not ready'));
+
+        var rt = data.runtime || {};
+        setText('dlRuntimeStatus', rt.installed ? t('downloads.installed', 'Installed') : t('downloads.not_installed', 'Not installed'));
+        setText('dlRuntimeSize', humanSize(rt.size_bytes));
+        setText('dlRuntimePython', rt.python_version || '—');
+        setText('dlRuntimeTorch', rt.torch_version || '—');
+        setText('dlRuntimeCuda', rt.cuda || '—');
+        setText('dlRuntimePath', rt.path || '—');
+        show('dlUninstallRuntime', !!rt.installed);
+        show('dlInstallRuntime', !rt.installed);
+
+        var list = document.getElementById('dlModelList');
+        if (!list) return;
+        list.innerHTML = '';
+        (data.models || []).forEach(function (model) {
+            var li = document.createElement('li');
+            li.className = 'dl-model-item';
+            var meta = document.createElement('div');
+            meta.className = 'dl-model-meta';
+            var name = document.createElement('span');
+            name.className = 'dl-model-name';
+            name.innerHTML = '<span class="dl-dot ' + (model.present ? 'on' : 'off') + '"></span>' + model.display_name;
+            var sub = document.createElement('span');
+            sub.className = 'dl-model-sub';
+            sub.textContent = model.id + ' · ' + (model.present ? humanSize(model.size_bytes) : t('downloads.not_installed', 'Not installed'));
+            meta.appendChild(name);
+            meta.appendChild(sub);
+            li.appendChild(meta);
+
+            var actions = document.createElement('div');
+            actions.className = 'dl-actions';
+            var btn = document.createElement('button');
+            btn.className = 'sv-btn sv-btn-sm ' + (model.present ? 'sv-btn-danger' : 'sv-btn-primary');
+            btn.type = 'button';
+            btn.textContent = model.present ? t('downloads.uninstall', 'Uninstall') : t('downloads.install', 'Install');
+            btn.addEventListener('click', function () {
+                if (model.present) uninstallModel(model.id);
+                else startTask('model', model.id);
+            });
+            actions.appendChild(btn);
+            li.appendChild(actions);
+            list.appendChild(li);
+        });
+        if (!(data.models || []).length) {
+            list.innerHTML = '<li class="dl-model-item dl-muted">' + t('downloads.no_models', 'No weights configured') + '</li>';
+        }
+        setText('dlModelRoot', (t('downloads.path', 'Path') + ': ') + (data.model_root || ''));
+    }
+
+    function renderProgress() {
+        var tasks = state.tasks || [];
+        var runtimeTask = null;
+        tasks.forEach(function (task) { if (task.component === 'runtime') runtimeTask = task; });
+        if (runtimeTask && !runtimeTask.finished) {
+            show('dlRuntimeProgress', true);
+            show('dlRuntimeProgressText', true);
+            show('dlInstallRuntime', false);
+            show('dlCancelRuntime', true);
+            var pct = Math.max(0, Math.min(100, (runtimeTask.ratio || 0) * 100));
+            var bar = document.getElementById('dlRuntimeBar');
+            if (bar) bar.style.width = pct.toFixed(1) + '%';
+            setText('dlRuntimeProgressText', (runtimeTask.message || runtimeTask.stage) + ' · ' + pct.toFixed(0) + '%');
+        } else {
+            show('dlRuntimeProgress', false);
+            show('dlRuntimeProgressText', false);
+            show('dlCancelRuntime', false);
+            if (runtimeTask && runtimeTask.finished && runtimeTask.error) {
+                show('dlRuntimeProgressText', true);
+                setText('dlRuntimeProgressText', t('downloads.error', 'Error') + ': ' + runtimeTask.error);
+            }
+        }
+        var anyRunning = tasks.some(function (task) { return !task.finished; });
+        if (anyRunning && !pollTimer) startPolling();
+        if (!anyRunning && pollTimer) { stopPolling(); refresh(); }
+    }
+
+    function refresh() {
+        return Promise.all([api('/api/downloads/status'), api('/api/downloads/progress')]).then(function (results) {
+            var statusResp = results[0] || {};
+            var progressResp = results[1] || {};
+            if (statusResp.success) state.status = statusResp.data;
+            if (progressResp.success) state.tasks = (progressResp.data || {}).tasks || [];
+            renderStatus();
+            renderProgress();
+        }).catch(function (err) {
+            setText('dlReadyText', t('downloads.error', 'Error') + ': ' + err);
+        });
+    }
+
+    function startPolling() {
+        if (pollTimer) return;
+        pollTimer = setInterval(function () {
+            api('/api/downloads/progress').then(function (resp) {
+                if (resp && resp.success) {
+                    state.tasks = (resp.data || {}).tasks || [];
+                    renderProgress();
+                }
+            });
+        }, POLL_MS);
+    }
+
+    function stopPolling() {
+        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    }
+
+    function startTask(kind, target) {
+        if (busy) return;
+        busy = true;
+        api('/api/downloads/start', { method: 'POST', body: JSON.stringify({ kind: kind, target: target || '' }) })
+            .then(function (resp) {
+                if (!resp.success) {
+                    alert((resp.error && resp.error.message) || t('downloads.error', 'Error'));
+                    return;
+                }
+                startPolling();
+                refresh();
+            })
+            .catch(function (err) { alert(String(err)); })
+            .then(function () { busy = false; });
+    }
+
+    function cancelTask(kind) {
+        api('/api/downloads/cancel', { method: 'POST', body: JSON.stringify({ kind: kind, target: '' }) })
+            .then(refresh);
+    }
+
+    function uninstallModel(id) {
+        if (!confirm(t('downloads.confirm_uninstall', 'Delete these files?'))) return;
+        api('/api/downloads/uninstall', { method: 'POST', body: JSON.stringify({ kind: 'model', target: id }) })
+            .then(refresh);
+    }
+
+    function uninstallRuntime() {
+        if (!confirm(t('downloads.confirm_uninstall_runtime', 'Uninstall the runtime?'))) return;
+        api('/api/downloads/uninstall', { method: 'POST', body: JSON.stringify({ kind: 'runtime', target: '' }) })
+            .then(refresh);
+    }
+
+    document.getElementById('dlInstallRuntime').addEventListener('click', function () { startTask('runtime', ''); });
+    document.getElementById('dlCancelRuntime').addEventListener('click', function () { cancelTask('runtime'); });
+    document.getElementById('dlUninstallRuntime').addEventListener('click', uninstallRuntime);
+    document.getElementById('dlRefresh').addEventListener('click', refresh);
+
+    refresh();
+})();
+</script>
+{% endblock %}
