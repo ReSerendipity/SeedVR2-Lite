@@ -15,18 +15,11 @@
     "size_bytes": 2907703182,
     "built_at": "2026-11-01T01:54:25Z",
     "min_app_version": "1.7.0",
-    "volumes": [
-      {
-        "name": "SeedVR2-Lite-Runtime-cu128.zip.001",
-        "size": 1992294400,
-        "sha256": "fc14df11c3eaed2b689edf294dada5301e753303868e73255fb0e3b6a439db26"
-      },
-      {
-        "name": "SeedVR2-Lite-Runtime-cu128.zip.002",
-        "size": 915408782,
-        "sha256": "8a4d41803b50b91ad95dfa008353513cb0ee385a33667b5b3588ccc423bfc678"
-      }
-    ]
+    "volumes": [],
+    "install_mode": "online",
+    "index_url": "https://download.pytorch.org/whl/cu128",
+    "pip_extra_index": "https://pypi.tuna.tsinghua.edu.cn/simple",
+    "note": "install_mode=online：页内点安装时后端直接 pip 官方索引安装 （torch 家族 + 生态包），无需下载预置分卷。"
   },
   "models": []
 }
