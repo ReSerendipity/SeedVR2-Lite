@@ -6,16 +6,27 @@
     "tag": "runtime-v1",
     "base_url": "https://github.com/ReSerendipity/SeedVR2-Lite/releases/download/runtime-v1",
     "python": "3.12.10",
-    "torch": "2.13.0+cu132",
-    "cuda": "cu132",
+    "torch": "2.10.0+cu128",
+    "cuda": "cu128",
     "packages": [
-      "torch==2.13.0",
-      "torchvision==0.28.0"
+      "torch==2.10.0",
+      "torchvision==0.25.0"
     ],
-    "size_bytes": 0,
-    "built_at": null,
+    "size_bytes": 2907703182,
+    "built_at": "2026-11-01T01:54:25Z",
     "min_app_version": "1.7.0",
-    "volumes": []
+    "volumes": [
+      {
+        "name": "SeedVR2-Lite-Runtime-cu128.zip.001",
+        "size": 1992294400,
+        "sha256": "fc14df11c3eaed2b689edf294dada5301e753303868e73255fb0e3b6a439db26"
+      },
+      {
+        "name": "SeedVR2-Lite-Runtime-cu128.zip.002",
+        "size": 915408782,
+        "sha256": "8a4d41803b50b91ad95dfa008353513cb0ee385a33667b5b3588ccc423bfc678"
+      }
+    ]
   },
   "models": []
 }

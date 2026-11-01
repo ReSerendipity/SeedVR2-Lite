@@ -122,8 +122,20 @@
     var pollTimer = null;
     var busy = false;
 
+    // Double Submit Cookie：非安全方法必须回传 X-CSRF-Token，否则 CSRF 中间件 403
+    // （本页的 fetch 是独立封装的，不经过 app.js 的 csrfHeaders()，须自己带）
+    function csrfToken() {
+        var match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]*)/);
+        return match ? decodeURIComponent(match[1]) : '';
+    }
+
     function api(path, options) {
-        return fetch(path, Object.assign({ headers: { 'Content-Type': 'application/json' } }, options || {}))
+        var opts = options || {};
+        var headers = Object.assign(
+            { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken() },
+            opts.headers || {}
+        );
+        return fetch(path, Object.assign({}, opts, { headers: headers }))
             .then(function (resp) { return resp.json().catch(function () { return {}; }); });
     }
 
