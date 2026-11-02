@@ -596,6 +596,8 @@
     "social_douyin": "抖音",
     "social_kuaishou": "快手",
     "social_bilibili": "B站",
+    "social_modelscope": "魔搭 ModelScope",
+    "social_zhihu": "知乎",
     "model_management": "模型管理",
     "vram_col_model": "模型",
     "vram_quant_note": "量化權重（INT8-ConvRot / MXFP8 / NVFP4）在載入期反量化為 FP16 參與計算，因此顯存占用與 FP16 相同；其收益是磁碟與下載體積更小，而非省顯存。"
