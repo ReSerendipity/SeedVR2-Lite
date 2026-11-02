@@ -596,6 +596,8 @@
     "social_douyin": "Douyin (TikTok)",
     "social_kuaishou": "Kuaishou",
     "social_bilibili": "Bilibili",
+    "social_modelscope": "ModelScope",
+    "social_zhihu": "Zhihu",
     "model_management": "Modèle",
     "vram_col_model": "Modèle",
     "vram_quant_note": "Les poids quantifiés (INT8-ConvRot / MXFP8 / NVFP4) sont déquantifiés en FP16 au chargement : leur empreinte VRAM est donc identique au FP16. Leur intérêt est un téléchargement bien plus léger, pas une VRAM réduite."
