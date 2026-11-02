@@ -596,6 +596,8 @@
     "social_douyin": "Douyin (TikTok)",
     "social_kuaishou": "Kuaishou",
     "social_bilibili": "Bilibili",
+    "social_modelscope": "ModelScope",
+    "social_zhihu": "Zhihu",
     "model_management": "Model",
     "vram_col_model": "Model",
     "vram_quant_note": "Quantised weights (INT8-ConvRot / MXFP8 / NVFP4) are dequantised to FP16 at load time, so their VRAM footprint matches FP16. Their benefit is a much smaller download, not lower VRAM."
