@@ -596,6 +596,8 @@
     "social_douyin": "Douyin（TikTok）",
     "social_kuaishou": "Kuaishou（快手）",
     "social_bilibili": "Bilibili",
+    "social_modelscope": "ModelScope",
+    "social_zhihu": "Zhihu",
     "model_management": "モデル",
     "vram_col_model": "モデル",
     "vram_quant_note": "量子化重み（INT8-ConvRot / MXFP8 / NVFP4）はロード時に FP16 へ逆量子化して計算するため、VRAM 使用量は FP16 と同じです。利点はダウンロード容量の削減であり、VRAM 削減ではありません。"
