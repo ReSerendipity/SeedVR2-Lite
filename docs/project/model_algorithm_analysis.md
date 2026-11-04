@@ -163,8 +163,8 @@ Causal Video VAE 是基于 3D 因果卷积的视频变分自编码器，架构�
   - 每层 3D 卷积 + GroupNorm + SiLU
 - **空间复杂度**: O(B × C × T × H × W) — 解码后全分辨率视频
   - 空间分块推理可降低峰值到 O(B × C × tile_H × tile_W × T)
-- **优化候选**: Tiled VAE 已实现（余弦窗渐变融合）；~~GroupNorm 累积器优化已集成~~ → **2026-09-10 查证：GroupNormAccumulator / TiledVAEHook 均未接线（空转，`_var_lists` 恒为空、Gaussian 混合分支永不执行），已从 `_vae_pipeline` 移除死路径并改日志措辞，见 `docs/VAE_STALL_DIAGNOSIS_20260910.md` §三/§四**
-- **风险**: 分块边界处可能出现伪影（2026-09-10 查证：GroupNorm 累积器精度问题一项不成立——该类从未接线，见 `docs/VAE_STALL_DIAGNOSIS_20260910.md`）
+- **优化候选**: Tiled VAE 已实现（余弦窗渐变融合）；~~GroupNorm 累积器优化已集成~~ → **2026-09-10 查证：GroupNormAccumulator / TiledVAEHook 均未接线（空转，`_var_lists` 恒为空、Gaussian 混合分支永不执行），已从 `_vae_pipeline` 移除死路径并改日志措辞，见 `docs/_archive/VAE_STALL_DIAGNOSIS_20260910.md` §三/§四**
+- **风险**: 分块边界处可能出现伪影（2026-09-10 查证：GroupNorm 累积器精度问题一项不成立——该类从未接线，见 `docs/_archive/VAE_STALL_DIAGNOSIS_20260910.md`）
 
 #### `ResnetBlock3D.forward()`
 - **时间复杂度**: O(B × C × T × H × W × k³) — 3D 卷积主导, k=3 (核大小)

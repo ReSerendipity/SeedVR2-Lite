@@ -36,7 +36,7 @@ SeedVR2-lite/
 ├── requirements-dev.txt      ← 开发依赖（pytest + ruff + mypy + coverage）
 ├── requirements-lock.txt     ← 锁定依赖版本（generate_lock.py 生成）
 ├── requirements-container-lock.txt ← 容器锁定依赖
-└── pyproject.toml            ← 项目元数据 + 工具配置（版本权威位 1.6.1）
+└── pyproject.toml            ← 项目元数据 + 工具配置（版本权威位，当前 1.7.0，截至 2026-11-04）
 ```
 
 ### 3.2 禁区目录（禁止 AI 自动修改，必须人工确认）

@@ -16,7 +16,7 @@
 ## 1. 版本号规范
 
 - 遵循 SemVer `MAJOR.MINOR.PATCH`；预发布用 `-alpha.N` / `-beta.N` / `-rc.N`（公共条款，§10.2）。
-- **唯一权威版本位**：`pyproject.toml` 顶层 `version`（当前 1.6.1）。
+- **唯一权威版本位**：`pyproject.toml` 顶层 `version`（当前 1.7.0，截至 2026-11-04）。
 - 必须同步的其它版本位：
   - `app/integrated_app/version.py`：运行时直读 `pyproject.toml`，不另存版本串。
   - `CHANGELOG.md`：每个发版小节标题含版本号。
