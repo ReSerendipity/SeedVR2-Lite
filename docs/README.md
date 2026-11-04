@@ -26,7 +26,7 @@
 
 ## docs/ 索引（本目录）
 
-本文件即 `docs/README.md`，为 docs/ 索引入口。下表覆盖 `docs/` 下全部 45 篇 tracked Markdown（含子目录），链接均为相对路径、可直接点击；「状态/截至」摘自各文自述定位（2026-11-04 复核）。
+本文件即 `docs/README.md`，为 docs/ 索引入口。下表覆盖 `docs/` 下全部 46 篇 tracked Markdown（含子目录；另有 8 篇 `_devarchive/` 本地文档未随仓库分发），链接均为相对路径、可直接点击；「状态/截至」摘自各文自述定位（2026-11-04 复核）。
 
 ### 架构与项目上下文（project/）
 | 文件 | 管什么 | 状态/截至 |
@@ -105,6 +105,7 @@
 | [_archive/壳更新-下一轮改动清单.md](_archive/壳更新-下一轮改动清单.md) | 壳更新执行记录 | 归档（2026-11-04）；历史记录（v1.5.3 已执行，2026-09-08） |
 | [_archive/INSTALLER-LESSONS.md](_archive/INSTALLER-LESSONS.md) | Inno Setup & CI 编译经验教训（v1.4.8 分卷打包） | 归档（2026-11-04）；已被 Tauri v2 方案取代（2026-10-21 注记） |
 | [_archive/VAE_STALL_DIAGNOSIS_20260910.md](_archive/VAE_STALL_DIAGNOSIS_20260910.md) | VAE 阶段卡死 + 显存占用诊断报告 | 归档（2026-11-04）；历史诊断（2026-09-10） |
+| [_archive/2026-09-agent-memory-archive.md](_archive/2026-09-agent-memory-archive.md) | 2026-09 会话记忆归档（Git 损坏恢复 / 测试 flake / 发版事故 / v1.6.0 runbook） | 归档（2026-11-04）；历史记录（2026-09-06 ~ 09-30） |
 
 ### 维护者本地 / 未随仓库分发的目录
 | 目录 | 管什么 | 状态/截至 |
