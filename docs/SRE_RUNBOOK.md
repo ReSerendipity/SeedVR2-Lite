@@ -2,7 +2,7 @@
 
 > **来源**：家族泛化自 TTS_MultiModel `docs/SRE_RUNBOOK.md` + 本仓既有云原生部署，本仓本地化。
 > 配套：`docs/rollback_sop.md`、`docs/release-governance.md`。
-> 适用版本：v1.6.1（与 `pyproject.toml` / `app/integrated_app/version.py` 一致）。
+> 适用版本：以 `pyproject.toml` 为准（当前 1.7.0，截至 2026-11-04）。
 
 ---
 

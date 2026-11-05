@@ -28,7 +28,7 @@ A standalone video & image super-resolution toolkit powered by SeedVR2 diffusion
 
 SeedVR2-Lite 把字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开源的 [SeedVR2](https://huggingface.co/ByteDance-Seed) 单步扩散修复模型，包装成一个**独立运行的本地 Web 应用**：上传一张图片或一段视频，即可完成超分辨率与细节增强，数据全程不出本机。它不依赖 ComfyUI，也不需要任何外部推理服务。
 
-对外正式分发为 **Tauri v2 桌面版**（离线完整包解压即用）；开发者也可以直接用源码或便携分卷包在浏览器中运行。当前稳定版本为 **v1.6.1**。
+对外正式分发为 **Tauri v2 桌面版**（离线完整包解压即用）；开发者也可以直接用源码或便携分卷包在浏览器中运行。当前稳定版本为 **v1.7.0**（截至 2026-11-04）。
 
 ### 核心特性
 
@@ -157,8 +157,8 @@ docker build -t seedvr2 .
 docker run --gpus all -p 7870:7870 seedvr2
 
 # 或使用随 v* 标签发布的 GHCR 镜像
-docker pull ghcr.io/reserendipity/seedvr2-lite:1.6.1
-docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-lite:1.6.1
+docker pull ghcr.io/reserendipity/seedvr2-lite:1.7.0
+docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-lite:1.7.0
 ```
 
 环境变量模板见 `.env.example`，常用 `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`。
@@ -182,7 +182,7 @@ docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-lite:1.6.1
 - **文档**：仓内 [用户手册](docs/用户手册.md) 与 [开发者指南](docs/开发者指南.md)。
 - **治理规范**：组织级治理与贡献约定见 [ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance) 与 [贡献指南](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md)。
 - **架构决策（ADR）**：关键技术选型记录于 [`docs/adr/`](docs/adr/)。
-- **发布治理**：版本发布、增量更新与回滚见 [release-governance](docs/release-governance.md)、[发布检查清单](docs/发布检查清单.md)、[增量更新发布手册](docs/增量更新发布手册.md) 与 [rollback_sop](docs/rollback_sop.md)；版本与变更见 [CHANGELOG.md](CHANGELOG.md)。
+- **发布治理**：版本发布、增量更新与回滚见 [release-governance](docs/release-governance.md)、[发布检查清单（历史记录，v1.5.1 时代）](docs/_archive/发布检查清单.md)、[增量更新发布手册](docs/增量更新发布手册.md) 与 [rollback_sop](docs/rollback_sop.md)；版本与变更见 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 贡献与支持
 
@@ -202,7 +202,7 @@ docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-lite:1.6.1
 
 SeedVR2-Lite packages the [SeedVR2](https://huggingface.co/ByteDance-Seed) one-step diffusion restoration model (jointly open-sourced by ByteDance's Seed team and NTU S-Lab) into a **standalone local web app**: upload an image or video and get super-resolution / detail enhancement on the spot, with all data staying on your machine. It does **not** depend on ComfyUI or any external inference service.
 
-The supported distribution is a **Tauri v2 desktop build** (offline bundle, extract-and-run); developers can also run it from source or via the portable bundle in a browser. Current stable release: **v1.6.1**.
+The supported distribution is a **Tauri v2 desktop build** (offline bundle, extract-and-run); developers can also run it from source or via the portable bundle in a browser. Current stable release: **v1.7.0** (as of 2026-11-04).
 
 ### Highlights
 
@@ -315,8 +315,8 @@ docker build -t seedvr2 .
 docker run --gpus all -p 7870:7870 seedvr2
 
 # Or use the GHCR image published with v* tags
-docker pull ghcr.io/reserendipity/seedvr2-lite:1.6.1
-docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-lite:1.6.1
+docker pull ghcr.io/reserendipity/seedvr2-lite:1.7.0
+docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-lite:1.7.0
 ```
 
 Environment variables: see `.env.example`; a common one is `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`.
@@ -340,7 +340,7 @@ Please read [USER_AGREEMENT.md](docs/USER_AGREEMENT.md) before use. This is an i
 - **Docs**: in-repo [user manual](docs/用户手册.md) and [developer guide](docs/开发者指南.md).
 - **Governance**: org-level governance and contribution conventions live in [ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance) and the [contributing guide](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md).
 - **Architecture decisions (ADR)**: key design records are under [`docs/adr/`](docs/adr/).
-- **Release governance**: versioning, incremental updates and rollback are covered by [release-governance](docs/release-governance.md), the [release checklist](docs/发布检查清单.md), the [incremental-update manual](docs/增量更新发布手册.md) and [rollback_sop](docs/rollback_sop.md); see [CHANGELOG.md](CHANGELOG.md) for versions and changes.
+- **Release governance**: versioning, incremental updates and rollback are covered by [release-governance](docs/release-governance.md), the [release checklist (historical, v1.5.1 era)](docs/_archive/发布检查清单.md), the [incremental-update manual](docs/增量更新发布手册.md) and [rollback_sop](docs/rollback_sop.md); see [CHANGELOG.md](CHANGELOG.md) for versions and changes.
 
 ### Contributing & support
 
