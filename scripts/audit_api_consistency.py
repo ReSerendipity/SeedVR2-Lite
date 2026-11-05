@@ -137,6 +137,12 @@ KNOWN_ORPHANS: dict[str, tuple[str, str]] = {
         "examples/api_example.js:324 与 examples/api_example.py:305 实际在调用（examples/ 为维护者本地目录，未随仓库分发）；"
         "曾误标 dead-code（漏看了 examples 消费者），本批补进 website/docs/guide/api.md",
     ),
+    "/api/downloads/catalog": (
+        "intentional",
+        "对外集成面：桌面壳/外部客户端读取可下载清单（环境包分卷与校验和 + 权重变体）；"
+        "仓内下载页只用 status/progress/start/cancel/uninstall，无 UI 入口。"
+        "2026-11-05 补登记（此前未归档导致契约审计红）",
+    ),
 }
 
 _HTTP_METHODS = ("get", "post", "put", "delete", "patch")
