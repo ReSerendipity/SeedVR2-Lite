@@ -307,7 +307,7 @@ def _install_runtime_online(
     if extra_index:
         command += ["--extra-index-url", extra_index]
     env = dict(os.environ, PIP_CONFIG_FILE="NUL")  # 屏蔽用户镜像，防止被顶成 +cpu
-    proc = subprocess.Popen(
+    proc = subprocess.Popen(  # nosemgrep - 项目目标 Python 3.10+，py3.6 兼容规则（Popen1/Popen2）误触发
         command,
         cwd=PROJECT_ROOT,
         env=env,
