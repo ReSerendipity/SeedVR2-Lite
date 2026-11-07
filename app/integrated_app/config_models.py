@@ -677,6 +677,23 @@ class RuntimeOomBreakerConfig(BaseModel):
     cooldown_seconds: float = Field(600.0, ge=30.0, le=7200.0)
 
 
+class RuntimeQualityBreakerConfig(BaseModel):
+    """输出质量劣化熔断配置（评估 A3 整改：阈值告警 + 自动回滚钩子）。
+
+    Attributes:
+        enabled: 是否启用熔断（False 时 quality_breaker_remaining 恒返回 0）。
+        luma_min: 输出平均亮度下限（0-255 刻度，0-64），低于记一次劣化样本。
+        threshold: 连续低亮度样本次数阈值（1-20），达到即打开熔断并触发回滚钩子。
+        cooldown_seconds: 熔断冷却期（30-7200 秒），期间新任务提交返回 503 + Retry-After。
+    """
+
+    model_config = ConfigDict(extra="ignore")
+    enabled: bool = True
+    luma_min: float = Field(8.0, ge=0.0, le=64.0)
+    threshold: int = Field(3, ge=1, le=20)
+    cooldown_seconds: float = Field(600.0, ge=30.0, le=7200.0)
+
+
 class RuntimeRetryConfig(BaseModel):
     """推理坏案例自动重试配置模型。
 
@@ -714,6 +731,7 @@ class RuntimeConfig(BaseModel):
         sse: SSE 进度推送配置。
         batch: 批量任务重试配置。
         retry: 推理坏案例自动重试配置。
+        quality: 输出质量劣化熔断配置（阈值告警 + 自动回滚钩子，评估 A3 整改）。
         task: 任务队列配置。
         upload: 文件上传配置。
         security: 安全策略配置。
@@ -724,6 +742,10 @@ class RuntimeConfig(BaseModel):
     sse: RuntimeSseConfig = Field(default_factory=RuntimeSseConfig)
     batch: RuntimeBatchConfig = Field(default_factory=RuntimeBatchConfig)
     retry: RuntimeRetryConfig = Field(default_factory=RuntimeRetryConfig)
+    quality: RuntimeQualityBreakerConfig = Field(
+        default_factory=RuntimeQualityBreakerConfig,
+        description="输出质量劣化熔断（A3：阈值告警 + 自动回滚钩子）",
+    )
     task: RuntimeTaskConfig = Field(default_factory=RuntimeTaskConfig)
     upload: RuntimeUploadConfig = Field(default_factory=RuntimeUploadConfig)
     security: RuntimeSecurityConfig = Field(default_factory=RuntimeSecurityConfig)

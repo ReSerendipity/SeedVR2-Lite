@@ -40,6 +40,13 @@ async def get_metrics():
         data["vram_leak"] = vram_leak_detector.snapshot()
     except Exception as e:  # noqa: BLE001 — 可观测性字段失败不影响主指标
         logger.warning(f"显存泄漏监控快照获取失败: {e}")
+    # 评估 A3 整改：暴露输出质量劣化熔断状态（阈值/连续计数/回滚钩子挂载数）
+    try:
+        from app.integrated_app.services.restore_service import quality_breaker
+
+        data["quality_breaker"] = quality_breaker.snapshot()
+    except Exception as e:  # noqa: BLE001 — 可观测性字段失败不影响主指标
+        logger.warning(f"质量劣化熔断快照获取失败: {e}")
     return respond_success(data=data)
 
 

@@ -244,10 +244,10 @@
         <!-- 默认设置按钮组 -->
         <div class="sv2-presets sv2-presets-defaults">
             <button type="button" class="sv-btn sv-btn-secondary sv-btn-sm sv-w-100" id="btnSaveAsDefault" title="{{ t('restore.save_default_tip') }}">
-                <i class="bi bi-save"></i> 保存为默认设置
+                <i class="bi bi-save"></i> {{ t('restore.save_default_label') }}
             </button>
             <button type="button" class="sv-btn sv-btn-outline sv-btn-sm sv-w-100 sv-mt-2" id="btnResetToDefault" title="{{ t('restore.reset_default_tip') }}">
-                <i class="bi bi-arrow-counterclockwise"></i> 重置为默认值
+                <i class="bi bi-arrow-counterclockwise"></i> {{ t('restore.reset_default_label') }}
             </button>
         </div>
 
@@ -482,7 +482,7 @@
                     <span class="sv-badge sv-text-xs" id="restoreRecRisk">--</span>
                 </div>
                 <button type="button" class="sv-btn sv-btn-primary sv-btn-xs sv-w-100 sv-mt-1" id="btnApplyRecommend">
-                    <i class="bi bi-magic"></i> 一键应用推荐
+                    <i class="bi bi-magic"></i> {{ t('restore.apply_recommend_label') }}
                 </button>
                 <div id="restoreRecWarning" class="sv-alert sv-alert-warning sv-mt-1" style="display:none;">
                     <small><i class="bi bi-exclamation-triangle"></i> <span id="restoreRecWarningText"></span></small>
@@ -560,25 +560,26 @@
     </div>
 </div>
 
-<!-- P1-1 首次使用协议确认（合规整改 2026-09-15；必须勾选后关闭，无遮罩关闭） -->
+<!-- P1-1 首次使用协议确认（合规整改 2026-09-15；必须勾选后关闭，无遮罩关闭）。
+     文案走 i18n 键（评估 R1/E20 整改 2026-11-06）；<b> 与 <a> 锚点留在模板（词表值不含 HTML）。 -->
 <div class="sv-modal-overlay" id="agreementModal" style="display:none;">
     <div class="sv-modal" style="max-width:560px">
-        <h2 style="margin:0 0 10px">使用前须知</h2>
-        <p style="font-size:13.5px;line-height:1.7;margin:0 0 8px">本工具基于 SeedVR2 扩散模型对图像/视频做 AI 修复，<b>全部处理在本地完成</b>。继续使用即表示你已阅读并同意
-            <a href="https://github.com/ReSerendipity/SeedVR2-lite/blob/main/docs/USER_AGREEMENT.md" target="_blank" rel="noopener">《用户协议》</a> 与
-            <a href="https://github.com/ReSerendipity/SeedVR2-lite/blob/main/docs/PRIVACY_POLICY.md" target="_blank" rel="noopener">《隐私政策》</a>：</p>
+        <h2 style="margin:0 0 10px">{{ t('restore.agreement_title') }}</h2>
+        <p style="font-size:13.5px;line-height:1.7;margin:0 0 8px">{{ t('restore.agreement_intro_1') }}<b>{{ t('restore.agreement_intro_local') }}</b>{{ t('restore.agreement_intro_2') }}
+            <a href="https://github.com/ReSerendipity/SeedVR2-lite/blob/main/docs/USER_AGREEMENT.md" target="_blank" rel="noopener">{{ t('restore.agreement_link_user') }}</a> {{ t('restore.agreement_connector') }}
+            <a href="https://github.com/ReSerendipity/SeedVR2-lite/blob/main/docs/PRIVACY_POLICY.md" target="_blank" rel="noopener">{{ t('restore.agreement_link_privacy') }}</a>{{ t('restore.agreement_intro_3') }}</p>
         <ul style="font-size:13px;line-height:1.7;margin:0 0 10px;padding-left:18px">
-            <li>不修复/传播侵犯他人合法权益的内容（他人肖像或声音须经本人同意）；</li>
-            <li>不将输出用于深度伪造、欺诈等违法活动；</li>
-            <li>内容由 SeedVR2 模型输出；</li>
-            <li>输出内容对外传播时，遵守所在司法辖区对 AI 生成合成内容的标识要求。</li>
+            <li>{{ t('restore.agreement_rule_1') }}</li>
+            <li>{{ t('restore.agreement_rule_2') }}</li>
+            <li>{{ t('restore.agreement_rule_3') }}</li>
+            <li>{{ t('restore.agreement_rule_4') }}</li>
         </ul>
         <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:10px 0">
             <input type="checkbox" id="agreementChk">
-            <span>我已阅读并同意《用户协议》《隐私政策》及上述使用要求</span>
+            <span>{{ t('restore.agreement_checkbox') }}</span>
         </label>
         <button id="agreementAck" type="button" class="sv-btn sv-btn-primary" disabled
-            style="width:100%;margin-top:6px;opacity:.5">同意并开始使用</button>
+            style="width:100%;margin-top:6px;opacity:.5">{{ t('restore.agreement_confirm') }}</button>
     </div>
 </div>
 

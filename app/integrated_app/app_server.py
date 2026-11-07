@@ -755,6 +755,48 @@ async def lifespan(app: FastAPI):
         )
         logger.info(f"模型空闲自动卸载已启用: {idle_unload_minutes} 分钟无任务即卸载")
 
+    # 输出质量劣化自动回滚钩子（评估 A3 整改）：质量熔断打开时卸载当前模型权重——
+    # 下次任务重新走哈希白名单校验加载，坏权重/坏采样状态不跨劣化复用。
+    # 与空闲卸载同纪律：队列有任务运行中不卸载，轮询等待（上限=熔断冷却期）。
+    quality_cfg = config.get("runtime", {}).get("quality", {}) or {}
+    if quality_cfg.get("enabled", True):
+        _model_manager = app.state.model_manager
+
+        async def _rollback_unload_when_idle(max_wait_seconds: float) -> None:
+            waited = 0.0
+            poll_interval = 2.0
+            while waited < max_wait_seconds:
+                queue = getattr(app.state, "task_queue", None)
+                current = getattr(queue, "current_task_id", None) if queue is not None else None
+                task_running = (current() if callable(current) else current) is not None
+                if not task_running:
+                    if _model_manager is not None:
+                        logger.warning("质量劣化自动回滚：卸载当前模型权重（下次任务重新走哈希白名单校验加载）")
+                        await _model_manager.unload_model()
+                    else:
+                        logger.warning("质量劣化自动回滚：模型管理器不可用，跳过卸载")
+                    return
+                await asyncio.sleep(poll_interval)
+                waited += poll_interval
+            logger.warning("质量劣化自动回滚：等待队列空闲超时，本次跳过卸载（熔断保持打开）")
+
+        def _quality_rollback_hook(reason: dict) -> None:
+            # 熔断打开瞬间调度回滚协程；等待上限=冷却期。
+            # 须在运行中的事件循环里才可 create_task（同步上下文/测试环境无 loop
+            # 时跳过并告警——熔断与 503 提交闸仍然生效，回滚由下次触发补做）。
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                logger.warning("质量劣化自动回滚：当前无运行中的事件循环，跳过调度（熔断保持打开）")
+                return
+            cooldown = max(float(reason.get("remaining_seconds") or 600.0), 60.0)
+            loop.create_task(_rollback_unload_when_idle(max_wait_seconds=cooldown))
+
+        from app.integrated_app.services.restore_service import quality_breaker
+
+        quality_breaker.register_rollback_hook(_quality_rollback_hook)
+        logger.info("输出质量劣化熔断已启用（阈值告警 + 自动回滚钩子已挂载）")
+
     backend_value = gpu_manager.backend.value if gpu_manager.backend else "unavailable"
     logger.info(f"GPU 后端: {backend_value}, 设备: {gpu_manager.device_name}")
 

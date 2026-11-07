@@ -28,6 +28,10 @@
 两层都带 `--min-psnr 15 --min-ssim 0.5` 硬阈值（`image_metrics.py` 计算），不达标即红。
 触发：周一/周四定时 + Portable Release 成功后联动 + 手动 dispatch。runner 离线时自动建 skip-record issue，恢复后自动关闭，不留静默盲区。
 
+**发布前阻断联动（评估 A3 整改，2026-11-05）**：`portable-release.yml` 的「解包冒烟验收（发布前门禁）」步在 `require_gpu_inference=true`（self-hosted GPU runner 构建）时，同步传 `--quality-gate --min-psnr 15 --min-ssim 0.5`——真机 smoke 的 PSNR/SSIM 结果在**发布前**落阈值判定，未达标即失败（refusing to publish），与 §4 的运行时熔断构成「发布前真机门 + 运行时亮度熔断」两道模型级劣化拦截。托管 runner（无 GPU）构建仍只验打包层，此边界由 `require_gpu_inference` 输入显式声明，非静默豁免。
+
+**视频路径画质基线（评估整改，2026-11-06）**：`scripts/generate_video_quality_baseline.py` + `app/integrated_app/utils/video_metrics.py` + `tests/golden/video_quality_baseline.json`——确定性合成动态剪辑（固定 seed/帧数/编码参数）经 ffmpeg 编码后，用与图像门同源的 `image_metrics.psnr/ssim` 逐帧配对计算基线（实测 34.9346dB / 0.944809，32 帧配对），CI（Linux 档）与 `pytest -m integration` 按 manifest 硬下限（−2.0dB / −0.05 跨版本余量）复算判定。视频修复链路的客观画质自此有可复算回归门，不再只靠人工眼验。
+
 ## 3. 量化质量基线（跨精度 PSNR/SSIM 对比）
 
 证据：`perf/benchmark/quant_quality_baseline.py` + `.github/workflows/gpu-smoke.yml` 的 `quant_baseline` 开关。
@@ -35,13 +39,14 @@
 - 便携包内置 3B MXFP8；量化基线补下 FP8 作参考精度，同一确定性 golden 源图（固定 seed=42）跑两精度，产出对比 JSON 并以 artifact 归档。
 - 开关默认关闭（需补下 ~8GB 权重 + 常驻服务真机对比，耗时显著）；手动 dispatch `quant_baseline: true` 触发。CI 只跑纯逻辑自测，真 GPU 产出需人工在真机跑后归档——这是有意的成本取舍，非缺失。
 
-## 4. 运行时输出侧轻量质量信号（MLOps P-2，2026-10-06 接入）
+## 4. 运行时输出侧轻量质量信号（MLOps P-2，2026-10-06 接入；A3 阈值熔断 2026-11-05 接入）
 
-证据：`app/integrated_app/metrics.py` 的 `compute_output_mean_luma()`、`tests/test_metrics.py` 的 `TestOutputMeanLuma`。
+证据：`app/integrated_app/metrics.py` 的 `compute_output_mean_luma()`、`tests/test_metrics.py` 的 `TestOutputMeanLuma`；`app/integrated_app/services/quality_breaker.py` + `tests/test_quality_breaker.py`（阈值熔断）。
 
 - 每次成功推理（图片产出）best-effort 采集输出图平均亮度（0-255，缩略到 64px 再算），近 100 次样本均值经 `/api/system/metrics` 暴露。
 - 用途：最低成本探测「输出全黑」类静默劣化（模型错载/采样异常的典型症状）。失败/视频/解码异常一律记 None，不影响主流程。
-- **当前边界**：这只是运行时观测字段，未接告警阈值；真正的质量回归仍以 §2 真机门为准。
+- **阈值告警 + 自动回滚钩子（A3 整改）**：亮度样本同步喂入 `quality_breaker`（`runtime.quality` 配置，默认连续 3 次 < 8.0 触发）——触发即 ① WARNING 告警；② `/api/system/metrics` 暴露 `quality_breaker` 状态；③ 执行注册的回滚钩子（app_server 挂载：等队列空闲后卸载当前模型权重，下次任务重新走哈希白名单校验加载）；④ 冷却期内新任务提交返回 503 + Retry-After（与 OOM 熔断同语义），冷却结束半开放行一次探测。
+- **当前边界**：亮度阈值是「全黑/全灰」类灾难劣化探测器，不是画质综合判定；夜间等低亮度内容的合法输出也可能低于默认阈值——可调低 `luma_min` 或 `enabled=false` 关闭该面。综合画质回归仍以 §2 真机门为准。
 
 ## 5. 禁区与升级口径
 

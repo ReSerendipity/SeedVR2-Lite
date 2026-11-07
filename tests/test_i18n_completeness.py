@@ -97,20 +97,75 @@ def test_template_keys_resolve_in_every_locale(lang: str) -> None:
     assert not missing, f"{lang}.json 缺少模板用到的键: {sorted(missing)}"
 
 
-def test_no_hardcoded_chinese_only_fallback_via_or_idiom() -> None:
-    """禁止再写 `{{ t('x') or '中文' }}`。
+def test_no_dead_fallback_copy_idioms() -> None:
+    """禁止两类永不生效的硬编码兜底写法（评估 R1/E20 整改，2026-11-06 收口）。
 
-    t() 未命中返回键本身（非空字符串），`or` 分支永远取不到，
-    这个写法只会掩盖缺键、并在页面上泄漏裸键。
+    t() 未命中返回键本身（非空字符串，真值），因此两种写法的兜底分支都取不到，
+    只会掩盖缺键、把硬编码文案留在源码里：
+    1. `{{ t('x') or '中文' }}`——or 分支永不触发；
+    2. `{{ t('x') if t('x') else '文案' }}`——else 分支永不触发
+      （index.html「No restoration tasks yet.」等 7 处即此型，历史测试只禁 or 型漏网）。
     需要兜底请用 `t('x', default='…')`，或者把键补进 5 个词表。
     """
     offenders: list[str] = []
-    pattern = re.compile(r"""\{\{\s*t\(\s*['"][^'"]+['"]\s*\)\s+or\s+""")
+    patterns = [
+        # 型 1：t('x') or '…'
+        re.compile(r"""\{\{\s*t\(\s*['"][^'"]+['"]\s*\)\s+or\s+"""),
+        # 型 2：t('x') if t('x') else '…'（同一键重复出现的条件表达式死回退）
+        re.compile(r"""\{\{\s*t\(\s*['"]([^'"]+)['"]\s*\)\s+if\s+t\(\s*['"]([^'"]+)['"]\s*\)\s+else\s+"""),
+    ]
     for tpl in sorted(TEMPLATES_DIR.glob("*.html")):
         for lineno, line in enumerate(tpl.read_text(encoding="utf-8").splitlines(), 1):
-            if pattern.search(line):
-                offenders.append(f"{tpl.name}:{lineno}")
-    assert not offenders, f"失效的 or 回退写法（应改为补键或 t(k, default=…)）: {offenders}"
+            for pattern in patterns:
+                if pattern.search(line):
+                    offenders.append(f"{tpl.name}:{lineno}")
+                    break
+    assert not offenders, f"失效的兜底写法（应改为补键或 t(k, default=…)）: {offenders}"
+
+
+# 语言选择器的本族语名（i18n 惯例：语言名用它自己的语言展示，不进词表）
+_NATIVE_LANGUAGE_NAMES = {"中文", "繁體中文", "日本語", "简中", "繁中"}
+
+# CJK 字符（汉字 + CJK 标点 + 全角形式）：出现在剔除注释/脚本/样式后的
+# 可见模板内容里即为硬编码文案残留
+_CJK = re.compile(r"[\u3000-\u303f\u4e00-\u9fff\uff00-\uffef]+")
+
+# 剥离顺序敏感：先 Jinja 注释/表达式（内嵌 HTML 注释会被整体吞掉），再 HTML 注释，
+# 再 script/style 块（JS/CSS 的中文注释与字符串是开发面向，非页面文案），
+# 最后剥标签留文本节点+属性值。剥离用「同位空格化」——保留换行结构，
+# 使命中位置的行号与原文件一一对应。
+_JINJA_COMMENT = re.compile(r"\{#.*?#\}", re.S)
+_JINJA_TAG = re.compile(r"\{\{.*?\}\}|\{%.*?%\}", re.S)
+_HTML_COMMENT = re.compile(r"<!--.*?-->", re.S)
+_SCRIPT_OR_STYLE = re.compile(r"<script\b.*?</script>|<style\b.*?</style>", re.S)
+_ANY_TAG = re.compile(r"<[^>]+>")
+
+
+def _blank_keep_newlines(pattern: re.Pattern[str], text: str) -> str:
+    """把 pattern 命中段替换为等长空白（换行保留），维持行号映射。"""
+    return pattern.sub(lambda m: re.sub(r"[^\n]", " ", m.group(0)), text)
+
+
+def test_no_cjk_in_visible_template_text() -> None:
+    """模板可见文本（文本节点+属性值）不得含硬编码 CJK 文案（评估 R1/E20 整改）。
+
+    扫描口径：剔除 Jinja 注释/表达式、HTML 注释、script/style 块后逐模板扫描
+    剩余内容（文本节点与属性值）。语言选择器的本族语名（中文/繁體中文/日本語）
+    按 i18n 惯例白名单豁免；真正的页面文案必须走 t() 键。
+    """
+    offenders: list[str] = []
+    for tpl in sorted(TEMPLATES_DIR.glob("*.html")):
+        source = tpl.read_text(encoding="utf-8")
+        stripped = source
+        for pattern in (_JINJA_COMMENT, _JINJA_TAG, _HTML_COMMENT, _SCRIPT_OR_STYLE, _ANY_TAG):
+            stripped = _blank_keep_newlines(pattern, stripped)
+        for match in _CJK.finditer(stripped):
+            text = match.group(0).strip()
+            if text in _NATIVE_LANGUAGE_NAMES:
+                continue
+            lineno = stripped.count("\n", 0, match.start()) + 1
+            offenders.append(f"{tpl.name}:{lineno}: {text!r}")
+    assert not offenders, "模板可见文本含硬编码 CJK 文案（应改走 t() 键）:\n" + "\n".join(offenders)
 
 
 def test_js_referenced_keys_are_injected(test_app) -> None:

@@ -18,9 +18,9 @@
     </div>
     <div class="sv-hero-status sv-anim-rise sv-anim-d4" id="heroStatus">
         <span class="sv-hero-status-dot" id="heroStatusDot"></span>
-        <span id="heroStatusText">{{ t('status.gpu_detecting') if t('status.gpu_detecting') else 'Detecting...' }}</span>
+        <span id="heroStatusText">{{ t('status.gpu_detecting') }}</span>
         <span class="sv-hero-status-sep">&middot;</span>
-        <span id="heroModelStatus">{{ t('system.not_loaded') if t('system.not_loaded') else 'Model not loaded' }}</span>
+        <span id="heroModelStatus">{{ t('system.not_loaded') }}</span>
     </div>
 </div>
 
@@ -63,7 +63,7 @@
     </div>
     <div class="sv-recent-list sv-anim-rise sv-anim-d4" id="recentList">
         <div class="sv-recent-empty" id="recentEmpty" style="display:none;">
-            <p>{{ t('home.no_tasks_desc') if t('home.no_tasks_desc') else 'No restoration tasks yet.' }}</p>
+            <p>{{ t('home.no_tasks_desc') }}</p>
             <div class="sv-recent-empty-actions" style="margin-top: 12px;">
                 <a href="/restore" class="sv-btn sv-btn-primary sv-btn-sm">
                     <i class="bi bi-lightning-charge"></i> {{ t('home.start') }}

@@ -12,7 +12,10 @@
 #      main 有合并」的窗口提供源码级真机回归，见下「双层烟测」）；
 #   2. workflow_dispatch：手动指定/默认最新 Release；
 #   3. workflow_run：Portable Release 成功结束后立即冒烟该 tag —— 通知级联动，
-#      不阻塞发布（发布前门禁已由解包冒烟承担打包级错误，真机只补 GPU 推理级缺陷）。
+#      不阻塞发布（workflow_run 无法阻断已发布的 Release；发布前的真机质量阈值
+#      阻断由 portable-release.yml 在 require_gpu_inference=true 时以
+#      --quality-gate --min-psnr 15 --min-ssim 0.5 承担，评估 A3 整改 2026-11-05；
+#      运行时亮度劣化由 app 内 quality_breaker 熔断兜底，见 docs/ML_OPS_GATES.md §4）。
 #      workflow_run 仅按默认分支上的本文件版本触发；tag push 的 head_branch 即 tag 名，
 #      非 v* tag（如手动 dispatch 构建）只记 notice 不冒烟。
 # 双层烟测（报告长期⑨「main 源码级 + 发布包级」的落地形态）：每次触发跑两遍真机——

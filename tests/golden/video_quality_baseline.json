@@ -1,0 +1,26 @@
+{
+  "schema": "seedvr2-video-golden/1",
+  "frames": 32,
+  "frame_size": 256,
+  "fps": 8,
+  "noise_seed": 20261105,
+  "ref_crf": "18",
+  "degraded_crf": "28",
+  "margin": {
+    "psnr_db": 2.0,
+    "ssim": 0.05
+  },
+  "degraded_vs_reference": {
+    "psnr_db": 34.9346,
+    "ssim": 0.944809,
+    "frames_compared": 32
+  },
+  "reference_self_check": {
+    "psnr_db": 99.0,
+    "ssim": 1.0
+  },
+  "floors": {
+    "psnr_db_min": 32.9346,
+    "ssim_min": 0.894809
+  }
+}

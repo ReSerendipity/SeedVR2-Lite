@@ -207,6 +207,19 @@ runtime:
       cooldown_seconds: 600.0
       enabled: true
       threshold: 3
+  quality:
+    # 输出质量劣化熔断（评估 A3 整改：阈值告警 + 自动回滚钩子）。
+    # 连续 threshold 次成功输出的平均亮度 < luma_min（0-255 刻度）即打开熔断：
+    # WARNING 告警 + 注册的回滚钩子（等队列空闲后卸载当前模型权重，下次任务
+    # 重新走哈希白名单校验加载）+ 冷却期内新任务提交返回 503。冷却期结束自动
+    # 半开放行一次探测，健康输出复位，仍劣化则重新打开。
+    # 边界：亮度阈值是「全黑/全灰」类灾难劣化探测器，不是画质综合判定；
+    # 夜间等低亮度内容的合法输出也可能低于默认阈值，可调低 luma_min 或
+    # enabled=false 关闭该面（口径见 docs/ML_OPS_GATES.md §4）。
+    cooldown_seconds: 600.0
+    enabled: true
+    luma_min: 8.0
+    threshold: 3
   security:
     allowed_base_dirs:
     - outputs/

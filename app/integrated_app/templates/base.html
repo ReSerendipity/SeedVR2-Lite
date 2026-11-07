@@ -216,8 +216,8 @@
                            placeholder="Enter path, e.g. C:\Users" aria-label="Directory path">
                     <button class="sv-btn sv-btn-primary sv-btn-sm" id="dirBrowserGoBtn">{{ t('common.go') }}</button>
                     <button class="sv-btn sv-btn-outline sv-btn-sm" id="dirBrowserOpenExplorerBtn"
-                            data-tooltip="{{ t('common.open_explorer') if t('common.open_explorer') else 'Open in explorer' }}"
-                            aria-label="{{ t('common.open_explorer') if t('common.open_explorer') else 'Open in explorer' }}">
+                            data-tooltip="{{ t('common.open_explorer') }}"
+                            aria-label="{{ t('common.open_explorer') }}">
                         <i class="bi bi-folder2-open"></i>
                     </button>
                 </div>
@@ -237,7 +237,7 @@
     <div class="sv-context-menu" id="svContextMenu" role="menu" aria-hidden="true">
         <button class="sv-context-menu-item" id="ctxOpenOutputDir" role="menuitem">
             <i class="bi bi-folder2-open"></i>
-            <span>{{ t('history.open_output_dir') if t('history.open_output_dir') else 'Open output directory' }}</span>
+            <span>{{ t('history.open_output_dir') }}</span>
         </button>
         <button class="sv-context-menu-item" id="ctxRefreshRow" role="menuitem">
             <i class="bi bi-arrow-clockwise"></i>
