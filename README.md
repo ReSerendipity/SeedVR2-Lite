@@ -153,6 +153,8 @@ python .github/scripts/check_layout.py
 
 > 站点 rewq.cn 实验区原有的交互式估算器（2026-11-08 下线）口径存档于此。官方值只取 [ByteDance-Seed/SeedVR](https://github.com/ByteDance-Seed/SeedVR) README 的 GPU Requirement 与 3B/7B 模型名（configs_3b / configs_7b）；**权重显存与相对负载是派生值，不含激活与框架开销**。官方没有给吞吐与单价，这里只算显存与配置，不编价格。
 
+**在线交互版**：<https://rewq.cn/lab/vram.html>（调 3B/7B、输出高度、帧数、GPU 数，实时读数）。
+
 **官方参考档位**：
 
 | 场景 | 官方参考 |
@@ -186,7 +188,7 @@ python .github/scripts/check_layout.py
 
 | 480 档（rewq.cn 省流档默认） | 1024 档 |
 |---|---|
-| ![480 档](docs/assets/readme-res-cmp-259472-w480-20261108.webp) | ![1024 档](docs/assets/readme-res-cmp-259472-w1024-20261108.webp) |
+| ![480 档](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-res-cmp-259472-w480-20261108.webp) | ![1024 档](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-res-cmp-259472-w1024-20261108.webp) |
 | 28.4 KB | 102.2 KB |
 
 同一张图，字节差 **3.6×**——这是 rewq.cn 省流档把 w480 设为默认档的数据依据；两档的细节差异看发簪、竹叶和衣袖。
@@ -353,6 +355,8 @@ Model precision (`.safetensors`):
 
 > This archives the sizing logic of the interactive estimator that used to live in the rewq.cn lab section (retired 2026-11-08). Official values come only from the GPU Requirement section of the [ByteDance-Seed/SeedVR](https://github.com/ByteDance-Seed/SeedVR) README and the 3B/7B model names (configs_3b / configs_7b); **weight VRAM and relative load are derived values, excluding activations and framework overhead**. No throughput or pricing has been published officially, so this covers VRAM and configuration only — no invented prices.
 
+**Interactive version**: <https://rewq.cn/lab/vram.html> (tune 3B/7B, output height, frames and GPU count with live readouts).
+
 **Official reference tiers**:
 
 | Scenario | Official reference |
@@ -386,7 +390,7 @@ Examples (readings the original estimator would show):
 
 | 480 tier (rewq.cn data-saver default) | 1024 tier |
 |---|---|
-| ![480 tier](docs/assets/readme-res-cmp-259472-w480-20261108.webp) | ![1024 tier](docs/assets/readme-res-cmp-259472-w1024-20261108.webp) |
+| ![480 tier](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-res-cmp-259472-w480-20261108.webp) | ![1024 tier](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-res-cmp-259472-w1024-20261108.webp) |
 | 28.4 KB | 102.2 KB |
 
 Same image, **3.6×** byte difference — the data basis for rewq.cn's data-saver mode defaulting to w480; the detail differences are in the hairpin, the bamboo leaves and the sleeves.
