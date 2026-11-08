@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>显存与配置估算 · SeedVR2</title>
+<meta name="description" content="按 SeedVR 官方 GPU Requirement 档位估算 SeedVR2 3B/7B 的显存与 GPU 配置。权重显存与相对负载为派生值，不含激活与框架开销。">
+<style>
+  :root{--bg:#efe7d6;--ink:#1d1912;--body:#4f463b;--dim:#6b5f52;--line:#cbb894;--accent:#a04526;--panel:#faf5ea}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--body);font:16px/1.75 system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+  main{max-width:56rem;margin:0 auto;padding:2rem 1.25rem 3rem}
+  h1{font-size:1.5rem;color:var(--ink);margin:0 0 .2rem;letter-spacing:-.01em}
+  .k{font-family:ui-monospace,Consolas,monospace;font-size:.72rem;letter-spacing:.18em;color:var(--accent);margin:0 0 1rem}
+  .note{border-left:3px solid var(--line);color:var(--dim);margin:0 0 1.4rem;padding:.1rem 0 .1rem 1em;font-size:.92rem}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1.1rem 1.25rem;margin:0 0 1.2rem}
+  .card h2{font-size:1rem;color:var(--ink);margin:0 0 .8rem}
+  label{display:flex;justify-content:space-between;gap:.8rem;font-family:ui-monospace,Consolas,monospace;font-size:.8rem;color:var(--dim);margin-top:.55rem}
+  label b{color:var(--ink);font-weight:600}
+  input[type=range]{width:100%;margin:.1rem 0 .2rem;accent-color:var(--accent);height:28px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:0 1.6rem}
+  @media(max-width:40rem){.grid{grid-template-columns:1fr}}
+  table{border-collapse:collapse;width:100%;margin:.4rem 0;font-size:.9rem}
+  th,td{border:1px solid var(--line);padding:.4rem .7rem;text-align:left}
+  th{background:var(--bg);color:var(--ink);font-weight:600}
+  .out{font-family:ui-monospace,Consolas,monospace;font-size:.9rem;line-height:2}
+  .out b{color:var(--ink)}
+  #ref{font-size:1.6rem;color:var(--ink);letter-spacing:-.01em;margin:.1rem 0}
+  #status{color:var(--accent);min-height:1.6em;margin:.5rem 0 0}
+  footer{border-top:1px solid var(--line);margin-top:2rem;padding-top:1rem;font-family:ui-monospace,Consolas,monospace;font-size:.72rem;color:var(--dim)}
+  footer a{color:var(--dim)}
+</style>
+</head>
+<body>
+<main>
+  <p class="k">SEEDVR2 · VRAM SIZING</p>
+  <h1>显存与配置估算</h1>
+  <p class="note">官方值只取 <a href="https://github.com/ByteDance-Seed/SeedVR" target="_blank" rel="noopener">ByteDance-Seed/SeedVR</a> README 的 GPU Requirement 与 3B/7B 模型名；<b>权重显存与相对负载是派生值，不含激活与框架开销</b>。官方没有给吞吐与单价，这里只算显存与配置，不编价格。想按本机实际显存做运行时预检，请用 SeedVR2-Lite 工作台里的「VRAM 预检 &amp; 推荐参数」。</p>
+
+  <div class="card">
+    <h2>估算器</h2>
+    <div class="grid">
+      <div>
+        <label for="cModel">模型 <b id="cModelV">3B</b></label>
+        <input type="range" id="cModel" min="0" max="1" step="1" value="0">
+        <label for="cHeight">输出高度 <b id="cHeightV">720p</b></label>
+        <input type="range" id="cHeight" min="0" max="2" step="1" value="0">
+      </div>
+      <div>
+        <label for="cFrames">帧数 <b id="cFramesV">100</b></label>
+        <input type="range" id="cFrames" min="1" max="300" step="1" value="100">
+        <label for="cGpus">GPU 数 <b id="cGpusV">1</b></label>
+        <input type="range" id="cGpus" min="1" max="8" step="1" value="1">
+      </div>
+    </div>
+    <div class="out">
+      <p class="k" style="margin:.8rem 0 0">OFFICIAL REFERENCE</p>
+      <p id="ref">1×H100-80G</p>
+      <p id="refNote" style="margin:0">官方示例：100×720×1280</p>
+      <p style="margin:.4rem 0 0">权重显存（派生）<b id="cWeights">≈ 6.0 GB</b><br>
+      所选 GPU 总显存 <b id="cTotal">80 GB</b><br>
+      每卡相对负载（派生）<b id="cLoad">1×</b></p>
+      <p id="status">满足官方参考</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>官方参考档位（README GPU Requirement）</h2>
+    <table>
+      <tr><th>场景</th><th>官方参考</th></tr>
+      <tr><td>100×720×1280（720p · 100 帧）</td><td>1×H100-80G</td></tr>
+      <tr><td>1080p / 2K（sp_size=4）</td><td>4×H100-80G</td></tr>
+    </table>
+    <p class="out" style="margin:.2rem 0 0">SOURCE: <a href="https://github.com/ByteDance-Seed/SeedVR" target="_blank" rel="noopener">ByteDance-Seed/SeedVR</a> · README GPU Requirement · configs_3b / configs_7b</p>
+  </div>
+
+  <footer>
+    <a href="https://github.com/ReSerendipity/SeedVR2-Lite#显存与配置估算" target="_blank" rel="noopener">README 同源口径</a> · <a href="https://github.com/ReSerendipity/SeedVR2-Lite" target="_blank" rel="noopener">GitHub 仓库</a> · <a href="https://rewq.cn" target="_blank" rel="noopener">rewq.cn</a> · 2026 ReSerendipity
+  </footer>
+</main>
+<script>
+(function(){
+  var M=[{n:'3B',p:3},{n:'7B',p:7}];
+  var H=[{n:'720p',px:720},{n:'1080p',px:1080},{n:'2K',px:1440}];
+  function $(id){return document.getElementById(id)}
+  function calc(){
+    var mi=+$('cModel').value, hi=+$('cHeight').value, f=+$('cFrames').value, g=+$('cGpus').value;
+    var m=M[mi], h=H[hi];
+    var official=hi===0?1:4;
+    var load=Math.pow(h.px/720,2)*(f/100);
+    $('cModelV').textContent=m.n;
+    $('cHeightV').textContent=h.n;
+    $('cFramesV').textContent=f;
+    $('cGpusV').textContent=g;
+    $('ref').textContent=official+'×H100-80G';
+    $('refNote').textContent=hi===0?'官方示例：100×720×1280':'官方示例：1080p / 2K（sp_size=4）';
+    $('cWeights').textContent='≈ '+(m.p*2).toFixed(1)+' GB';
+    $('cTotal').textContent=(g*80)+' GB';
+    $('cLoad').textContent=(Math.round(load*100)/100)+'×';
+    var status;
+    if(mi===1) status=(g<official?'低于 3B 参考：建议 '+official+'×H100-80G；':'')+'7B 官方参考未单列，建议以实测为准';
+    else if(g<official) status='低于官方参考：建议 '+official+'×H100-80G';
+    else status='满足官方参考';
+    if(f>100) status+=(status?' · ':'')+'帧数超过官方示例的 100 帧，需实测';
+    $('status').textContent=status;
+  }
+  ['cModel','cHeight','cFrames','cGpus'].forEach(function(id){ $(id).addEventListener('input',calc); });
+  calc();
+})();
+</script>
+</body>
+</html>

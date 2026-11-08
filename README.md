@@ -153,7 +153,7 @@ python .github/scripts/check_layout.py
 
 > 站点 rewq.cn 实验区原有的交互式估算器（2026-11-08 下线）口径存档于此。官方值只取 [ByteDance-Seed/SeedVR](https://github.com/ByteDance-Seed/SeedVR) README 的 GPU Requirement 与 3B/7B 模型名（configs_3b / configs_7b）；**权重显存与相对负载是派生值，不含激活与框架开销**。官方没有给吞吐与单价，这里只算显存与配置，不编价格。
 
-**在线交互版**：<https://rewq.cn/lab/vram.html>（调 3B/7B、输出高度、帧数、GPU 数，实时读数）。
+**在线交互版**：<https://reserendipity.github.io/SeedVR2-Lite/vram.html>（调 3B/7B、输出高度、帧数、GPU 数，实时读数；源文件 [docs/vram.html](docs/vram.html)，经 GitHub Pages 发布）。
 
 **官方参考档位**：
 
@@ -355,7 +355,7 @@ Model precision (`.safetensors`):
 
 > This archives the sizing logic of the interactive estimator that used to live in the rewq.cn lab section (retired 2026-11-08). Official values come only from the GPU Requirement section of the [ByteDance-Seed/SeedVR](https://github.com/ByteDance-Seed/SeedVR) README and the 3B/7B model names (configs_3b / configs_7b); **weight VRAM and relative load are derived values, excluding activations and framework overhead**. No throughput or pricing has been published officially, so this covers VRAM and configuration only — no invented prices.
 
-**Interactive version**: <https://rewq.cn/lab/vram.html> (tune 3B/7B, output height, frames and GPU count with live readouts).
+**Interactive version**: <https://reserendipity.github.io/SeedVR2-Lite/vram.html> (tune 3B/7B, output height, frames and GPU count with live readouts; source at [docs/vram.html](docs/vram.html), served via GitHub Pages).
 
 **Official reference tiers**:
 
