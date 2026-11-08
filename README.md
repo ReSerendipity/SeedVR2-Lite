@@ -180,6 +180,17 @@ python .github/scripts/check_layout.py
 
 > 工作台里的「VRAM 预检 & 推荐参数」是按本机实际显存的运行时预检，与这张静态参考表互补。
 
+### 分辨率对比 · 480 / 1024
+
+> 站点 rewq.cn 实验区「RESOLUTION · 480 / 1024」交互对比（2026-11-08 下线）的存档：同一张 AI 生成图（[魔搭 #259472](https://modelscope.cn/aigc/gallery/share/259472)，原图 SHA-256 前 8 位 `2b862db8`）的两个分辨率档，都是 WebP。
+
+| 480 档（rewq.cn 省流档默认） | 1024 档 |
+|---|---|
+| ![480 档](docs/assets/readme-res-cmp-259472-w480-20261108.webp) | ![1024 档](docs/assets/readme-res-cmp-259472-w1024-20261108.webp) |
+| 28.4 KB | 102.2 KB |
+
+同一张图，字节差 **3.6×**——这是 rewq.cn 省流档把 w480 设为默认档的数据依据；两档的细节差异看发簪、竹叶和衣袖。
+
 ### 使用示例
 
 ```bash
@@ -368,6 +379,17 @@ Examples (readings the original estimator would show):
 | 7B | 1080p | 100 | 4 | 4×H100-80G | ≈ 14.0 GB | 2.25× | No official 7B tier; verify by benchmarking |
 
 > The workbench's "VRAM preflight & recommended parameters" is a runtime check against your actual local VRAM and complements this static reference table.
+
+### Resolution comparison · 480 / 1024
+
+> Archive of the "RESOLUTION · 480 / 1024" interactive comparison from the rewq.cn lab section (retired 2026-11-08): the same AI-generated image ([ModelScope #259472](https://modelscope.cn/aigc/gallery/share/259472), original SHA-256 first 8 hex `2b862db8`) in two resolution tiers, both WebP.
+
+| 480 tier (rewq.cn data-saver default) | 1024 tier |
+|---|---|
+| ![480 tier](docs/assets/readme-res-cmp-259472-w480-20261108.webp) | ![1024 tier](docs/assets/readme-res-cmp-259472-w1024-20261108.webp) |
+| 28.4 KB | 102.2 KB |
+
+Same image, **3.6×** byte difference — the data basis for rewq.cn's data-saver mode defaulting to w480; the detail differences are in the hairpin, the bamboo leaves and the sleeves.
 
 ### Usage examples
 
