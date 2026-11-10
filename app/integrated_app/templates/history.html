@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </a>
                         </div>`;
                 }
-                document.getElementById('pagination').style.display = 'none';
+                SvVisibility.hide(document.getElementById('pagination'));
                 return;
             }
 
@@ -383,8 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 分页
             const paginationEl = document.getElementById('pagination');
-            paginationEl.classList.remove('sv-hidden');
-            paginationEl.style.display = 'flex';
+            SvVisibility.show(paginationEl, 'flex');
             document.getElementById('pageInfo').textContent = `${currentPage} / ${totalPages}`;
             document.getElementById('btnPrevPage').disabled = currentPage <= 1;
             document.getElementById('btnNextPage').disabled = currentPage >= totalPages;

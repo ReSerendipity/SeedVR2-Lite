@@ -181,7 +181,7 @@ model/                                 # 15.35GB 级权重，元数据仅存 con
 | 推理期清理 | 忙碌时跳过清理（`is_busy` 防竞态） | `app_server.py:421-423` |
 
 **剩余缺口**：
-- ⚠️ `cache.max_size_mb: 500` 配置存在但 `cache.py` **只实现了 TTL 清理，未实现按总大小清理**——又一处"配置承诺未兑现"
+- ✅ ~~`cache.max_size_mb: 500` 配置存在但 `cache.py` 只实现 TTL 清理~~（**2026-11-06 复核：已兑现，本条作废**）：`app/integrated_app/cache.py:267-320` 有 `FileCache.cleanup_oversize()`——递归收集 `(路径, 大小, mtime)`，总大小超过 `max_size_bytes` 时按 mtime 升序（最旧优先）逐个删除，回落即停；构造参数 `max_size_mb`（`:54`、`:72`，0 = 不限制，向后兼容）；接线两处——`app_server.py:963-966` 用 `config["cache"]["max_size_mb"]` 注入，`start_cleanup_task` 的周期循环 `:357-365` 每次 TTL 清理后**紧跟一次**总大小淘汰。实测：`config.yaml` 读到的 500 → `max_size_bytes=524288000`；临时目录塞 3×400KB（mtime 递增）后用 1MB 上限跑 `cleanup_oversize()` → `1.17MB → 0.78MB`、`evicted=1`、最旧的 `f0.bin` 被删、较新的两个保留；`pytest tests/test_cache_max_size.py tests/test_cache.py` → 26 passed
 - ⚠️ 半成品输出文件（compose 中断的 mp4）无显式删除（仅 `_frames` 有兜底）
 - ⚠️ `data/tmp_sse_debug.db`、`app/integrated_app/data/` 空目录等残留无回收机制
 - ❌ 训练 epoch checkpoint 豁免滚动删除 → 长期训练仍可能累积（但至少按步快照有界）
@@ -281,7 +281,7 @@ model/                                 # 15.35GB 级权重，元数据仅存 con
 | **P1** | HistoryRecord 增加源文件 sha256 列 | 半天 | 弱血缘 → 内容寻址血缘 |
 | **P1** | folder/batch 入口复用魔数校验 | 2 小时 | 堵住旁路校验缺口 |
 | **P1** | 接入现成 `HierarchicalDegradationProcessor` 构建 golden 退化基准对 + CI 质量门禁 | 1-2 天 | 生成器已存在，只差接线；从根本上回答"改坏了没有" |
-| **P1** | 缓存 `max_size_mb` 兑现实现（或删除配置） | 2 小时 | 第二处配置漂移 |
+| ~~**P1**~~ | ~~缓存 `max_size_mb` 兑现实现（或删除配置）~~ → **已落地（2026-11-06 复核，P1-4）**，见 §5.1 | — | 第二处配置漂移已消；证据：`cache.py:267-320` + `app_server.py:963-966` + 周期循环 `:357-365` + `tests/test_cache_max_size.py` |
 | **P2** | 训练 dataset manifest（数据集哈希+清单入 experiment_tracker） | 1 天 | 训练谱系从 0 到 1 |
 | **P2** | 权重 sidecar metadata（训练日期/数据集/parent） | 1 天 | 同上 |
 | **P2** | epoch checkpoint 纳入保留策略 | 2 小时 | TB 级风险点的最后一道闸 |

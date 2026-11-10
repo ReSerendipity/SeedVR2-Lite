@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "note": "下载管理页的环境包清单基线。发版时由 scripts/build_desktop_bundle.ps1 -Mode runtime 覆盖为含真实分卷名与 SHA256 的版本；volumes 为空表示尚未发布环境包，页面会提示清单缺失。",
+  "runtime": {
+    "version": "1",
+    "tag": "runtime-v1",
+    "base_url": "https://github.com/ReSerendipity/SeedVR2-Lite/releases/download/runtime-v1",
+    "python": "3.12.10",
+    "torch": "2.10.0+cu128",
+    "cuda": "cu128",
+    "packages": [
+      "torch==2.10.0",
+      "torchvision==0.25.0"
+    ],
+    "size_bytes": 2907703182,
+    "built_at": "2026-11-01T01:54:25Z",
+    "min_app_version": "1.7.0",
+    "volumes": [],
+    "install_mode": "online",
+    "index_url": "https://download.pytorch.org/whl/cu128",
+    "pip_extra_index": "https://pypi.tuna.tsinghua.edu.cn/simple",
+    "note": "install_mode=online：页内点安装时后端直接 pip 官方索引安装 （torch 家族 + 生态包），无需下载预置分卷。"
+  },
+  "models": []
+}

@@ -14,10 +14,10 @@ hero:
       link: /guide/quickstart
     - theme: alt
       text: 在线模拟演示
-      link: https://reserendipity.github.io/SeedVR2-lite/
+      link: https://reserendipity.github.io/SeedVR2-Lite/
     - theme: alt
       text: GitHub
-      link: https://github.com/ReSerendipity/SeedVR2-lite
+      link: https://github.com/ReSerendipity/SeedVR2-Lite
 
 features:
   - icon: ⚡

@@ -203,7 +203,7 @@ async def upload_and_restore(
 
     # OOM 熔断检查（P2-12）：连续 OOM 达到阈值后拒绝新任务，避免队列白烧 GPU。
     # 先于 GPU 能力检查：熔断是全局安全状态，无 GPU 环境（CI）也应观测到该语义
-    from app.integrated_app.services.restore_service import oom_breaker_remaining
+    from app.integrated_app.services.restore_service import oom_breaker_remaining, quality_breaker_remaining
 
     _breaker_remaining = oom_breaker_remaining(config)
     if _breaker_remaining > 0:
@@ -213,6 +213,19 @@ async def upload_and_restore(
                 f"连续推理 OOM 触发熔断，请降低分辨率/切换更小模型后重试（约 {_breaker_remaining:.0f} 秒后自动恢复）"
             ),
             headers={"Retry-After": str(int(_breaker_remaining) + 1)},
+        )
+
+    # 输出质量劣化熔断检查（评估 A3 整改）：连续低亮度输出达到阈值后拒绝新任务，
+    # 避免熔断打开期间继续产出「全黑」类劣化结果；冷却期结束半开放行探测。
+    _quality_remaining = quality_breaker_remaining(config)
+    if _quality_remaining > 0:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                f"输出质量劣化触发熔断（疑似全黑输出），已自动卸载疑似异常权重；"
+                f"约 {_quality_remaining:.0f} 秒后自动放行探测，若复现请检查模型权重完整性"
+            ),
+            headers={"Retry-After": str(int(_quality_remaining) + 1)},
         )
 
     if not gpu_manager.is_gpu_available:

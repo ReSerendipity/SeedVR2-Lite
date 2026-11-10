@@ -160,6 +160,20 @@ jobs:
           # 仅比对指标内容；--ignore-cr-at-eol 规避跨平台换行符差异造成的误报
           git diff --ignore-cr-at-eol --exit-code -- tests/golden/manifest.json
 
+      - name: Video quality baseline (regenerate + threshold check)
+        # 评估整改：视频路径客观画质基线门禁（此前 golden/真机门均为图像路径，
+        # 视频修复验收只能靠人工眼验）。确定性合成剪辑 → ffmpeg 编码 →
+        # video_metrics（image_metrics 同源 PSNR/SSIM）重算 → manifest 硬下限判定。
+        # 仅 Linux 档执行（ubuntu runner 自带 ffmpeg；windows 档无 ffmpeg 时
+        # pytest 层集成用例自动跳过，不影响门禁有效性）。
+        # 测试失败必须让 job 失败：本步骤是真实门禁，不得加 || true
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          python scripts/generate_video_quality_baseline.py --check
+          # manifest 记录值须与本机重算一致（跨 ffmpeg 版本允许清单内余量）
+          python -m pytest tests/test_video_quality_baseline.py -q -m integration
+
       - name: Coverage Gate (>= 55%)
         if: always()
         shell: bash

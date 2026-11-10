@@ -259,8 +259,14 @@ jobs:
           # Hosted windows runners have no GPU, so real inference is not required here; but any packaging
           # level error (server won't boot, 404 route, 403 CSRF, import failure, corrupt output) fails hard.
           # On a self-hosted GPU runner, set require_gpu_inference=true to force a real restore.
+          # 评估 A3 整改（发布前质量门）：强制真机推理时同步落质量阈值判定——真机 smoke 的
+          # PSNR/SSIM 必须通过 --min-psnr/--min-ssim 硬阈值（与 gpu-smoke.yml 同值 15/0.5），
+          # 未达标即本步失败（refusing to publish）。阈值属 MLOps 门禁（ML_OPS_GATES.md §2/§5）。
           $extra = @()
-          if ('${{ github.event.inputs.require_gpu_inference }}' -eq 'true') { $extra += '--require-inference' }
+          if ('${{ github.event.inputs.require_gpu_inference }}' -eq 'true') {
+              $extra += '--require-inference'
+              $extra += '--quality-gate', '--min-psnr', '15', '--min-ssim', '0.5'
+          }
 
           # 冒烟前诊断（GOTCHAS #98）：用便携 python + payload 闭源 pyd 直接验签，
           # 与服务器启动自检同一函数，True/False 直接区分「pyd/环境问题」与「启动路径问题」。

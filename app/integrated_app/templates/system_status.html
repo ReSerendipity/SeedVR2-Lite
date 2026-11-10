@@ -56,7 +56,7 @@
                 <span class="stat-value" id="gpuUtil"><span class="sv-skeleton sv-skeleton-text sv-skeleton-text--medium sv-skeleton--stat"></span></span>
             </div>
             <div class="sv-gauge-bar">
-                <div class="gauge-fill sv-bg-success" id="gpuUtilBar" style="width:0%;"></div>
+                <div class="gauge-fill sv-bg-success sv-gauge-fill-zero" id="gpuUtilBar"></div>
             </div>
             <div class="sv-trend-chart" id="gpuTrendChart">
                 <svg viewBox="0 0 200 60" preserveAspectRatio="none">
@@ -99,7 +99,7 @@
                 <span class="stat-value" id="modelVramUsage"><span class="sv-skeleton sv-skeleton-text sv-skeleton-text--medium sv-skeleton--stat"></span></span>
             </div>
             <div class="sv-model-summary">
-                <div class="sv-model-summary-label">{{ t('system.model_load_time') if t('system.model_load_time') else '模型加载时间' }}</div>
+                <div class="sv-model-summary-label">{{ t('system.model_load_time') }}</div>
                 <div class="sv-model-summary-value" id="modelLoadTime">--</div>
             </div>
         </div>
@@ -186,7 +186,7 @@
         <div class="sv-card-body" id="vramEstimateBody">
             <div class="sv-stat-item">
                 <span class="stat-label">{{ t('system.vram_model') }}</span>
-                <select id="vramModelSelect" class="sv-form-control sv-form-control-sm" style="max-width:160px;display:inline-block;">
+                <select id="vramModelSelect" class="sv-form-control sv-form-control-sm sv-inline-block-w160">
                     <option value="3b">SeedVR2-3B</option>
                     <option value="7b">SeedVR2-7B</option>
                     <option value="7b-sharp">SeedVR2-7B-Sharp</option>
@@ -195,19 +195,19 @@
             <div class="sv-stat-item">
                 <span class="stat-label">{{ t('system.vram_resolution') }}</span>
                 <div class="sv-flex sv-gap-2 sv-items-center">
-                    <input type="number" id="vramWidth" value="1920" min="64" max="7680" class="sv-form-control sv-form-control-sm" style="max-width:80px;">
+                    <input type="number" id="vramWidth" value="1920" min="64" max="7680" class="sv-form-control sv-form-control-sm sv-vram-num">
                     <span>×</span>
-                    <input type="number" id="vramHeight" value="1080" min="64" max="4320" class="sv-form-control sv-form-control-sm" style="max-width:80px;">
+                    <input type="number" id="vramHeight" value="1080" min="64" max="4320" class="sv-form-control sv-form-control-sm sv-vram-num">
                 </div>
             </div>
             <div class="sv-stat-item">
                 <span class="stat-label">{{ t('system.vram_frames') }}</span>
-                <input type="number" id="vramFrames" value="1" min="1" max="10000" class="sv-form-control sv-form-control-sm" style="max-width:80px;">
+                <input type="number" id="vramFrames" value="1" min="1" max="10000" class="sv-form-control sv-form-control-sm sv-vram-num">
             </div>
             <button type="button" class="sv-btn sv-btn-primary sv-btn-sm sv-mt-2" id="btnVramEstimate">
                 <i class="bi bi-calculator" aria-hidden="true"></i> {{ t('system.vram_estimate_btn') }}
             </button>
-            <div id="vramEstimateResults" style="display:none;" class="sv-mt-3">
+            <div id="vramEstimateResults" class="sv-mt-3 sv-hidden">
                 <div class="sv-stat-item">
                     <span class="stat-label">{{ t('restore.rec_precision') }}</span>
                     <span class="stat-value"><span class="sv-badge sv-badge-completed" id="vramRecPrecision">--</span></span>
@@ -232,7 +232,7 @@
                     <span class="stat-label">{{ t('restore.rec_risk') }}</span>
                     <span class="stat-value" id="vramRecRisk">--</span>
                 </div>
-                <div id="vramRecWarning" class="sv-alert sv-alert-warning sv-mt-2" style="display:none;">
+                <div id="vramRecWarning" class="sv-alert sv-alert-warning sv-mt-2 sv-hidden">
                     <i class="bi bi-exclamation-triangle"></i> <span id="vramRecWarningText"></span>
                 </div>
             </div>
@@ -344,9 +344,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('gpuCudaVer').textContent = '--';
                     document.getElementById('gpuDriverVer').textContent = '--';
                     const gpuVramRing = document.getElementById('gpuVramRing');
-                    if (gpuVramRing) gpuVramRing.style.display = 'none';
+                    if (gpuVramRing) SvVisibility.hide(gpuVramRing);
                     const gpuUtilBar = document.querySelector('.sv-gauge-bar');
-                    if (gpuUtilBar) gpuUtilBar.style.display = 'none';
+                    if (gpuUtilBar) SvVisibility.hide(gpuUtilBar);
                 }
             }
 
@@ -414,13 +414,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const warnDiv = document.getElementById('vramRecWarning');
                 const warnText = document.getElementById('vramRecWarningText');
                 if (d.warning) {
-                    warnDiv.style.display = '';
+                    SvVisibility.show(warnDiv);
                     warnText.textContent = d.warning;
                 } else {
-                    warnDiv.style.display = 'none';
+                    SvVisibility.hide(warnDiv);
                 }
 
-                resultsDiv.style.display = '';
+                SvVisibility.show(resultsDiv);
             }
         } catch (err) {
             console.error('VRAM estimate failed:', err);

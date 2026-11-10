@@ -18,9 +18,9 @@
     </div>
     <div class="sv-hero-status sv-anim-rise sv-anim-d4" id="heroStatus">
         <span class="sv-hero-status-dot" id="heroStatusDot"></span>
-        <span id="heroStatusText">{{ t('status.gpu_detecting') if t('status.gpu_detecting') else 'Detecting...' }}</span>
+        <span id="heroStatusText">{{ t('status.gpu_detecting') }}</span>
         <span class="sv-hero-status-sep">&middot;</span>
-        <span id="heroModelStatus">{{ t('system.not_loaded') if t('system.not_loaded') else 'Model not loaded' }}</span>
+        <span id="heroModelStatus">{{ t('system.not_loaded') }}</span>
     </div>
 </div>
 
@@ -62,9 +62,9 @@
         <a href="/history" class="sv-section-link">{{ t('home.view_all') }} <i class="bi bi-arrow-right"></i></a>
     </div>
     <div class="sv-recent-list sv-anim-rise sv-anim-d4" id="recentList">
-        <div class="sv-recent-empty" id="recentEmpty" style="display:none;">
-            <p>{{ t('home.no_tasks_desc') if t('home.no_tasks_desc') else 'No restoration tasks yet.' }}</p>
-            <div class="sv-recent-empty-actions" style="margin-top: 12px;">
+        <div class="sv-recent-empty sv-hidden" id="recentEmpty">
+            <p>{{ t('home.no_tasks_desc') }}</p>
+            <div class="sv-recent-empty-actions">
                 <a href="/restore" class="sv-btn sv-btn-primary sv-btn-sm">
                     <i class="bi bi-lightning-charge"></i> {{ t('home.start') }}
                 </a>
@@ -114,9 +114,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const empty = document.getElementById('recentEmpty');
 
         if (records.length === 0) {
-            if (empty) empty.style.display = '';
+            if (empty) SvVisibility.show(empty);
         } else {
-            if (empty) empty.style.display = 'none';
+            if (empty) SvVisibility.hide(empty);
             const rows = records.map(r => {
                 const name = SeedVR2.displayFileName(r);
                 const statusKey = 'status.' + r.status;
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 属正常瞬态，不应污染 console（E2E 的 console-error 断言会因此误报）
         console.warn('Failed to load recent tasks:', err);
         const empty = document.getElementById('recentEmpty');
-        if (empty) empty.style.display = '';
+        if (empty) SvVisibility.show(empty);
     }
 });
 </script>

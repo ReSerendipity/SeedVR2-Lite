@@ -5,8 +5,8 @@
 
 ## 项目主许可
 
-SeedVR2-lite 项目代码采用 [Apache License 2.0](LICENSE)。
-模型权重与引擎许可见 [NOTICE](NOTICE)，不由本文件管理。
+SeedVR2-lite 项目代码采用 [Apache License 2.0](../LICENSE)。
+模型权重与引擎许可见 [NOTICE](../NOTICE)，不由本文件管理。
 
 ## 主要 Python 依赖（许可类型为常见归类，以各包 LICENSE 为准）
 
@@ -31,11 +31,11 @@ SeedVR2-lite 项目代码采用 [Apache License 2.0](LICENSE)。
 
 ### 推理内核（`model_lib/`、`common/`）
 
-- 源自 SeedVR2 上游内核代码，许可遵循上游（见 [model_lib/SOURCE.md](model_lib/SOURCE.md) 与 [NOTICE](NOTICE)）
+- 源自 SeedVR2 上游内核代码，许可遵循上游（见 [model_lib/SOURCE.md](../model_lib/SOURCE.md) 与 [NOTICE](../NOTICE)）
 
 ### 视频/图像修复模型
 
-- SeedVR2 系模型权重由用户自行下载，许可以各模型卡为准（见 [NOTICE](NOTICE)）
+- SeedVR2 系模型权重由用户自行下载，许可以各模型卡为准（见 [NOTICE](../NOTICE)）
 
 ---
 

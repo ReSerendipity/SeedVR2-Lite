@@ -8,7 +8,8 @@
     "restore": "修復",
     "history": "履歴",
     "system": "システム状態",
-    "settings": "概要"
+    "settings": "概要",
+    "downloads": "ダウンロード"
   },
   "home": {
     "hero_title": "すべてのフレームに、",
@@ -385,7 +386,24 @@
     "tip_compile_vae": "torch.compile でエンコード/デコードをコンパイルします。⚠ 本機実測：定常時 50% 遅化、初回 +7s、利益 0%。VAE は動的シェイプでコンパイル失敗が多いが、失敗時は未コンパイルに退避するだけで出力は出る。モデル再読み込み時に反映されます。",
     "compile_saved": "保存しました。次のモデル読み込み時に有効になります",
     "compile_save_failed": "コンパイル設定の保存に失敗しました",
-    "compile_unavailable": "この環境では torch.compile が使用できないため、スイッチは無効です"
+    "compile_unavailable": "この環境では torch.compile が使用できないため、スイッチは無効です",
+    "agreement_title": "使用前の注意",
+    "agreement_intro_1": "本ツールは SeedVR2 拡散モデルにより画像/動画を AI 修復します。",
+    "agreement_intro_local": "すべての処理はローカルで完結します",
+    "agreement_intro_2": "。使用を続けることで、次の文書を読み、",
+    "agreement_link_user": "利用規約",
+    "agreement_connector": "と",
+    "agreement_link_privacy": "プライバシーポリシー",
+    "agreement_intro_3": "に同意したものとみなされます。",
+    "agreement_rule_1": "他人の正当な権利を侵害するコンテンツ（本人同意のない肖像・声を含む）の修復・配布を行わないこと。",
+    "agreement_rule_2": "ディープフェイク・詐欺などの違法行為に出力を使用しないこと。",
+    "agreement_rule_3": "コンテンツは SeedVR2 モデルによる生成出力です。",
+    "agreement_rule_4": "出力を外部に公開する際は、お住まいの管轄域の AI 生成コンテンツ表示要件に従うこと。",
+    "agreement_checkbox": "利用規約・プライバシーポリシーおよび上記の使用条件を読み、同意しました",
+    "agreement_confirm": "同意して開始",
+    "save_default_label": "デフォルトとして保存",
+    "reset_default_label": "デフォルトに戻す",
+    "apply_recommend_label": "推奨設定を適用"
   },
   "history": {
     "title": "履歴",
@@ -632,5 +650,32 @@
     "double_res_hint_default": "画像または動画アップロード後、解像度は短辺×2で自動計算されます（このモードでは手動編集無効）",
     "double_res_applied": "解像度とタイルパラメータを短辺×2で自動設定しました",
     "initializing": "初期化中"
+  },
+  "downloads": {
+    "title": "ダウンロード管理",
+    "subtitle": "ランタイムとモデル",
+    "loading": "読み込み中…",
+    "refresh": "更新",
+    "mode_bootstrap": "ブートストラップモード",
+    "mode_full": "フルランタイム",
+    "mode_system": "システム Python",
+    "ready": "準備完了",
+    "not_ready": "未準備",
+    "runtime": "実行環境",
+    "runtime_desc": "PyTorch（CUDA）入りの Python ランタイム。スリム版には含まれないため、推論前にここでインストールしてください。",
+    "status": "状態",
+    "installed": "インストール済み",
+    "not_installed": "未インストール",
+    "install": "インストール",
+    "cancel": "キャンセル",
+    "uninstall": "アンインストール",
+    "size": "サイズ",
+    "path": "パス",
+    "models": "モデル重み",
+    "models_desc": "重みをダウンロードすると修復を開始できます。同じサイズの複数精度を共存できます。",
+    "no_models": "重みが未設定です",
+    "confirm_uninstall": "これらのファイルを削除しますか？",
+    "confirm_uninstall_runtime": "ランタイムをアンインストールしますか？推論には再インストールが必要です。",
+    "error": "エラー"
   }
 }

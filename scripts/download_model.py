@@ -42,6 +42,7 @@ import argparse
 import hashlib
 import importlib.util
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -68,15 +69,19 @@ _SHARED_FILES: list[str] = [
     "neg_emb.pt",
 ]
 
-# 默认下载来源仓库（社区整理的 ComfyUI 版，文件名与上述清单完全一致）
-# 可通过 --repo 覆盖为其他镜像仓库
-_DEFAULT_REPO = "numz/SeedVR2_comfyUI"
+# 默认下载来源仓库（2026-11-01 定案：只用官方源，社区整理仓不作默认）
+# 官方链路：上游权重 ByteDance-Seed/SeedVR2-3B|7B（原始 .pth）；
+# 发行版默认用 **Comfy-Org/SeedVR2**（Comfy 官方组织发布的官方转换/量化档，
+# fp16/fp8/int8/mxfp8/nvfp4 与 VAE 齐全），经 ModelScope 直链下载。
+# 需要社区整理仓时显式 --repo numz/SeedVR2_comfyUI 覆盖。
+_DEFAULT_REPO = "Comfy-Org/SeedVR2"
 
 # Comfy-Org 转包/量化权重来源（ModelScope，直连 resolve URL 下载）。
-# config.yaml 的 fp16/fp8 用 numz 的 seedvr2_ema_*，三种量化精度用 Comfy-Org 的
-# seedvr2_*_{int8_convrot,mxfp8,nvfp4}，两套文件名互不兼容，按前缀自动路由来源。
+# 文件名两套：历史配置写 seedvr2_ema_3b_*，Comfy-Org 发的是 seedvr2_3b_*；
+# 下载时按 _comfy_remote_name 去掉 "ema_" 做映射，落地仍用 config 里的名字。
 _COMFY_ORG_REPO = "Comfy-Org/SeedVR2"
 _COMFY_ORG_SUBFOLDER = "diffusion_models"
+_COMFY_ORG_VAE_SUBFOLDER = "vae"
 _MODELSCOPE_BASE = "https://modelscope.cn/models"
 
 # 精度标识 → config.yaml checkpoint 键（--precisions 的合法取值与文件名来源）
@@ -97,9 +102,30 @@ def _is_comfy_org(filename: str) -> bool:
     return filename.startswith("seedvr2_") and not filename.startswith("seedvr2_ema_")
 
 
+def _comfy_remote_name(filename: str) -> str:
+    """config 名 → Comfy-Org 仓内文件名。
+
+    只把 ``seedvr2_ema_<3b|7b>_*`` 映射成 ``seedvr2_<3b|7b>_*``；
+    ``seedvr2_ema_vae_*`` 在官方仓里就是原名，不做替换。
+    """
+    name = Path(filename).name
+    m = re.match(r"^seedvr2_ema_(3b|7b)", name)
+    if m:
+        return "seedvr2_" + name[len("seedvr2_ema_") :]
+    return name
+
+
 def _resolve_source(filename: str, default_repo: str) -> tuple[str, str | None]:
-    """返回 (repo, subfolder)：Comfy-Org 文件走 ModelScope 子目录，其余走 --repo 指定的 HF 仓。"""
-    if _is_comfy_org(filename):
+    """返回 (repo, subfolder)。
+
+    - seedvr2_*（含历史 ema_ 命名）→ Comfy-Org/SeedVR2 的 diffusion_models
+    - ema_vae* / seedvr2_ema_vae*        → Comfy-Org/SeedVR2 的 vae
+    - 其余（如 qwen 组件）               → 调用方指定的 HF 仓
+    """
+    name = Path(filename).name
+    if name.startswith(("ema_vae", "seedvr2_ema_vae")):
+        return _COMFY_ORG_REPO, _COMFY_ORG_VAE_SUBFOLDER
+    if name.startswith("seedvr2_"):
         return _COMFY_ORG_REPO, _COMFY_ORG_SUBFOLDER
     return default_repo, None
 
@@ -181,7 +207,8 @@ def _download_file(
 
     try:
         if subfolder:
-            url = f"{_MODELSCOPE_BASE}/{repo_id}/resolve/master/{subfolder}/{filename}"
+            remote_name = _comfy_remote_name(filename) if repo_id == _COMFY_ORG_REPO else filename
+            url = f"{_MODELSCOPE_BASE}/{repo_id}/resolve/master/{subfolder}/{remote_name}"
             print(f"  [下载·ModelScope] {filename} ...")
             _http_download(url, target)
         else:
@@ -487,7 +514,11 @@ if __name__ == "__main__":
         help="模型大小 (默认 3b)",
     )
     parser.add_argument("--save-dir", default="model", help="保存目录 (默认 model)")
-    parser.add_argument("--repo", default=_DEFAULT_REPO, help="HuggingFace 仓库 ID (默认 numz/SeedVR2_comfyUI)")
+    parser.add_argument(
+        "--repo",
+        default=_DEFAULT_REPO,
+        help=f"HuggingFace 仓库 ID（默认官方 {_DEFAULT_REPO}；社区整理仓可用 numz/SeedVR2_comfyUI）",
+    )
     parser.add_argument(
         "--endpoint",
         default=None,

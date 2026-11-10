@@ -8,7 +8,8 @@
     "restore": "Restaurer",
     "history": "Historique",
     "system": "État Système",
-    "settings": "À propos"
+    "settings": "À propos",
+    "downloads": "Téléchargements"
   },
   "home": {
     "hero_title": "Chaque image,",
@@ -385,7 +386,24 @@
     "tip_compile_vae": "Compile l'encodeur/décodeur avec torch.compile. Mesuré ici : ~50% plus lent en régime stable, +7 s au premier appel, 0% de gain. Le VAE a des formes dynamiques et échoue plus souvent ; un échec revient au mode non compilé avec un avertissement, la sortie est produite quand même. Appliqué au prochain chargement du modèle.",
     "compile_saved": "Enregistré ; pris en compte au prochain chargement du modèle",
     "compile_save_failed": "Échec de l'enregistrement du paramètre de compilation",
-    "compile_unavailable": "torch.compile est indisponible dans cet environnement ; commutateurs désactivés"
+    "compile_unavailable": "torch.compile est indisponible dans cet environnement ; commutateurs désactivés",
+    "agreement_title": "Avant de commencer",
+    "agreement_intro_1": "Cet outil restaure des images/vidéos par IA à partir du modèle de diffusion SeedVR2 ;",
+    "agreement_intro_local": "tout le traitement reste local",
+    "agreement_intro_2": ". En continuant, vous confirmez avoir lu et accepté le ",
+    "agreement_link_user": "Contrat d'utilisation",
+    "agreement_connector": " et la ",
+    "agreement_link_privacy": "Politique de confidentialité",
+    "agreement_intro_3": " :",
+    "agreement_rule_1": "Ne pas restaurer ni diffuser de contenu portant atteinte aux droits légitimes d'autrui (portraits ou voix soumis au consentement de la personne) ;",
+    "agreement_rule_2": "Ne pas utiliser les sorties pour la deepfake, la fraude ou toute autre activité illégale ;",
+    "agreement_rule_3": "Le contenu est généré par le modèle SeedVR2 ;",
+    "agreement_rule_4": "Lors du partage externe des sorties, respectez les exigences d'étiquetage des contenus générés par IA de votre juridiction.",
+    "agreement_checkbox": "J'ai lu et j'accepte le contrat d'utilisation, la politique de confidentialité et les conditions ci-dessus",
+    "agreement_confirm": "Accepter et commencer",
+    "save_default_label": "Enregistrer par défaut",
+    "reset_default_label": "Réinitialiser par défaut",
+    "apply_recommend_label": "Appliquer la recommandation"
   },
   "history": {
     "title": "Historique",
@@ -632,5 +650,32 @@
     "double_res_hint_default": "Après envoi d'une image ou d'une vidéo, la résolution est calculée automatiquement en petit-côté × 2 (modification manuelle désactivée dans ce mode)",
     "double_res_applied": "Résolution et paramètres de tuile pré-remplis à petit-côté × 2",
     "initializing": "Initialisation"
+  },
+  "downloads": {
+    "title": "Téléchargements",
+    "subtitle": "Environnement et modèles",
+    "loading": "Chargement…",
+    "refresh": "Actualiser",
+    "mode_bootstrap": "Mode bootstrap",
+    "mode_full": "Runtime complet",
+    "mode_system": "Python système",
+    "ready": "Prêt",
+    "not_ready": "Non prêt",
+    "runtime": "Environnement d'exécution",
+    "runtime_desc": "Runtime Python avec PyTorch (CUDA). Le paquet allégé ne l'inclut pas — installez-le ici avant l'inférence.",
+    "status": "État",
+    "installed": "Installé",
+    "not_installed": "Non installé",
+    "install": "Installer",
+    "cancel": "Annuler",
+    "uninstall": "Désinstaller",
+    "size": "Taille",
+    "path": "Chemin",
+    "models": "Poids des modèles",
+    "models_desc": "Téléchargez les poids pour commencer. Plusieurs précisions par taille peuvent coexister.",
+    "no_models": "Aucun poids configuré",
+    "confirm_uninstall": "Supprimer ces fichiers ?",
+    "confirm_uninstall_runtime": "Désinstaller le runtime ? Une réinstallation sera nécessaire.",
+    "error": "Erreur"
   }
 }

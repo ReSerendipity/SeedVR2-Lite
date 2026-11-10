@@ -253,13 +253,30 @@ class TestDequantizeStateDict:
 
 class TestDownloadRouting:
     def test_source_routing(self):
-        from scripts.download_model import _is_comfy_org, _resolve_source
-
-        assert _resolve_source("seedvr2_ema_3b_fp16.safetensors", "numz/SeedVR2_comfyUI") == (
-            "numz/SeedVR2_comfyUI",
-            None,
+        from scripts.download_model import (
+            _DEFAULT_REPO,
+            _comfy_remote_name,
+            _is_comfy_org,
+            _resolve_source,
         )
-        repo, sub = _resolve_source("seedvr2_3b_nvfp4.safetensors", "numz/SeedVR2_comfyUI")
+
+        # 2026-11-01 定案：默认源即官方 Comfy-Org 仓；ema_ 命名的 fp16/fp8 也走官方，
+        # 仓内名去掉 ema_ 前缀（seedvr2_ema_3b_fp16 → seedvr2_3b_fp16）。
+        assert _DEFAULT_REPO == "Comfy-Org/SeedVR2"
+        assert _resolve_source("seedvr2_ema_3b_fp16.safetensors", _DEFAULT_REPO) == (
+            "Comfy-Org/SeedVR2",
+            "diffusion_models",
+        )
+        assert _comfy_remote_name("seedvr2_ema_3b_fp16.safetensors") == "seedvr2_3b_fp16.safetensors"
+        # VAE 走 vae/ 子目录且保持原名（官方仓里两种命名都存在）
+        assert _resolve_source("ema_vae_fp16.safetensors", _DEFAULT_REPO) == (
+            "Comfy-Org/SeedVR2",
+            "vae",
+        )
+        assert _comfy_remote_name("seedvr2_ema_vae_fp16.safetensors") == ("seedvr2_ema_vae_fp16.safetensors")
+        # 非 seedvr2 组件仍走调用方指定仓
+        assert _resolve_source("qwen_component.safetensors", "some/repo") == ("some/repo", None)
+        repo, sub = _resolve_source("seedvr2_3b_nvfp4.safetensors", _DEFAULT_REPO)
         assert (repo, sub) == ("Comfy-Org/SeedVR2", "diffusion_models")
         assert not _is_comfy_org("ema_vae_fp16.safetensors")
 

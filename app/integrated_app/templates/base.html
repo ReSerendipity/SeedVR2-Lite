@@ -6,8 +6,10 @@
     {% set csp_nonce = csp_nonce | default('') %}
     {# CSP 收紧 S2（docs/CSP_TIGHTENING_ROADMAP.md）：nonce 存在时 script-src 不再含
        'unsafe-inline'——全部 7 处内联脚本均带 nonce（render_page 无条件注入）；
-       仅当 nonce 缺失（异常渲染路径）才回退 unsafe-inline 保证页面不死。 #}
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'{% if csp_nonce %} 'nonce-{{ csp_nonce }}'{% else %} 'unsafe-inline'{% endif %}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self';">
+       仅当 nonce 缺失（异常渲染路径）才回退 unsafe-inline 保证页面不死。
+       S4 Phase 2（WO-B17，2026-11-09）：style-src 去掉 'unsafe-inline'（与
+       security_headers.py 的 _DEFAULT_CSP 原子同改，交集语义下两处必须一致）。 #}
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'{% if csp_nonce %} 'nonce-{{ csp_nonce }}'{% else %} 'unsafe-inline'{% endif %}; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self';">
     <title>{% block title %}SeedVR2{% endblock %}</title>
     <!-- 主题初始化（防止闪烁，默认暗色主题） -->
     <script nonce="{{ csp_nonce | default('') }}">
@@ -53,7 +55,7 @@
     <link rel="stylesheet" href="/static/fonts/fonts.css">
 
     <!-- 自定义样-->
-    <link rel="stylesheet" href="/static/css/style.css?v=3.16.2">
+    <link rel="stylesheet" href="/static/css/style.css?v=3.16.3">
 
     {% block head %}{% endblock %}
 </head>
@@ -105,13 +107,19 @@
                     <span>{{ t('nav.settings') }}</span>
                 </a>
             </li>
+            <li>
+                <a href="/downloads" class="sv-nav-link {% if active_page == 'downloads' %}active{% endif %}">
+                    <i class="bi bi-cloud-arrow-down nav-icon"></i>
+                    <span>{{ t('nav.downloads') }}</span>
+                </a>
+            </li>
         </ul>
 
         <div class="sv-navbar-actions">
             <!-- 标题字体切换下拉 -->
             <div class="sv-font-dropdown" id="fontDropdown">
                 <button class="sv-nav-icon-btn" id="btnFontSwitch" aria-label="{{ t('common.switch_font') }}" title="{{ t('common.switch_font') }}" aria-haspopup="true" aria-expanded="false">
-                    <span style="font-weight:700;font-style:italic;font-size:15px">Aa</span>
+                    <span class="sv-font-dd-glyph">Aa</span>
                 </button>
                 <div class="sv-font-menu" id="fontMenu" role="menu"></div>
             </div>
@@ -166,7 +174,7 @@
             <span class="sw-item" id="statusModel">{{ t('settings.model_management') }}: {{ t('status.initializing') }}</span>
             <span class="sw-item" id="statusGpu">GPU: --</span>
             <span class="sw-item" id="statusMem">
-                <span class="sw-bar"><span class="sw-bar-fill" id="statusMemFill" style="transform:scaleX(0);transform-origin:left center"></span></span>
+                <span class="sw-bar"><span class="sw-bar-fill sv-bar-fill-zero" id="statusMemFill"></span></span>
                 <span id="statusMemText">--</span>
             </span>
         </div>
@@ -210,8 +218,8 @@
                            placeholder="Enter path, e.g. C:\Users" aria-label="Directory path">
                     <button class="sv-btn sv-btn-primary sv-btn-sm" id="dirBrowserGoBtn">{{ t('common.go') }}</button>
                     <button class="sv-btn sv-btn-outline sv-btn-sm" id="dirBrowserOpenExplorerBtn"
-                            data-tooltip="{{ t('common.open_explorer') if t('common.open_explorer') else 'Open in explorer' }}"
-                            aria-label="{{ t('common.open_explorer') if t('common.open_explorer') else 'Open in explorer' }}">
+                            data-tooltip="{{ t('common.open_explorer') }}"
+                            aria-label="{{ t('common.open_explorer') }}">
                         <i class="bi bi-folder2-open"></i>
                     </button>
                 </div>
@@ -231,7 +239,7 @@
     <div class="sv-context-menu" id="svContextMenu" role="menu" aria-hidden="true">
         <button class="sv-context-menu-item" id="ctxOpenOutputDir" role="menuitem">
             <i class="bi bi-folder2-open"></i>
-            <span>{{ t('history.open_output_dir') if t('history.open_output_dir') else 'Open output directory' }}</span>
+            <span>{{ t('history.open_output_dir') }}</span>
         </button>
         <button class="sv-context-menu-item" id="ctxRefreshRow" role="menuitem">
             <i class="bi bi-arrow-clockwise"></i>
@@ -249,8 +257,11 @@
     <script src="/static/vendor/bootstrap/bootstrap.bundle.min.js"></script>
     <!-- HTMX (本地) -->
     <script src="/static/vendor/htmx/htmx.min.js"></script>
+    <!-- 可见性状态机（CSP 收紧 S4 Phase 1）：show/hide/isVisible 单一出口，
+         必须早于 app.js 与各页内联脚本加载（全局 SvVisibility） -->
+    <script src="/static/js/visibility.js?v=1.0.0"></script>
     <!-- 应用脚本 -->
-    <script src="/static/js/app.js?v=3.8.3"></script>
+    <script src="/static/js/app.js?v=3.8.4"></script>
     <script src="/static/js/video-compare.js?v=1.0.1"></script>
 
     {% block scripts %}{% endblock %}

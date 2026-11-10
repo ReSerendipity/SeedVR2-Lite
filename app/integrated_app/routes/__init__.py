@@ -270,6 +270,21 @@ def register_page_routes(app: FastAPI):
         """
         return render_page(request, "history.html", active_page="history")
 
+    @app.get("/downloads", response_class=HTMLResponse)
+    async def downloads_page(request: Request):
+        """GET /downloads - 下载管理页面。
+
+        瘦包（不含运行时与权重）的首启入口：安装 Python 运行时（torch）与模型权重。
+        本页必须能在**无 torch 的引导解释器**上打开，否则用户无法完成安装。
+
+        Args:
+            request: FastAPI 请求对象。
+
+        Returns:
+            渲染后的 downloads.html 页面。
+        """
+        return render_page(request, "downloads.html", active_page="downloads")
+
     @app.get("/system-status", response_class=HTMLResponse)
     async def system_status_page(request: Request):
         """GET /system-status - 系统状态页面。

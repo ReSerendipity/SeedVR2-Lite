@@ -2,7 +2,7 @@
 
 > **来源**：家族泛化自 TTS_MultiModel `docs/SRE_RUNBOOK.md` + 本仓既有云原生部署，本仓本地化。
 > 配套：`docs/rollback_sop.md`、`docs/release-governance.md`。
-> 适用版本：v1.6.1（与 `pyproject.toml` / `app/integrated_app/version.py` 一致）。
+> 适用版本：以 `pyproject.toml` 为准（当前 1.7.0，截至 2026-11-04）。
 
 ---
 
@@ -52,6 +52,8 @@
 | 密钥泄露 | < 5 min | — | 轮转并重启 |
 
 > 演练步骤（每季度一次）：预发副本部署 → 注入故障（kill Pod / 删 config / 损坏权重）→ 观测探针翻转 → §2 恢复 → 复盘记录 RTO/RPO。
+
+> 执行记录：[DR演练记录-history-db-2026-11-06.md](../_archive/执行记录/2026-11/DR演练记录-history-db-2026-11-06.md)——history_db 损坏场景首轮实测（2026-11-06）：恢复+复验端到端 RTO 实测 0.490 s、RPO 0 s，全链路通过；恢复验收口径为逻辑对平（integrity_check + 行数 + `.dump` 摘要），非字节级 sha256。
 
 **数据备份**：`history_db`（SQLite）定期备份 + 一致性快照 tips（无定制脚本时 `sqlite3 .backup`）；权重离线冷备 + `integrity_manifest` 复验；密钥走 `SEEDVR2_SECRET_KEY` / Secret 管理。
 

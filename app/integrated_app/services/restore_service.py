@@ -57,6 +57,7 @@ from app.integrated_app.metrics import compute_output_mean_luma, metrics_collect
 from app.integrated_app.model_registry import model_registry
 from app.integrated_app.optimization.gpu.vram_leak_detector import vram_leak_detector
 from app.integrated_app.services.oom_breaker import OomBreaker
+from app.integrated_app.services.quality_breaker import QualityBreaker
 from app.integrated_app.services.task_state import task_state_store
 from app.integrated_app.utils.hashing import compute_file_sha256
 from app.integrated_app.utils.retry import exponential_backoff_with_jitter
@@ -65,6 +66,10 @@ logger = logging.getLogger(__name__)
 
 # P2-12：进程级 OOM 熔断器单例（阈值/冷却期由 app_config 在 oom_breaker_remaining 中同步）
 oom_breaker = OomBreaker()
+
+# 评估 A3 整改：进程级输出质量劣化熔断器单例。阈值/下限/冷却期/开关由
+# app_config 在 quality_breaker_remaining 中同步；回滚钩子由 app_server 启动时注册。
+quality_breaker = QualityBreaker()
 
 
 def oom_breaker_remaining(app_config: dict | None = None) -> float:
@@ -81,6 +86,26 @@ def oom_breaker_remaining(app_config: dict | None = None) -> float:
         cooldown_seconds=float(cfg.get("cooldown_seconds", 600.0) or 600.0),
     )
     return oom_breaker.remaining_cooldown()
+
+
+def quality_breaker_remaining(app_config: dict | None = None) -> float:
+    """查询输出质量劣化熔断剩余拒绝时间（秒），并按 config 同步阈值/冷却期。
+
+    评估 A3 整改：与 oom_breaker_remaining 同构的提交闸同步入口。
+
+    Returns:
+        float: >0 表示熔断打开（调用方应拒绝新任务并返回 Retry-After）。
+    """
+    cfg = (app_config or {}).get("runtime", {}).get("quality", {}) or {}
+    if not cfg.get("enabled", True):
+        return 0.0
+    quality_breaker.configure(
+        threshold=int(cfg.get("threshold", 3) or 3),
+        luma_min=float(cfg.get("luma_min", 8.0) if cfg.get("luma_min") is not None else 8.0),
+        cooldown_seconds=float(cfg.get("cooldown_seconds", 600.0) or 600.0),
+        enabled=bool(cfg.get("enabled", True)),
+    )
+    return quality_breaker.remaining_cooldown()
 
 
 def is_ram_exhaustion(error: str | None) -> bool:
@@ -593,6 +618,12 @@ async def run_task_with_state(
                 input_type=input_type,
                 output_mean_luma=output_mean_luma,
             )
+            # 评估 A3 整改：输出亮度喂入质量劣化熔断（阈值判定 + 告警 + 自动回滚钩子）。
+            # best-effort：熔断内部吞异常，不拖垮任务收尾路径
+            try:
+                quality_breaker.record_output_luma(output_mean_luma)
+            except Exception as qb_err:  # noqa: BLE001 — 观测面失败不影响主流程
+                logger.warning(f"质量劣化熔断记录失败（忽略）: {qb_err}")
             # P2-4：显存泄漏自动告警（峰值落库后喂给趋势检测器）
             if vram_peak_mb > 0:
                 try:
@@ -1371,6 +1402,11 @@ async def process_batch_background(
                         input_type=media_type,
                         output_mean_luma=output_mean_luma,
                     )
+                    # 评估 A3 整改：批量链路同样喂入质量劣化熔断（与单任务路径同语义）
+                    try:
+                        quality_breaker.record_output_luma(output_mean_luma)
+                    except Exception as qb_err:  # noqa: BLE001 — 观测面失败不影响主流程
+                        logger.warning(f"[{batch_id}] 质量劣化熔断记录失败（忽略）: {qb_err}")
                     # P2-4：批量链路同样喂入显存泄漏检测器
                     batch_vram = float(task_item.get("vram_peak_mb") or 0.0)
                     if batch_vram > 0:

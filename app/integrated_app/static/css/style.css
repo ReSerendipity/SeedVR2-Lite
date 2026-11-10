@@ -7795,9 +7795,12 @@ input[type="number"].sv-form-control::-webkit-outer-spin-button {
     transition: none;
 }
 
-/* compareCard 布局 */
+/* compareCard 布局
+   CSP S4 Phase 1（2026-11-09）：去掉 display 上的 !important——id 特异性会压过
+   `.sv-hidden`，使可见性状态机无法隐藏它（迁移前内联 `display:'none'` 同样被这条
+   覆盖，即对比卡实际一直在显示）。display:flex 保留，显示时布局与原先一致。 */
 #compareCard {
-    display: flex !important;
+    display: flex;
     flex-direction: column;
 }
 
@@ -9936,4 +9939,356 @@ a,
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* ===== 可见性状态机显示模式类（CSP 收紧 S4 · Phase 1 / 2026-11-09）=====
+   隐藏统一走 .sv-hidden（display:none!important，见「工具类」段）；
+   下面四个模式类只负责“显示出来时用哪种 display”，复现迁移前内联
+   style="display:flex|block" 的实现，不新增任何 !important。
+   置于文件末尾：与组件基础规则同特异性时以本段为准（如 .sv2-error-card 的
+   基础 display:none 会被 .sv-vis-flex 覆盖）。 */
+.sv-vis-flex { display: flex; }
+.sv-vis-block { display: block; }
+.sv-vis-inline-flex { display: inline-flex; }
+.sv-vis-grid { display: grid; }
+
+/* ===== 修复结果查看器叠层（CSP S4 Phase 1：从模板内联 style 迁入）=====
+   原先写在 #videoPlainViewer / #plainViewer / #compareCard / #videoCompareCard
+   的 style 属性里；display 交给状态机（.sv-hidden + .sv-vis-*），其余静态属性
+   在此固定，值与原内联逐项一致。 */
+.sv2-viewer-layer {
+    position: absolute;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+.sv2-compare-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* ===== 内联 display 收口（CSP S4 Phase 1 / 2026-11-09）=====
+   以下类承接原先写死在 style="display:flex;..." 里的静态属性，声明值逐项照抄，
+   display 结果与迁移前一致；置于文件末尾，同特异性时以本段为准。 */
+.sv2-allow-dirs-summary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--sv-text-secondary);
+    user-select: none;
+}
+.sv2-agree-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    font-size: 13px;
+    margin: 10px 0;
+}
+.sv2-scan-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+.sv2-scan-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.sv-about-faq-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sv-text-primary);
+    cursor: pointer;
+    list-style: none;
+}
+.sv-inline-block-w160 {
+    display: inline-block;
+    max-width: 160px;
+}
+
+/* 语言切换过渡遮罩（CSP S4 Phase 1：从 app.js 的 cssText 迁入） */
+.sv-locale-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--sv-bg, rgba(15, 20, 15, 0.95));
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+/* ===== CSP S4 Phase 2：剩余内联样式收口（2026-11-09）=====
+   docs/CSP_TIGHTENING_ROADMAP.md §S4。Phase 1 已把 display 收口到
+   .sv-hidden / .sv-vis-* 状态机；本段承接其余写死在模板与 JS 字符串
+   style="..." 里的静态属性：声明值逐项照抄原内联，不新增任何 !important，
+   全部置于文件末尾——与组件基础规则同特异性时以本段为准。
+
+   需要与既有 !important 规则对齐的两处，已在各自注释里说明：
+   - .sv2-agreement-ack:disabled（.sv-btn:disabled 的 opacity 为 .45）
+   - .sv-batch-file-list-scanned（.sv-batch-file-list 基础 max-height:150px） */
+
+/* 顶部「Aa」字体菜单触发按钮 */
+.sv-font-dd-glyph {
+    font-weight: 700;
+    font-style: italic;
+    font-size: 15px;
+}
+
+/* 系统状态浮窗内存条：初始 scaleX(0)，首帧后由 JS 经 CSSOM 写入真实比例 */
+.sv-bar-fill-zero {
+    transform: scaleX(0);
+    transform-origin: left center;
+}
+
+/* 首页「最近任务」空态：按钮行上间距 */
+.sv-recent-empty-actions {
+    margin-top: 12px;
+}
+
+/* 修复页：错误卡重试按钮（.sv2-tb-btn 基础为 min-height:44px / padding:0 11px） */
+.sv2-btn-retry {
+    height: 38px;
+    padding: 0 18px;
+}
+
+/* 修复结果查看器：视频/单图的最大尺寸与投影（原 #resultVideo / #plainImg 内联） */
+.sv2-result-media {
+    max-width: calc(100% - 40px);
+    max-height: calc(100% - 40px);
+    border-radius: var(--sv-radius);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, .3);
+}
+.sv2-result-img {
+    object-fit: contain;
+}
+
+/* 批量：允许目录折叠面板与其内容区 */
+.sv2-allow-dirs {
+    margin-bottom: 10px;
+}
+.sv2-allow-dirs-body {
+    margin-top: 6px;
+    padding: 8px 10px;
+    background: var(--sv-surface-2);
+    border-radius: var(--sv-radius-sm);
+}
+
+/* 高级参数：VAE 分块档位提示 */
+.sv2-vae-tier-hint {
+    margin-left: 8px;
+    font-weight: 400;
+}
+
+/* 首次使用协议弹窗 */
+.sv2-agreement-modal {
+    max-width: 560px;
+}
+.sv2-agreement-title {
+    margin: 0 0 10px;
+}
+.sv2-agreement-text {
+    font-size: 13.5px;
+    line-height: 1.7;
+    margin: 0 0 8px;
+}
+.sv2-agreement-list {
+    font-size: 13px;
+    line-height: 1.7;
+    margin: 0 0 10px;
+    padding-left: 18px;
+}
+.sv2-agreement-ack {
+    width: 100%;
+    margin-top: 6px;
+}
+/* .sv-btn:disabled 声明 opacity:.45（特异性 0,2,0）；这里同特异性后置覆盖为 .5，
+   与迁移前内联 opacity:.5 的计算值一致，勾选后 JS 仍用 CSSOM 写 opacity:1 */
+.sv2-agreement-ack:disabled {
+    opacity: .5;
+}
+
+/* 批量扫描结果摘要（restore.html 内 JS 拼装的 innerHTML，属运行期内联样式面） */
+.sv2-scan-flex1 {
+    flex: 1;
+}
+.sv2-scan-check {
+    color: #28a745;
+}
+.sv2-scan-total {
+    font-size: 1rem;
+}
+.sv2-scan-stats {
+    color: #666;
+}
+/* 扫描结果文件列表：覆盖 .sv-batch-file-list 基础的 max-height:150px */
+.sv-batch-file-list-scanned {
+    max-height: 280px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 8px;
+    background: #fafafa;
+}
+/* 允许目录行：删除按钮靠右不压缩 */
+.sv2-allow-dir-del {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* 设置页：路径说明 / FAQ 卡片 */
+.sv-settings-paths-note {
+    font-size: 12px;
+}
+.sv-about-faq-card-body {
+    padding: 0;
+}
+.sv-about-faq-item {
+    border-bottom: 1px solid var(--sv-border-light);
+    padding: 14px 16px;
+}
+.sv-about-faq-chevron {
+    transition: transform .2s;
+    color: var(--sv-primary);
+    flex-shrink: 0;
+}
+.sv-about-faq-answer {
+    font-size: 12px;
+    color: var(--sv-text-muted);
+    line-height: 1.6;
+    margin-top: 10px;
+    margin-bottom: 0;
+    padding-left: 22px;
+}
+
+/* 系统状态页：GPU 占用条初始 0 / 显存估算输入框宽度 */
+.sv-gauge-fill-zero {
+    width: 0%;
+}
+.sv-vram-num {
+    max-width: 80px;
+}
+
+/* 历史记录「清空」确认弹窗（app.js 拼装的 innerHTML） */
+.sv-modal.sv-modal-sm {
+    max-width: 420px;
+}
+.sv-clear-history-text {
+    margin-bottom: 14px;
+}
+.sv-clear-history-chk {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--sv-primary);
+}
+.sv-clear-history-label {
+    font-size: 0.85rem;
+}
+
+/* ===== 下载页样式（CSP S4 Phase 2：原 downloads.html 页内 <style> 迁入）=====
+   原块位于 body 内、文档顺序在 style.css 之后；这里接在文件末尾，
+   与 .dl-* 相关的既有规则无重叠，层叠结果与迁移前一致。 */
+.dl-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.dl-summary-main { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dl-badge {
+    display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px;
+    background: var(--sv-primary-dim); color: var(--sv-text); border: 1px solid var(--sv-border);
+}
+.dl-badge.is-ready { background: var(--sv-success); color: #fff; border-color: transparent; }
+.dl-summary-text { color: var(--sv-text-muted); font-size: 14px; }
+.dl-section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.dl-section-title { font-size: 16px; margin: 0 0 4px; }
+.dl-section-desc { margin: 0; font-size: 13px; color: var(--sv-text-muted); }
+.dl-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.dl-kv { display: grid; grid-template-columns: 110px 1fr; gap: 6px 14px; margin: 0; font-size: 13px; }
+.dl-kv dt { color: var(--sv-text-muted); }
+.dl-kv dd { margin: 0; }
+.dl-mono { font-family: var(--sv-font-mono, monospace); font-size: 12px; word-break: break-all; }
+.dl-model-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.dl-model-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 12px; border: 1px solid var(--sv-border); border-radius: var(--sv-radius);
+    background: var(--sv-bg-elevated, transparent);
+}
+.dl-model-meta { display: flex; flex-direction: column; gap: 2px; }
+.dl-model-name { font-size: 14px; }
+.dl-model-sub { font-size: 12px; color: var(--sv-text-muted); }
+.dl-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.dl-dot.on { background: var(--sv-success); }
+.dl-dot.off { background: var(--sv-text-muted); opacity: .4; }
+.dl-muted { color: var(--sv-text-muted); font-size: 13px; }
+.dl-hint { margin: 12px 0 0; font-size: 12px; color: var(--sv-text-muted); font-family: var(--sv-font-mono, monospace); }
+.dl-hidden { display: none !important; }
+.dl-progress-text { margin: 8px 0 0; font-size: 12px; color: var(--sv-text-muted); }
+
+/* ===== 设置页样式（CSP S4 Phase 2：原 settings.html 页内 <style> 迁入）=====
+   原块里的 .sv-about-faq-item[open] 箭头旋转与 summary 隐藏标记两段，与
+   文件前部「FAQ」段（L8109 附近）逐字重复，此处不再重复声明。 */
+.sv-settings-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 24px;
+    align-items: start;
+}
+.sv-settings-col {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+}
+@media (max-width: 1100px) {
+    .sv-settings-layout {
+        grid-template-columns: 1fr;
+    }
+}
+.sv-settings-panel {
+    max-width: none;
+}
+.sv-settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sv-space-4);
+    padding: var(--sv-space-3) 0;
+    border-bottom: 1px solid var(--sv-border-light);
+}
+.sv-settings-row:last-of-type {
+    border-bottom: none;
+}
+.sv-settings-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--sv-text-primary);
+}
+.sv-settings-select {
+    width: 220px;
+    height: 34px;
+    border: 1px solid var(--sv-border);
+    border-radius: var(--sv-radius-sm);
+    background: var(--sv-bg-surface);
+    color: var(--sv-text-primary);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 0 var(--sv-space-3);
+    cursor: pointer;
+}
+.sv-settings-select:focus-visible {
+    outline: 2px solid var(--sv-primary);
+    outline-offset: 2px;
+}
+.sv-settings-paths {
+    font-size: 12.5px;
+    font-family: var(--sv-font-mono);
 }

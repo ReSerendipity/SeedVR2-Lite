@@ -152,8 +152,21 @@ from app.integrated_app.middleware.csrf import CSRFMiddleware  # noqa: E402
 from app.integrated_app.middleware.request_id import RequestIDLogFilter, RequestIDMiddleware  # noqa: E402
 from app.integrated_app.middleware.security_headers import SecurityHeadersMiddleware  # noqa: E402
 from app.integrated_app.middleware.tracing import TraceLogFilter, TracingMiddleware  # noqa: E402
-from app.integrated_app.model_manager import ModelManager  # noqa: E402
 from app.integrated_app.model_registry import model_registry  # noqa: E402
+
+# 引导态（瘦包：只有 Web 依赖、没有 torch）必须能起后端——否则下载管理页打不开，
+# 用户永远装不上环境。模型管理器背后是推理引擎，引擎顶层 `import torch`，所以这里
+# 用可选导入：失败时降级为 None，引擎类路由会在路由发现阶段被跳过（routes/__init__
+# 对每个路由模块单独 try/except），下载管理页与静态资源照常工作。
+_MODEL_MANAGER_UNAVAILABLE: Exception | None
+try:  # noqa: SIM105 - 需要保留异常对象用于日志
+    from app.integrated_app.model_manager import ModelManager  # noqa: E402
+except Exception as _model_manager_exc:  # noqa: BLE001
+    ModelManager = None  # type: ignore[assignment,misc]
+    _MODEL_MANAGER_UNAVAILABLE = _model_manager_exc
+else:
+    _MODEL_MANAGER_UNAVAILABLE = None
+
 from app.integrated_app.routes.system.sse import event_bus  # noqa: E402
 from app.integrated_app.task_queue import TaskQueue  # noqa: E402
 from app.integrated_app.utils.response import respond_error, respond_success  # noqa: E402
@@ -742,12 +755,57 @@ async def lifespan(app: FastAPI):
         )
         logger.info(f"模型空闲自动卸载已启用: {idle_unload_minutes} 分钟无任务即卸载")
 
+    # 输出质量劣化自动回滚钩子（评估 A3 整改）：质量熔断打开时卸载当前模型权重——
+    # 下次任务重新走哈希白名单校验加载，坏权重/坏采样状态不跨劣化复用。
+    # 与空闲卸载同纪律：队列有任务运行中不卸载，轮询等待（上限=熔断冷却期）。
+    quality_cfg = config.get("runtime", {}).get("quality", {}) or {}
+    if quality_cfg.get("enabled", True):
+        _model_manager = app.state.model_manager
+
+        async def _rollback_unload_when_idle(max_wait_seconds: float) -> None:
+            waited = 0.0
+            poll_interval = 2.0
+            while waited < max_wait_seconds:
+                queue = getattr(app.state, "task_queue", None)
+                current = getattr(queue, "current_task_id", None) if queue is not None else None
+                task_running = (current() if callable(current) else current) is not None
+                if not task_running:
+                    if _model_manager is not None:
+                        logger.warning("质量劣化自动回滚：卸载当前模型权重（下次任务重新走哈希白名单校验加载）")
+                        await _model_manager.unload_model()
+                    else:
+                        logger.warning("质量劣化自动回滚：模型管理器不可用，跳过卸载")
+                    return
+                await asyncio.sleep(poll_interval)
+                waited += poll_interval
+            logger.warning("质量劣化自动回滚：等待队列空闲超时，本次跳过卸载（熔断保持打开）")
+
+        def _quality_rollback_hook(reason: dict) -> None:
+            # 熔断打开瞬间调度回滚协程；等待上限=冷却期。
+            # 须在运行中的事件循环里才可 create_task（同步上下文/测试环境无 loop
+            # 时跳过并告警——熔断与 503 提交闸仍然生效，回滚由下次触发补做）。
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                logger.warning("质量劣化自动回滚：当前无运行中的事件循环，跳过调度（熔断保持打开）")
+                return
+            cooldown = max(float(reason.get("remaining_seconds") or 600.0), 60.0)
+            loop.create_task(_rollback_unload_when_idle(max_wait_seconds=cooldown))
+
+        from app.integrated_app.services.restore_service import quality_breaker
+
+        quality_breaker.register_rollback_hook(_quality_rollback_hook)
+        logger.info("输出质量劣化熔断已启用（阈值告警 + 自动回滚钩子已挂载）")
+
     backend_value = gpu_manager.backend.value if gpu_manager.backend else "unavailable"
     logger.info(f"GPU 后端: {backend_value}, 设备: {gpu_manager.device_name}")
 
     if gpu_manager.is_gpu_available and config.get("model", {}).get("auto_load", True):
         try:
-            model_manager: ModelManager = app.state.model_manager
+            model_manager = app.state.model_manager
+            if model_manager is None:
+                logger.warning("模型管理器不可用（引导态），跳过模型自动加载")
+                raise RuntimeError("model manager unavailable")
             await model_manager.load_model()
             logger.info("模型自动加载完成")
         except Exception as e:
@@ -885,7 +943,8 @@ def create_app(config: dict | None = None) -> FastAPI:
     register_error_handlers(app)
 
     app.state.config = config
-    app.state.model_manager = ModelManager(config)
+    # 引导态下 ModelManager 为 None（缺 torch），此时只有下载管理页可用
+    app.state.model_manager = ModelManager(config) if ModelManager is not None else None
     app.state.gpu_backend = gpu_manager
     app.state.history_db = HistoryDB(
         db_path=config.get("history", {}).get("db_path", "data/history.db"),
@@ -938,6 +997,20 @@ def create_app(config: dict | None = None) -> FastAPI:
     register_page_routes(app)
 
     auto_discover_routes(app)
+
+    # 引导态兜底：瘦包（无 torch）下 routes/system/health 等模块在自动发现阶段被跳过，
+    # 壳的 /api/system/health 探活会 404 → 壳认为后端没起来，永远不导航到下载页。
+    # 这里补一个极简健康端点，只在真正缺失时注册（有完整实现时不覆盖）；且只在
+    # ModelManager 不可用（即确实处于引导态）时兜底——完整装态下若因路由懒加载
+    # 导致此刻看不到该路径，也不能让极简版去顶替带自检信息的完整实现。
+    if ModelManager is None and not any(getattr(route, "path", "") == "/api/system/health" for route in app.routes):
+
+        @app.get("/api/system/health")
+        async def _minimal_health():  # noqa: ANN202 - FastAPI 端点不需要显式返回类型
+            """最小健康响应（引导态）：壳只要求 200，不计较字段多少。"""
+            return respond_success({"status": "ok", "mode": "bootstrap", "degraded": True})
+
+        logger.warning("未注册完整 /api/system/health（引导态），已挂载最小健康端点")
 
     try:
         from app.integrated_app.optimization.engine.engine_scheduler import EngineScheduler

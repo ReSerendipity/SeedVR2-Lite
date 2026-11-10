@@ -11,8 +11,9 @@ SeedVR2 的配置以 dict 形式注入 ``app.state.config``，安全头策略读
 置于中间件栈最外层（``add_middleware`` 后添加 = 请求最先执行、响应最后装配），
 确保所有响应（含 Basic Auth / CSRF / Rate Limit 产生的 401/403/429）均携带安全头。
 
-注意：默认 CSP 保留 ``'unsafe-inline'``，因为现有前端模板大量使用内联事件处理器
-与内联 style；一刀切会破坏 UI。待前端改为事件委托 + 外部样式后可收紧。
+默认 CSP 现状（2026-11-09）：``script-src`` 仍留 ``'unsafe-inline'``——模板的内联脚本
+全部带 nonce，现代浏览器在 nonce 上下文忽略该回退；``style-src`` 已**不含**
+``'unsafe-inline'``（S4 Phase 2 落地，页面内联 style 已清零，运行时改样式走 CSSOM）。
 """
 
 from __future__ import annotations
@@ -25,7 +26,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 logger = logging.getLogger(__name__)
 
-# 默认 CSP（保留 unsafe-inline 以兼容现有前端内联事件与内联样式）
+# 默认 CSP（script-src 保留 unsafe-inline 作无 nonce 回退；style-src 已收紧）
 #
 # ⚠ 必须与 base.html 头部的 <meta http-equiv="Content-Security-Policy"> 保持一致：
 # 浏览器对 meta 与响应头两份策略取交集，任何一边更严都会拦截另一边明确放行的资源。
@@ -39,11 +40,16 @@ logger = logging.getLogger(__name__)
 # S2 收紧说明（docs/CSP_TIGHTENING_ROADMAP.md，2026-09-06）：script-src 的实际
 # 收紧在 meta 侧完成（nonce 上下文移除 unsafe-inline）；响应头侧无 per-request
 # nonce 可用，保留 'unsafe-inline' 字符串不构成弱点——交集语义下 meta 的
-# nonce-only 策略必然更严并生效。style-src 收紧见 S4。
+# nonce-only 策略必然更严并生效。
+# S4 Phase 2（WO-B17，2026-11-09）：应用侧内联 style 已清零（模板/UI JS/页内 <style>
+# 块/Python 拼装均为 0，`.style.cssText` 属 CSSOM 不受 style-src 约束），style-src
+# 两侧同步去掉 'unsafe-inline'，仅保留 'self' 与字体域（决策 D22 保留 Google Fonts）。
+# 已知偏差：desktop/src/desktop-bridge.js 的更新弹窗仍用内联 style 拼 DOM（超出本工单
+# 允许改动清单，见路线图 §2e），若启用该桌面壳，弹窗会掉样式。
 _DEFAULT_CSP = (
     "default-src 'self'; "
     "script-src 'self' 'unsafe-inline'; "
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+    "style-src 'self' https://fonts.googleapis.com; "
     "img-src 'self' data: blob:; "
     "media-src 'self' blob:; "
     "connect-src 'self'; "

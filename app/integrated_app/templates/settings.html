@@ -41,7 +41,7 @@
                 <span class="sv-settings-label">{{ t('settings.paths_label') }}</span>
                 <span class="sv-text-muted sv-settings-paths">outputs/ · model/</span>
             </div>
-            <p class="sv-text-muted sv-mt-1" style="font-size:12px">{{ t('settings.paths_note') }}</p>
+            <p class="sv-text-muted sv-mt-1 sv-settings-paths-note">{{ t('settings.paths_note') }}</p>
         </div>
     </div>
 </div>
@@ -274,14 +274,14 @@
         {{ t('settings.faq_title') }}
     </div>
     <div class="sv-card">
-        <div class="sv-card-body" style="padding:0">
+        <div class="sv-card-body sv-about-faq-card-body">
             {% for q_key, a_key in [("settings.faq_q1", "settings.faq_a1"), ("settings.faq_q2", "settings.faq_a2"), ("settings.faq_q3", "settings.faq_a3")] %}
-            <details class="sv-about-faq-item" style="border-bottom:1px solid var(--sv-border-light);padding:14px 16px">
-                <summary style="font-size:13px;font-weight:600;color:var(--sv-text-primary);cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sv-about-faq-chevron" style="transition:transform .2s;color:var(--sv-primary);flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>
+            <details class="sv-about-faq-item">
+                <summary class="sv-about-faq-summary">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sv-about-faq-chevron"><polyline points="6 9 12 15 18 9"/></svg>
                     {{ t(q_key) }}
                 </summary>
-                <p style="font-size:12px;color:var(--sv-text-muted);line-height:1.6;margin-top:10px;margin-bottom:0;padding-left:22px">{{ t(a_key) }}</p>
+                <p class="sv-about-faq-answer">{{ t(a_key) }}</p>
             </details>
             {% endfor %}
         </div>
@@ -322,72 +322,6 @@
     </div>
 </div>
 
-<style>
-.sv-about-faq-item[open] .sv-about-faq-chevron {
-    transform: rotate(180deg);
-}
-.sv-about-faq-item summary::-webkit-details-marker {
-    display: none;
-}
-
-/* 设置面板（分栏重构：左设置+项目信息，右技术栈/快速开始/显存/FAQ；技术特性移至整宽区） */
-.sv-settings-layout {
-    display: grid;
-    grid-template-columns: 1fr 1.2fr;
-    gap: 24px;
-    align-items: start;
-}
-.sv-settings-col {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    min-width: 0;
-}
-@media (max-width: 1100px) {
-    .sv-settings-layout {
-        grid-template-columns: 1fr;
-    }
-}
-.sv-settings-panel {
-    max-width: none;
-}
-.sv-settings-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sv-space-4);
-    padding: var(--sv-space-3) 0;
-    border-bottom: 1px solid var(--sv-border-light);
-}
-.sv-settings-row:last-of-type {
-    border-bottom: none;
-}
-.sv-settings-label {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--sv-text-primary);
-}
-.sv-settings-select {
-    width: 220px;
-    height: 34px;
-    border: 1px solid var(--sv-border);
-    border-radius: var(--sv-radius-sm);
-    background: var(--sv-bg-surface);
-    color: var(--sv-text-primary);
-    font-family: inherit;
-    font-size: 13px;
-    padding: 0 var(--sv-space-3);
-    cursor: pointer;
-}
-.sv-settings-select:focus-visible {
-    outline: 2px solid var(--sv-primary);
-    outline-offset: 2px;
-}
-.sv-settings-paths {
-    font-size: 12.5px;
-    font-family: var(--sv-font-mono);
-}
-</style>
 
 <script nonce="{{ csp_nonce | default('') }}">
 document.addEventListener('DOMContentLoaded', function () {
