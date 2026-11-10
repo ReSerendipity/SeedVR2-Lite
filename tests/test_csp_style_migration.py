@@ -142,9 +142,7 @@ class TestNoInlineStyleSurface:
             for i, line in enumerate(text.splitlines(), 1):
                 if _STYLE_BLOCK_RE.search(line):
                     offenders.append(f"{f.name}:{i} {line.strip()[:100]}")
-        assert offenders == [], "模板仍有页内 <style> 块（style-src 收紧后会被整块拦下）：\n" + "\n".join(
-            offenders
-        )
+        assert offenders == [], "模板仍有页内 <style> 块（style-src 收紧后会被整块拦下）：\n" + "\n".join(offenders)
 
     def test_ui_js_has_no_inline_style_markup(self):
         """UI JS 拼装的 innerHTML 同样受 style-src 管辖（CSSOM 写入不受限，另计）"""
@@ -313,7 +311,9 @@ class TestMigrationLock:
         assert _norm(last["grid-template-columns"]) == _norm("1fr 1.2fr")
         assert _norm(_rule_declarations(css, ".sv-settings-layout")["display"]) == "grid"
 
-    @pytest.mark.parametrize("page,template", [("downloads.html", "downloads.html"), ("settings.html", "settings.html")])
+    @pytest.mark.parametrize(
+        "page,template", [("downloads.html", "downloads.html"), ("settings.html", "settings.html")]
+    )
     def test_page_scoped_classes_have_rules(self, page, template):
         """页内 <style> 迁出后，页面用到的私有类必须在 style.css 里都有定义。"""
         css = _CSS.read_text(encoding="utf-8")
