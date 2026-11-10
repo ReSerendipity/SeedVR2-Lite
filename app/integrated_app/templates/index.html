@@ -62,9 +62,9 @@
         <a href="/history" class="sv-section-link">{{ t('home.view_all') }} <i class="bi bi-arrow-right"></i></a>
     </div>
     <div class="sv-recent-list sv-anim-rise sv-anim-d4" id="recentList">
-        <div class="sv-recent-empty" id="recentEmpty" style="display:none;">
+        <div class="sv-recent-empty sv-hidden" id="recentEmpty">
             <p>{{ t('home.no_tasks_desc') }}</p>
-            <div class="sv-recent-empty-actions" style="margin-top: 12px;">
+            <div class="sv-recent-empty-actions">
                 <a href="/restore" class="sv-btn sv-btn-primary sv-btn-sm">
                     <i class="bi bi-lightning-charge"></i> {{ t('home.start') }}
                 </a>
@@ -114,9 +114,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const empty = document.getElementById('recentEmpty');
 
         if (records.length === 0) {
-            if (empty) empty.style.display = '';
+            if (empty) SvVisibility.show(empty);
         } else {
-            if (empty) empty.style.display = 'none';
+            if (empty) SvVisibility.hide(empty);
             const rows = records.map(r => {
                 const name = SeedVR2.displayFileName(r);
                 const statusKey = 'status.' + r.status;
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 属正常瞬态，不应污染 console（E2E 的 console-error 断言会因此误报）
         console.warn('Failed to load recent tasks:', err);
         const empty = document.getElementById('recentEmpty');
-        if (empty) empty.style.display = '';
+        if (empty) SvVisibility.show(empty);
     }
 });
 </script>

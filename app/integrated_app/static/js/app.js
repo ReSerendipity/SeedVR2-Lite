@@ -1127,7 +1127,7 @@ const SeedVR2 = (() => {
                 // Safely capture file info from DOM
                 try {
                     var fi = document.getElementById('restoreFileInfo');
-                    if (fi && fi.style && fi.style.display !== 'none' && !snap.fileName) {
+                    if (fi && SvVisibility.isVisible(fi) && !snap.fileName) {
                         var n = fi.querySelector('.sv-fileinfo-name');
                         var s = fi.querySelector('.sv-fileinfo-size');
                         if (n) snap.fileName = n.textContent || '';
@@ -1136,7 +1136,7 @@ const SeedVR2 = (() => {
                 } catch(e) {}
                 try {
                     var bc = document.getElementById('batchProgressCard');
-                    if (bc && bc.style && bc.style.display !== 'none') {
+                    if (bc && SvVisibility.isVisible(bc)) {
                         snap.batchId = snap.batchId || existing.batchId;
                     }
                 } catch(e) {}
@@ -1235,7 +1235,7 @@ const SeedVR2 = (() => {
                     // 清除会话并隐藏进度卡片
                     try { localStorage.removeItem('sv_restore_session'); } catch(e) {}
                     const pc = document.getElementById('progressCard');
-                    if (pc) pc.style.display = 'none';
+                    if (pc) SvVisibility.hide(pc);
                     toast(data.error || '任务不存在', 'warning');
                     return;
                 }
@@ -1253,7 +1253,7 @@ const SeedVR2 = (() => {
                             setTimeout(() => {
                                 // 仅在进度卡未关闭时重连（用户可能已手动取消或离开页面）
                                 const pc = document.getElementById('progressCard');
-                                if (pc && pc.style.display !== 'none') {
+                                if (pc && SvVisibility.isVisible(pc)) {
                                     startRestoreProgressSSE(taskId, taskType);
                                 }
                             }, retryDelay);
@@ -1283,7 +1283,7 @@ const SeedVR2 = (() => {
                         if (typeof window !== 'undefined') window.currentTaskId = null;
                         try { localStorage.removeItem('sv_restore_session'); } catch(e) {}
                         const pc = document.getElementById('progressCard');
-                        if (pc) pc.style.display = 'none';
+                        if (pc) SvVisibility.hide(pc);
                         toast(_I['restore.task_stuck'] || '任务似乎已卡死，请重新开始', 'warning');
                         return;
                     }
@@ -1295,7 +1295,7 @@ const SeedVR2 = (() => {
                     if (typeof window !== 'undefined') window.currentTaskId = null;
                     try { localStorage.removeItem('sv_restore_session'); } catch(e) {}
                     const pc = document.getElementById('progressCard');
-                    if (pc) pc.style.display = 'none';
+                    if (pc) SvVisibility.hide(pc);
                     toast(_I['restore.task_stuck'] || '任务似乎已卡死，请重新开始', 'warning');
                     return;
                 }
@@ -1339,7 +1339,7 @@ const SeedVR2 = (() => {
 
                 // 视频任务显示详细信息：FPS和处理阶段
                 if (progressDetail && taskType === 'video' && data.current_frame) {
-                    progressDetail.style.display = '';
+                    SvVisibility.show(progressDetail);
                     // FPS计算：统计帧间隔时间
                     const now = Date.now();
                     const framesDelta = (data.current_frame || 0) - lastFrame;
@@ -1361,7 +1361,7 @@ const SeedVR2 = (() => {
 
                 // 图片任务：显示阶段信息（来自服务端的 message 字段）
                 if (progressDetail && taskType === 'image' && data.message) {
-                    progressDetail.style.display = '';
+                    SvVisibility.show(progressDetail);
                     if (progressStage) progressStage.textContent = data.message;
                 }
 
@@ -1394,7 +1394,7 @@ const SeedVR2 = (() => {
                     if (typeof window !== 'undefined') window.currentTaskId = null;
                     if (progressText) progressText.textContent = _I['restore.completed'] || t('restore.completed');
                     if (progressEta) progressEta.textContent = '';
-                    if (progressDetail) progressDetail.style.display = 'none';
+                    if (progressDetail) SvVisibility.hide(progressDetail);
                     if (progressFrames) progressFrames.textContent = '';
                     if (taskStatus) {
                         taskStatus.textContent = _I['status.completed'] || t('status.completed');
@@ -1416,7 +1416,7 @@ const SeedVR2 = (() => {
                     _restoreSseRetryCount = 0;
                     if (typeof window !== 'undefined') window.currentTaskId = null;
                     if (progressText) progressText.textContent = _I['restore.failed'] || t('restore.failed');
-                    if (progressDetail) progressDetail.style.display = 'none';
+                    if (progressDetail) SvVisibility.hide(progressDetail);
                     if (taskStatus) {
                         taskStatus.textContent = _I['status.failed'] || t('status.failed');
                         taskStatus.className = 'sv-badge sv-badge-failed';
@@ -1433,7 +1433,7 @@ const SeedVR2 = (() => {
                     _restoreSseRetryCount = 0;
                     if (typeof window !== 'undefined') window.currentTaskId = null;
                     if (progressText) progressText.textContent = (window.__I18N__ && window.__I18N__['restore.cancel_task']) || 'Cancelled';
-                    if (progressDetail) progressDetail.style.display = 'none';
+                    if (progressDetail) SvVisibility.hide(progressDetail);
                     if (taskStatus) {
                         taskStatus.textContent = (window.__I18N__ && window.__I18N__['status.cancelled']) || 'Cancelled';
                         taskStatus.className = 'sv-badge sv-badge-failed';
@@ -1463,7 +1463,7 @@ const SeedVR2 = (() => {
                     if (typeof window !== 'undefined') window.currentTaskId = null;
                     try { localStorage.removeItem('sv_restore_session'); } catch(e) {}
                     const pc = document.getElementById('progressCard');
-                    if (pc) pc.style.display = 'none';
+                    if (pc) SvVisibility.hide(pc);
                     toast(_I['restore.task_not_found'] || '任务已不存在或已过期', 'warning');
                     return;
                 }
@@ -1472,7 +1472,7 @@ const SeedVR2 = (() => {
                     const retryDelay = Math.min(2000 * Math.pow(2, _restoreSseRetryCount - 1), 15000);
                     setTimeout(() => {
                         const pc = document.getElementById('progressCard');
-                        if (pc && pc.style.display !== 'none') {
+                        if (pc && SvVisibility.isVisible(pc)) {
                             startRestoreProgressSSE(taskId, taskType);
                         }
                     }, retryDelay);
@@ -1499,10 +1499,10 @@ const SeedVR2 = (() => {
         const btnDownload = document.getElementById('btnDownload');
 
         const errorCard = document.getElementById('errorCard');
-        if (errorCard) errorCard.style.display = 'none';
+        if (errorCard) SvVisibility.hide(errorCard);
 
-        if (progressCard) progressCard.style.display = 'none';
-        if (resultCard) resultCard.style.display = 'block';
+        if (progressCard) SvVisibility.hide(progressCard);
+        if (resultCard) SvVisibility.show(resultCard, 'block');
         if (btnDownload) {
             btnDownload.href = `/api/restore/${taskId}/download`;
             btnDownload.removeAttribute('disabled');
@@ -1516,9 +1516,9 @@ const SeedVR2 = (() => {
             else if (meta.elapsedSec != null && isFinite(meta.elapsedSec)) elapsedSec = meta.elapsedSec;
             if (elapsedSec != null && isFinite(elapsedSec) && elapsedSec > 0) {
                 resultMetaText.textContent = `耗时 ${formatDuration(elapsedSec)}`;
-                resultMetaText.style.display = '';
+                SvVisibility.show(resultMetaText);
             } else {
-                resultMetaText.style.display = 'none';
+                SvVisibility.hide(resultMetaText);
             }
         }
 
@@ -1533,7 +1533,7 @@ const SeedVR2 = (() => {
         setBtn('btnCanvasClear', true);
         setBtn('btnCanvasReplace', true);
         const tbFileName = document.getElementById('tbFileName');
-        if (tbFileName) tbFileName.style.display = '';
+        if (tbFileName) SvVisibility.show(tbFileName);
 
         const compareCard = document.getElementById('compareCard');
         const plainViewer = document.getElementById('plainViewer');
@@ -1555,10 +1555,10 @@ const SeedVR2 = (() => {
             const afterV = document.getElementById('videoCompareAfterImg');
 
             // 隐藏图片对比/单图视图，默认进入视频对比
-            if (compareCard) compareCard.style.display = 'none';
-            if (plainViewer) plainViewer.style.display = 'none';
-            if (videoCompareCard) videoCompareCard.style.display = 'block';
-            if (videoPlainViewer) videoPlainViewer.style.display = 'none';
+            if (compareCard) SvVisibility.hide(compareCard);
+            if (plainViewer) SvVisibility.hide(plainViewer);
+            if (videoCompareCard) SvVisibility.show(videoCompareCard, 'block');
+            if (videoPlainViewer) SvVisibility.hide(videoPlainViewer);
 
             // 启用对比/缩放工具按钮（视频不支持放大镜）
             setBtn('btnCanvasCompare', true);
@@ -1581,9 +1581,9 @@ const SeedVR2 = (() => {
             // 若 before 视频无法解码 → 回退到单视频查看器并给出提示
             if (beforeV) {
                 beforeV.onerror = function () {
-                    if (videoCompareCard) videoCompareCard.style.display = 'none';
-                    if (videoPlainViewer) videoPlainViewer.style.display = 'flex';
-                    if (resultVideo) resultVideo.style.display = 'block';
+                    if (videoCompareCard) SvVisibility.hide(videoCompareCard);
+                    if (videoPlainViewer) SvVisibility.show(videoPlainViewer, 'flex');
+                    if (resultVideo) SvVisibility.show(resultVideo, 'block');
                     setBtn('btnCanvasCompare', false);
                     ['btnCompareHorizontal', 'btnCompareVertical', 'btnCompareZoomIn', 'btnCompareZoomOut', 'btnCompareFit', 'btnCompareReset'].forEach(id => setBtn(id, false));
                     console.warn('视频对比加载失败，已回退单查看模式（可能视频编码不受浏览器支持）');
@@ -1594,8 +1594,8 @@ const SeedVR2 = (() => {
 
         // 图片任务：默认进入前后对比查看器
         const afterSrc = `/api/restore/${taskId}/download`;
-        if (compareCard) compareCard.style.display = 'block';
-        if (plainViewer) plainViewer.style.display = 'none';
+        if (compareCard) SvVisibility.show(compareCard, 'block');
+        if (plainViewer) SvVisibility.hide(plainViewer);
         setBtn('btnCanvasCompare', true);
         setBtn('btnMagnifier', true);
         const cmpToggle = document.getElementById('btnCanvasCompare');
@@ -1621,8 +1621,8 @@ const SeedVR2 = (() => {
             }
         }
         if (vp.compare === false && compareCard && plainViewer) {
-            compareCard.style.display = 'none';
-            plainViewer.style.display = 'flex';
+            SvVisibility.hide(compareCard);
+            SvVisibility.show(plainViewer, 'flex');
             if (cmpToggle) cmpToggle.classList.remove('active');
         }
     }
@@ -1643,17 +1643,17 @@ const SeedVR2 = (() => {
         const plainViewer = document.getElementById('plainViewer');
         const resultVideo = document.getElementById('resultVideo');
 
-        if (progressCard) progressCard.style.display = 'none';
-        if (resultCard) resultCard.style.display = 'block';
-        if (compareCard) compareCard.style.display = 'none';
-        if (plainViewer) plainViewer.style.display = 'none';
+        if (progressCard) SvVisibility.hide(progressCard);
+        if (resultCard) SvVisibility.show(resultCard, 'block');
+        if (compareCard) SvVisibility.hide(compareCard);
+        if (plainViewer) SvVisibility.hide(plainViewer);
         const videoCc = document.getElementById('videoCompareCard');
         const videoPv = document.getElementById('videoPlainViewer');
-        if (videoCc) videoCc.style.display = 'none';
-        if (videoPv) videoPv.style.display = 'none';
-        if (resultVideo) { resultVideo.style.display = 'none'; resultVideo.src = ''; }
+        if (videoCc) SvVisibility.hide(videoCc);
+        if (videoPv) SvVisibility.hide(videoPv);
+        if (resultVideo) { SvVisibility.hide(resultVideo); resultVideo.src = ''; }
         if (errorMsg) errorMsg.textContent = msg || (window.__I18N__ && window.__I18N__['restore.failed']) || '修复失败，请重试';
-        if (errorCard) errorCard.style.display = 'flex';
+        if (errorCard) SvVisibility.show(errorCard, 'flex');
 
         const canvasStateLabel = document.getElementById('canvasStateLabel');
         if (canvasStateLabel) canvasStateLabel.textContent = (window.__I18N__ && window.__I18N__['status.failed']) || t('status.failed');
@@ -1667,14 +1667,14 @@ const SeedVR2 = (() => {
         ['btnCompareHorizontal', 'btnCompareVertical', 'btnCompareZoomIn', 'btnCompareZoomOut', 'btnCompareFit', 'btnCompareReset']
             .forEach(id => setBtn(id, false));
         const resultMetaText = document.getElementById('resultMetaText');
-        if (resultMetaText) { resultMetaText.style.display = 'none'; resultMetaText.textContent = ''; }
+        if (resultMetaText) { SvVisibility.hide(resultMetaText); resultMetaText.textContent = ''; }
 
         // 重试：复用页面级 startRestore（由 restore.html 内联注入）
         const btnRetry = document.getElementById('btnRetry');
         if (btnRetry) {
             btnRetry.onclick = () => {
                 if (typeof window.__retryRestore === 'function') {
-                    if (errorCard) errorCard.style.display = 'none';
+                    if (errorCard) SvVisibility.hide(errorCard);
                     window.__retryRestore();
                 }
             };
@@ -2412,10 +2412,10 @@ const SeedVR2 = (() => {
 
         // 切换内容区域显示
         document.querySelectorAll('.sv-settings-section').forEach(section => {
-            section.style.display = 'none';
+            SvVisibility.hide(section);
         });
         const target = document.getElementById(`section-${sectionName}`);
-        if (target) target.style.display = 'block';
+        if (target) SvVisibility.show(target, 'block');
     }
 
     /**
@@ -2538,19 +2538,19 @@ const SeedVR2 = (() => {
             const overlay = document.createElement('div');
             overlay.className = 'sv-modal-overlay';
             overlay.id = 'clearHistoryModal';
-            overlay.style.display = 'flex';
+            SvVisibility.show(overlay, 'flex');
             overlay.innerHTML = (
-                '<div class="sv-modal" style="max-width:420px;">' +
+                '<div class="sv-modal sv-modal-sm">' +
                 '<div class="sv-modal-header">' +
                 '<h3>' + (I["history.clear"] || 'Clear History') + '</h3>' +
                 '<button class="sv-btn sv-btn-icon sv-btn-outline" aria-label="Close" data-modal-close="clearHistoryModal">' +
                 '<i class="bi bi-x"></i></button>' +
                 '</div>' +
                 '<div class="sv-modal-body">' +
-                '<p style="margin-bottom:14px;">' + (I["history.clear_confirm"] || 'This will clear failed, pending, and processing records.') + '</p>' +
-                '<label class="sv-param-check" style="display:flex;align-items:center;gap:8px;cursor:pointer;">' +
-                '<input type="checkbox" id="cbIncludeCompleted" style="width:18px;height:18px;accent-color:var(--sv-primary);">' +
-                '<span style="font-size:0.85rem;">' + (I["history.clear_include_completed"] || 'Also clear completed records') + '</span>' +
+                '<p class="sv-clear-history-text">' + (I["history.clear_confirm"] || 'This will clear failed, pending, and processing records.') + '</p>' +
+                '<label class="sv-param-check">' +
+                '<input type="checkbox" id="cbIncludeCompleted" class="sv-clear-history-chk">' +
+                '<span class="sv-clear-history-label">' + (I["history.clear_include_completed"] || 'Also clear completed records') + '</span>' +
                 '</label>' +
                 '</div>' +
                 '<div class="sv-modal-footer">' +
@@ -2603,32 +2603,32 @@ const SeedVR2 = (() => {
         const folderPath = document.getElementById('folderPath');
         const folderScanResults = document.getElementById('folderScanResults');
 
-        if (progressCard) progressCard.style.display = 'none';
-        if (resultCard) resultCard.style.display = 'none';
-        if (compareCard) compareCard.style.display = 'none';
+        if (progressCard) SvVisibility.hide(progressCard);
+        if (resultCard) SvVisibility.hide(resultCard);
+        if (compareCard) SvVisibility.hide(compareCard);
         const plainViewer = document.getElementById('plainViewer');
-        if (plainViewer) plainViewer.style.display = 'none';
+        if (plainViewer) SvVisibility.hide(plainViewer);
         const videoCc = document.getElementById('videoCompareCard');
         const videoPv = document.getElementById('videoPlainViewer');
         const vBefore = document.getElementById('videoCompareBefore');
         const vAfter = document.getElementById('videoCompareAfterImg');
-        if (videoCc) { videoCc.style.display = 'none'; }
-        if (videoPv) { videoPv.style.display = 'none'; }
+        if (videoCc) { SvVisibility.hide(videoCc); }
+        if (videoPv) { SvVisibility.hide(videoPv); }
         if (vBefore) { vBefore.removeAttribute('src'); vBefore.load && vBefore.load(); }
         if (vAfter) { vAfter.removeAttribute('src'); vAfter.load && vAfter.load(); }
-        if (batchProgressCard) batchProgressCard.style.display = 'none';
+        if (batchProgressCard) SvVisibility.hide(batchProgressCard);
         if (uploadZone) uploadZone.classList.remove('has-file');
         if (fileInput) fileInput.value = '';
         if (fileInfo) {
-            fileInfo.style.display = 'none';
+            SvVisibility.hide(fileInfo);
             fileInfo.textContent = '';
         }
         if (imagePreview) {
-            imagePreview.style.display = 'none';
+            SvVisibility.hide(imagePreview);
             imagePreview.src = '';
         }
         if (resultVideo) {
-            resultVideo.style.display = 'none';
+            SvVisibility.hide(resultVideo);
             resultVideo.src = '';
         }
         if (folderPath) folderPath.value = '';
@@ -2668,11 +2668,11 @@ const SeedVR2 = (() => {
         const previewHud = document.getElementById('previewHud');
         if (previewHud) previewHud.textContent = '—';
         const errorCard = document.getElementById('errorCard');
-        if (errorCard) errorCard.style.display = 'none';
+        if (errorCard) SvVisibility.hide(errorCard);
         const resultMetaText = document.getElementById('resultMetaText');
-        if (resultMetaText) { resultMetaText.style.display = 'none'; resultMetaText.textContent = ''; }
+        if (resultMetaText) { SvVisibility.hide(resultMetaText); resultMetaText.textContent = ''; }
         const tbFileName = document.getElementById('tbFileName');
-        if (tbFileName) { tbFileName.style.display = 'none'; tbFileName.textContent = ''; }
+        if (tbFileName) { SvVisibility.hide(tbFileName); tbFileName.textContent = ''; }
         // 关闭放大镜与预览查看器状态
         if (activeCompareSlider) { try { activeCompareSlider.setMagnifier(false); } catch (e) { /* ignore */ } }
         if (activePreviewViewer) { try { activePreviewViewer.setMagnifier(false); } catch (e) { /* ignore */ } }
@@ -2799,7 +2799,8 @@ const SeedVR2 = (() => {
             toast(data.message || t('locale.switched'), 'success');
             // 显示过渡遮罩层，实现平滑刷新效果
             const overlay = document.createElement('div');
-            overlay.style.cssText = 'position:fixed;inset:0;background:var(--sv-bg,rgba(15,20,15,0.95));z-index:9999;opacity:0;transition:opacity 0.2s ease;display:flex;align-items:center;justify-content:center;';
+            // 静态样式（含 display:flex）已迁到 CSS 类，见 style.css `.sv-locale-overlay`
+            overlay.className = 'sv-locale-overlay';
             const spinner = document.createElement('span');
             spinner.className = 'sv-spinner';
             spinner.style.cssText = 'width:32px;height:32px;';
@@ -3195,7 +3196,7 @@ const SeedVR2 = (() => {
         // 每5秒自动保存进度快照（仅处理中时有效）
         setInterval(function() {
             var pc = document.getElementById('progressCard');
-            if (pc && pc.style.display !== 'none') saveRestoreSession();
+            if (pc && SvVisibility.isVisible(pc)) saveRestoreSession();
         }, 5000);
 
         // 表单验证
@@ -3725,7 +3726,7 @@ const SeedVR2 = (() => {
     function showCard(elementId) {
         const el = document.getElementById(elementId);
         if (!el) return;
-        el.style.display = 'block';
+        SvVisibility.show(el, 'block');
         el.classList.add('sv-fade-in');
         setTimeout(() => el.classList.remove('sv-fade-in'), 300);
     }
@@ -3739,7 +3740,7 @@ const SeedVR2 = (() => {
     function hideCard(elementId) {
         const el = document.getElementById(elementId);
         if (!el) return;
-        el.style.display = 'none';
+        SvVisibility.hide(el);
     }
 
     // ===== 按钮 Loading 状态工具 =====

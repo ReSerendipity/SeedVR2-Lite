@@ -22,7 +22,7 @@
     <div class="sv2-body" id="sv2Body">
     <main class="sv2-main">
         <!-- 批量路径工具条（批量模式显示） -->
-        <div class="sv2-batch-toolbar" id="batchToolbar" style="display:none;">
+        <div class="sv2-batch-toolbar sv-hidden" id="batchToolbar">
             <input type="text" class="sv-batch-input" id="folderPath" name="folder_path"
                    placeholder="{{ t('restore.folder_path_placeholder') }}" aria-label="{{ t('restore.folder_path') }}">
             <button type="button" class="sv-btn sv-btn-outline sv-btn-sm" id="btnBrowseFolder"
@@ -40,8 +40,8 @@
         <!-- 一体化画布工具条 -->
         <div class="sv2-toolbar" id="canvasToolbar">
             <span class="sv2-badge" id="canvasStateLabel">{{ t('restore.empty_state') }}</span>
-            <span class="sv2-filename" id="tbFileName" style="display:none"></span>
-            <span class="sv2-meta" id="resultMetaText" style="display:none"></span>
+            <span class="sv2-filename sv-hidden" id="tbFileName"></span>
+            <span class="sv2-meta sv-hidden" id="resultMetaText"></span>
             <span class="sv2-flex"></span>
             <div class="sv2-tb-group">
                 <button type="button" class="sv2-tb-btn" id="btnCanvasClear" disabled><i class="bi bi-x-lg"></i> {{ t('common.clear') }}</button>
@@ -76,8 +76,8 @@
                         <div class="sv-dropzone-title">{{ t('restore.upload_hint') }}</div>
                         <div class="sv-dropzone-hint">{{ t('restore.upload_single_hint') }}</div>
                         <div class="sv-dropzone-formats">{{ t('restore.supported_formats') }}</div>
-                        <div class="sv-dropzone-fileinfo" id="restoreFileInfo" style="display:none;"></div>
-                        <input type="file" id="restoreFileInput" style="display:none;"
+                        <div class="sv-dropzone-fileinfo sv-hidden" id="restoreFileInfo"></div>
+                        <input type="file" id="restoreFileInput" class="sv-hidden"
                                accept="image/png,image/jpeg,image/jpg,image/bmp,image/webp,video/mp4,video/avi,video/quicktime,video/x-matroska,video/webm,video/x-flv">
                     </div>
                     <!-- 最近任务：复用首页 home.recent_tasks 文案与 /api/system/history 接口，
@@ -93,21 +93,21 @@
             </div>
 
             <!-- 图片预览（支持缩放 / 拖动 / 双击适配 / 放大镜） -->
-            <div class="sv2-pane" id="imagePreviewContainer" style="display:none;">
+            <div class="sv2-pane sv-hidden" id="imagePreviewContainer">
                 <div class="sv2-preview-stage" id="previewStage">
                     <div class="sv2-preview-img" id="previewImgWrap"><img id="imagePreview" alt="{{ t('restore.before') }}"></div>
                     <span class="sv2-hud" id="previewHud">—</span>
                     <span class="sv2-hint"><kbd>{{ t('common.kbd_wheel') }}</kbd> {{ t('restore.act_zoom') }} · <kbd>{{ t('common.kbd_left_click') }}</kbd> {{ t('restore.act_pan') }} · <kbd>{{ t('common.kbd_double_click') }}</kbd> {{ t('restore.act_fit') }}</span>
                     <div class="sv2-magnifier" id="previewMagnifier" hidden>
                         <div class="mg-layer mg-before"></div>
-                        <div class="mg-layer mg-after" style="display:none"></div>
+                        <div class="mg-layer mg-after sv-hidden"></div>
                     </div>
                 </div>
                 <button type="button" class="sv2-clear-btn" id="btnClearImage" title="{{ t('restore.clear_image') }}"><i class="bi bi-x-lg"></i></button>
             </div>
 
             <!-- 进度 -->
-            <div class="sv2-pane" id="progressCard" style="display:none;">
+            <div class="sv2-pane sv-hidden" id="progressCard">
                 <div class="sv2-progress-card">
                     <div class="sv2-progress-head">
                         <span class="sv2-progress-stage" id="taskStatus">{{ t('status.processing') }}</span>
@@ -120,7 +120,7 @@
                         <span class="sv2-progress-detail" id="progressText">{{ t('status.pending') }}</span>
                         <span class="sv2-progress-frames" id="progressFrames"></span>
                     </div>
-                    <div class="sv2-progress-sub" id="progressDetail" style="display:none;">
+                    <div class="sv2-progress-sub sv-hidden" id="progressDetail">
                         <span id="progressFps"></span>
                         <span id="progressStage"></span>
                     </div>
@@ -128,22 +128,22 @@
             </div>
 
             <!-- 结果：错误卡 / 视频 / 单图 / 前后对比 -->
-            <div class="sv2-pane sv2-result" id="resultCard" style="display:none;">
+            <div class="sv2-pane sv2-result sv-hidden" id="resultCard">
                 <!-- 失败错误卡 -->
-                <div class="sv2-error-card" id="errorCard" style="display:none;">
+                <div class="sv2-error-card sv-hidden" id="errorCard">
                     <div class="sv2-error-icon"><i class="bi bi-exclamation-triangle"></i></div>
                     <div class="sv2-error-title">{{ t('restore.failed_title') }}</div>
                     <div class="sv2-error-msg" id="errorMsg"></div>
-                    <button type="button" class="sv2-tb-btn sv2-primary" id="btnRetry" style="height:38px;padding:0 18px"><i class="bi bi-arrow-counterclockwise"></i> {{ t('common.retry') }}</button>
+                    <button type="button" class="sv2-tb-btn sv2-primary sv2-btn-retry" id="btnRetry"><i class="bi bi-arrow-counterclockwise"></i> {{ t('common.retry') }}</button>
                 </div>
                 <!-- 视频单图查看器 -->
-                <div id="videoPlainViewer" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;">
-                    <video id="resultVideo" controls style="max-width:calc(100% - 40px);max-height:calc(100% - 40px);border-radius:var(--sv-radius);box-shadow:0 10px 40px rgba(0,0,0,.3);"></video>
+                <div id="videoPlainViewer" class="sv2-viewer-layer sv-hidden">
+                    <video id="resultVideo" controls class="sv2-result-media"></video>
                 </div>
-                <div id="plainViewer" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;width:100%;height:100%;">
-                    <img id="plainImg" alt="{{ t('restore.after') }}" style="max-width:calc(100% - 40px);max-height:calc(100% - 40px);object-fit:contain;border-radius:var(--sv-radius);box-shadow:0 10px 40px rgba(0,0,0,.3);">
+                <div id="plainViewer" class="sv2-viewer-layer sv-hidden">
+                    <img id="plainImg" alt="{{ t('restore.after') }}" class="sv2-result-media sv2-result-img">
                 </div>
-                <div id="compareCard" style="display:none;position:absolute;inset:0;width:100%;height:100%;">
+                <div id="compareCard" class="sv2-compare-layer sv-hidden">
                     <div class="sv-compare-viewport sv2-viewport" id="compareViewport" tabindex="0">
                         <div class="sv-compare-container" id="compareContainer">
                             <img id="compareBefore" alt="{{ t('restore.before') }}">
@@ -163,7 +163,7 @@
                     </div>
                 </div>
                 <!-- 视频前后对比查看器 -->
-                <div id="videoCompareCard" style="display:none;position:absolute;inset:0;width:100%;height:100%;">
+                <div id="videoCompareCard" class="sv2-compare-layer sv-hidden">
                     <div class="sv-compare-viewport sv2-viewport" id="videoCompareViewport" tabindex="0">
                         <div class="sv-compare-container" id="videoCompareContainer">
                             <video id="videoCompareBefore" muted loop playsinline></video>
@@ -187,11 +187,11 @@
                 <span class="sv2-batch-title">{{ t('restore.batch_title') }}</span>
                 <span class="sv-badge sv-badge-info">{{ t('restore.folder_mode') }}</span>
             </div>
-            <details class="sv2-allow-dirs" id="allowDirsPanel" style="margin-bottom:10px;">
-                <summary style="cursor:pointer;font-size:12px;color:var(--sv-text-secondary);user-select:none;display:flex;align-items:center;gap:6px;">
+            <details class="sv2-allow-dirs" id="allowDirsPanel">
+                <summary class="sv2-allow-dirs-summary">
                     <i class="bi bi-shield-check"></i> {{ t('restore.allow_dirs_title') }}
                 </summary>
-                <div class="sv2-allow-dirs-body" id="allowDirsList" style="margin-top:6px;padding:8px 10px;background:var(--sv-surface-2);border-radius:var(--sv-radius-sm);">
+                <div class="sv2-allow-dirs-body" id="allowDirsList">
                     <div class="sv-text-xs sv-text-muted"><span class="sv-spinner sv-spinner-sm"></span> {{ t('restore.allow_dirs_loading') }}</div>
                 </div>
             </details>
@@ -202,16 +202,16 @@
                 <div class="sv2-batch-empty-title">{{ t('restore.please_scan_folder') }}</div>
                 <div class="sv2-batch-empty-desc">{{ t('restore.batch_tip') }}</div>
             </div>
-            <div class="sv2-batch-progress" id="batchProgressCard" style="display:none;">
+            <div class="sv2-batch-progress sv-hidden" id="batchProgressCard">
                 <div class="sv2-batch-progress-head">
                     <span id="batchProgressTitle">{{ t('video.batch_progress') }}</span>
                     <span class="sv2-batch-pct" id="batchPercentText">0%</span>
                     <span id="batchStatus" class="sv-badge sv-badge-processing">{{ t('status.processing') }}</span>
-                    <button type="button" class="sv-btn sv-btn-outline sv-btn-sm" id="btnRetryBatch" style="display:none;" hidden><i class="bi bi-arrow-repeat"></i> {{ t('common.retry') }}</button>
+                    <button type="button" class="sv-btn sv-btn-outline sv-btn-sm sv-hidden" id="btnRetryBatch" hidden><i class="bi bi-arrow-repeat"></i> {{ t('common.retry') }}</button>
                     <button type="button" class="sv2-cancel" id="btnCancelBatch" aria-label="{{ t('common.cancel') }}" title="{{ t('restore.cancel_batch_task') }}"><i class="bi bi-x-lg"></i></button>
                 </div>
                 <div class="sv2-progress-track"><div class="sv2-progress-bar" id="batchProgressBar"></div></div>
-                <div id="batchCurrentFile" class="sv2-batch-cur" style="display:none;"><i class="bi bi-file-earmark-play"></i> <span></span></div>
+                <div id="batchCurrentFile" class="sv2-batch-cur sv-hidden"><i class="bi bi-file-earmark-play"></i> <span></span></div>
                 <div class="sv2-batch-stats">
                     <span id="batchProgressText">--</span>
                     <span class="sv2-batch-ok">{{ t('restore.batch_success') }} <span id="batchCompleted">0</span></span>
@@ -392,7 +392,7 @@
                 </div>
                 <div class="sv-adv-locked-group">
                     <div class="sv-adv-locked-header">{{ t('restore.optimized_params') }}
-                        <span id="vaeTilingTierHint" class="sv-text-xs sv-text-muted" style="margin-left:8px;font-weight:400"></span>
+                        <span id="vaeTilingTierHint" class="sv-text-xs sv-text-muted sv2-vae-tier-hint"></span>
                     </div>
                     <div class="sv-param-group sv-param-checks-row">
                         <label class="sv-param-check" data-tooltip="{{ t('restore.tip_tiled_encode') }}">
@@ -468,7 +468,7 @@
             <button type="button" class="sv-btn sv-btn-outline sv-btn-sm sv-w-100" id="btnVramRecommend">
                 <i class="bi bi-speedometer2" aria-hidden="true"></i> {{ t('system.vram_tool_title') }}
             </button>
-            <div id="vramRecommendResult" style="display:none;" class="sv-mt-2">
+            <div id="vramRecommendResult" class="sv-mt-2 sv-hidden">
                 <div class="sv-vram-rec-item">
                     <span class="sv-text-xs sv-text-muted">{{ t('restore.rec_precision') }}</span>
                     <span class="sv-badge sv-badge-completed sv-text-xs" id="restoreRecPrecision">--</span>
@@ -484,7 +484,7 @@
                 <button type="button" class="sv-btn sv-btn-primary sv-btn-xs sv-w-100 sv-mt-1" id="btnApplyRecommend">
                     <i class="bi bi-magic"></i> {{ t('restore.apply_recommend_label') }}
                 </button>
-                <div id="restoreRecWarning" class="sv-alert sv-alert-warning sv-mt-1" style="display:none;">
+                <div id="restoreRecWarning" class="sv-alert sv-alert-warning sv-mt-1 sv-hidden">
                     <small><i class="bi bi-exclamation-triangle"></i> <span id="restoreRecWarningText"></span></small>
                 </div>
             </div>
@@ -533,7 +533,7 @@
 </div>
 
 <!-- 首次引导模态框 -->
-<div class="sv-modal-overlay" id="onboardingModal" style="display:none;">
+<div class="sv-modal-overlay sv-hidden" id="onboardingModal">
     <div class="sv-modal sv-onb-modal">
         <h2 class="sv-onb-title">{{ t('restore.onboarding_title') }}</h2>
         <p class="sv-onb-desc">{{ t('restore.onboarding_desc') }}</p>
@@ -562,29 +562,28 @@
 
 <!-- P1-1 首次使用协议确认（合规整改 2026-09-15；必须勾选后关闭，无遮罩关闭）。
      文案走 i18n 键（评估 R1/E20 整改 2026-11-06）；<b> 与 <a> 锚点留在模板（词表值不含 HTML）。 -->
-<div class="sv-modal-overlay" id="agreementModal" style="display:none;">
-    <div class="sv-modal" style="max-width:560px">
-        <h2 style="margin:0 0 10px">{{ t('restore.agreement_title') }}</h2>
-        <p style="font-size:13.5px;line-height:1.7;margin:0 0 8px">{{ t('restore.agreement_intro_1') }}<b>{{ t('restore.agreement_intro_local') }}</b>{{ t('restore.agreement_intro_2') }}
+<div class="sv-modal-overlay sv-hidden" id="agreementModal">
+    <div class="sv-modal sv2-agreement-modal">
+        <h2 class="sv2-agreement-title">{{ t('restore.agreement_title') }}</h2>
+        <p class="sv2-agreement-text">{{ t('restore.agreement_intro_1') }}<b>{{ t('restore.agreement_intro_local') }}</b>{{ t('restore.agreement_intro_2') }}
             <a href="https://github.com/ReSerendipity/SeedVR2-lite/blob/main/docs/USER_AGREEMENT.md" target="_blank" rel="noopener">{{ t('restore.agreement_link_user') }}</a> {{ t('restore.agreement_connector') }}
             <a href="https://github.com/ReSerendipity/SeedVR2-lite/blob/main/docs/PRIVACY_POLICY.md" target="_blank" rel="noopener">{{ t('restore.agreement_link_privacy') }}</a>{{ t('restore.agreement_intro_3') }}</p>
-        <ul style="font-size:13px;line-height:1.7;margin:0 0 10px;padding-left:18px">
+        <ul class="sv2-agreement-list">
             <li>{{ t('restore.agreement_rule_1') }}</li>
             <li>{{ t('restore.agreement_rule_2') }}</li>
             <li>{{ t('restore.agreement_rule_3') }}</li>
             <li>{{ t('restore.agreement_rule_4') }}</li>
         </ul>
-        <label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:10px 0">
+        <label class="sv2-agree-row">
             <input type="checkbox" id="agreementChk">
             <span>{{ t('restore.agreement_checkbox') }}</span>
         </label>
-        <button id="agreementAck" type="button" class="sv-btn sv-btn-primary" disabled
-            style="width:100%;margin-top:6px;opacity:.5">{{ t('restore.agreement_confirm') }}</button>
+        <button id="agreementAck" type="button" class="sv-btn sv-btn-primary sv2-agreement-ack" disabled>{{ t('restore.agreement_confirm') }}</button>
     </div>
 </div>
 
 
-<button type="button" class="sv2-sb-restore" id="btnRestoreSidebar" style="display:none;" title="{{ t('restore.expand_params_tip') }}"><i class="bi bi-sliders" aria-hidden="true"></i> {{ t('restore.params_short') }}</button>
+<button type="button" class="sv2-sb-restore sv-hidden" id="btnRestoreSidebar" title="{{ t('restore.expand_params_tip') }}"><i class="bi bi-sliders" aria-hidden="true"></i> {{ t('restore.params_short') }}</button>
 {% endblock %}
 
 {% block scripts %}
@@ -903,8 +902,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             warning.classList.toggle('sv-alert-collapsed');
                             const isCollapsed = warning.classList.contains('sv-alert-collapsed');
                             collapseBtn.innerHTML = isCollapsed ? '<i class="bi bi-chevron-down"></i>' : '<i class="bi bi-chevron-up"></i>';
-                            if (detailEl) detailEl.style.display = isCollapsed ? 'none' : '';
-                            if (actionsEl) actionsEl.style.display = isCollapsed ? 'none' : '';
+                            if (detailEl) SvVisibility.set(detailEl, !isCollapsed);
+                            if (actionsEl) SvVisibility.set(actionsEl, !isCollapsed);
                         });
                     }
 
@@ -1030,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             var savedBatchId = currentBatchId;
             var savedTaskId = currentTaskId;
-            els.batchProgressCard.style.display = 'none';
+            SvVisibility.hide(els.batchProgressCard);
             currentTaskId = null;
             currentBatchId = null;
             try { localStorage.removeItem('sv_restore_session'); } catch(e) {}
@@ -1095,7 +1094,7 @@ document.addEventListener('DOMContentLoaded', () => {
         var hasSeen = localStorage.getItem('sv_onboarding_seen_v2');
 
         if (modal && !hasSeen) {
-            modal.style.display = 'flex';
+            SvVisibility.show(modal, 'flex');
             requestAnimationFrame(function() {
                 modal.classList.add('show');
             });
@@ -1105,7 +1104,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (closeBtn && modal) {
             closeBtn.addEventListener('click', function() {
                 modal.classList.remove('show');
-                setTimeout(function() { modal.style.display = 'none'; }, 300);
+                setTimeout(function() { SvVisibility.hide(modal); }, 300);
             });
         }
 
@@ -1114,7 +1113,7 @@ document.addEventListener('DOMContentLoaded', () => {
             modal.addEventListener('click', function(e) {
                 if (e.target === modal) {
                     modal.classList.remove('show');
-                    setTimeout(function() { modal.style.display = 'none'; }, 300);
+                    setTimeout(function() { SvVisibility.hide(modal); }, 300);
                 }
             });
         }
@@ -1128,7 +1127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!box) return;
         var seen = localStorage.getItem(KEY);
         if (seen !== AGREEMENT_VERSION) {
-            box.style.display = 'flex';
+            SvVisibility.show(box, 'flex');
             requestAnimationFrame(function() { box.classList.add('show'); });
         }
         var chk = document.getElementById('agreementChk');
@@ -1142,7 +1141,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!chk.checked) return;
                 try { localStorage.setItem(KEY, AGREEMENT_VERSION); } catch (e) {}
                 box.classList.remove('show');
-                setTimeout(function() { box.style.display = 'none'; }, 300);
+                setTimeout(function() { SvVisibility.hide(box); }, 300);
             });
         }
     })();
@@ -1150,7 +1149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 上传区
     const restoreFileHandlers = {
         onFileSelected: (file) => {
-            els.fileInfo.style.display = 'flex';
+            SvVisibility.show(els.fileInfo, 'flex');
             const isImage = file.type.startsWith('image/');
             const isVideo = file.type.startsWith('video/');
             const iconClass = isImage ? 'bi-image' : 'bi-film';
@@ -1202,9 +1201,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (isImage) {
                 els.imagePreview.src = previewObjectUrl;
-                els.imagePreview.style.display = 'block';
+                SvVisibility.show(els.imagePreview, 'block');
                 if (els.imagePreviewContainer) {
-                    els.imagePreviewContainer.style.display = 'flex';
+                    SvVisibility.show(els.imagePreviewContainer, 'flex');
                     const pa = document.getElementById('previewArea');
                     if (pa) pa.classList.add('has-content');
                 }
@@ -1219,11 +1218,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (_pv && _vp.magnifier) { _pv.setMagnifier(true); if (mgBtn) mgBtn.classList.add('active'); }
                 } catch(e) {}
                 const wg = document.getElementById('workflowGuide');
-                if (wg) wg.style.display = 'none';
+                if (wg) SvVisibility.hide(wg);
                 // 两倍模式：自动根据图片短边 × 2 填分辨率
                 autoSetResolutionFromImage(file).catch(() => { /* 忽略非致命错误 */ });
             } else {
-                els.imagePreview.style.display = 'none';
+                SvVisibility.hide(els.imagePreview);
                 // 两倍模式：自动根据视频宽高短边 × 2 填分辨率
                 autoSetResolutionFromVideo(file).catch(() => { /* 忽略非致命错误 */ });
             }
@@ -1239,21 +1238,21 @@ document.addEventListener('DOMContentLoaded', () => {
             updateStartButton();
         },
         onFileCleared: () => {
-            els.fileInfo.style.display = 'none';
+            SvVisibility.hide(els.fileInfo);
             els.fileInfo.innerHTML = '';
             if (previewObjectUrl) {
                 URL.revokeObjectURL(previewObjectUrl);
                 previewObjectUrl = null;
             }
-            els.imagePreview.style.display = 'none';
+            SvVisibility.hide(els.imagePreview);
             els.imagePreview.src = '';
-            if (els.imagePreviewContainer) els.imagePreviewContainer.style.display = 'none';
+            if (els.imagePreviewContainer) SvVisibility.hide(els.imagePreviewContainer);
             // 销毁预览查看器并禁用放大镜
             try { SeedVR2.destroyPreviewViewer(); } catch(e) {}
             const mgBtn = document.getElementById('btnMagnifier');
             if (mgBtn) { mgBtn.setAttribute('disabled', ''); mgBtn.classList.remove('active'); }
             const wg = document.getElementById('workflowGuide');
-            if (wg) wg.style.display = '';
+            if (wg) SvVisibility.show(wg);
             // 文件清除时也清理持久化会话
             try { SeedVR2.saveRestoreSession({ status: 'cleared' }); } catch(e) {}
             resetResolutionState();
@@ -1282,11 +1281,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 URL.revokeObjectURL(previewObjectUrl);
                 previewObjectUrl = null;
             }
-            els.fileInfo.style.display = 'none';
+            SvVisibility.hide(els.fileInfo);
             els.fileInfo.innerHTML = '';
-            els.imagePreview.style.display = 'none';
+            SvVisibility.hide(els.imagePreview);
             els.imagePreview.src = '';
-            if (els.imagePreviewContainer) els.imagePreviewContainer.style.display = 'none';
+            if (els.imagePreviewContainer) SvVisibility.hide(els.imagePreviewContainer);
             // 销毁预览查看器 / 关闭放大镜
             try { SeedVR2.destroyPreviewViewer(); } catch(e) {}
             const mgBtn = document.getElementById('btnMagnifier');
@@ -1295,9 +1294,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const resultCard = document.getElementById('resultCard');
             const compareCard = document.getElementById('compareCard');
             const resultVideo = document.getElementById('resultVideo');
-            if (resultCard) resultCard.style.display = 'none';
-            if (compareCard) compareCard.style.display = 'none';
-            if (resultVideo) { resultVideo.style.display = 'none'; resultVideo.src = ''; }
+            if (resultCard) SvVisibility.hide(resultCard);
+            if (compareCard) SvVisibility.hide(compareCard);
+            if (resultVideo) { SvVisibility.hide(resultVideo); resultVideo.src = ''; }
             if (SeedVR2.getActiveCompareSlider) {
                 const cs = SeedVR2.getActiveCompareSlider();
                 if (cs && cs.setMagnifier) cs.setMagnifier(false);
@@ -1306,7 +1305,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try { sessionStorage.removeItem('sv_restore_result'); } catch(e) {}
             // 显示上传区域
             const wg = document.getElementById('workflowGuide');
-            if (wg) wg.style.display = '';
+            if (wg) SvVisibility.show(wg);
             // 清除持久化会话
             try { localStorage.removeItem('sv_restore_session'); } catch(e) {}
             resetResolutionState();
@@ -1377,13 +1376,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             els.scanResults.innerHTML = `
                 <div class="sv-alert sv-alert-success sv-mb-2">
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
-                        <div style="flex:1;">
-                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                                <i class="bi bi-check-circle-fill sv-font-lg" style="color:#28a745;"></i>
-                                <strong style="font-size:1rem;">${totalText}</strong>
+                    <div class="sv2-scan-head">
+                        <div class="sv2-scan-flex1">
+                            <div class="sv2-scan-title-row">
+                                <i class="bi bi-check-circle-fill sv-font-lg sv2-scan-check"></i>
+                                <strong class="sv2-scan-total">${totalText}</strong>
                             </div>
-                            <div class="sv-text-xs sv-flex sv-gap-3 sv-flex-wrap" style="color:#666;">
+                            <div class="sv-text-xs sv-flex sv-gap-3 sv-flex-wrap sv2-scan-stats">
                                 ${typeStats.join('')}
                                 <span><i class="bi bi-hdd"></i> ${totalSizeMB} MB</span>
                                 <span><i class="bi bi-folder"></i> ${SeedVR2.escapeHtml(path)}</span>
@@ -1391,7 +1390,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                 </div>
-                <div class="sv-batch-file-list" style="max-height:280px;overflow-y:auto;border:1px solid #e0e0e0;border-radius:6px;padding:8px;background:#fafafa;">
+                <div class="sv-batch-file-list sv-batch-file-list-scanned">
                     ${listHtml}
                     ${moreInfo}
                 </div>
@@ -1416,7 +1415,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <i class="bi bi-shield-exclamation"></i>
                         <div>
                             <strong>${I['restore.dir_not_allowed'] || '该目录不在允许扫描列表'}</strong>
-                            <div class="sv-text-xs sv-mt-1" style="word-break:break-all;">${SeedVR2.escapeHtml(deniedPath)}</div>
+                            <div class="sv-text-xs sv-text-break sv-mt-1">${SeedVR2.escapeHtml(deniedPath)}</div>
                             <div class="sv-text-xs sv-text-muted sv-mt-1">${I['restore.dir_not_allowed_desc'] || '加入允许目录后即可重新扫描'}</div>
                             <button type="button" class="sv-btn sv-btn-secondary sv-btn-sm sv-mt-2" id="btnAllowDirAdd">
                                 <i class="bi bi-plus-circle"></i> ${I['restore.allow_dir_add_scan'] || '加入允许目录并重新扫描'}
@@ -1556,8 +1555,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const items = dirs.map((dir, idx) => {
                 const isDefault = defaultDirs.indexOf(dir) !== -1;
                 return `<div class="sv-flex sv-gap-2 sv-mt-1">
-                    <code class="sv-text-xs" style="word-break:break-all;">${SeedVR2.escapeHtml(dir)}</code>
-                    <button type="button" class="sv-btn sv-btn-outline sv-btn-sm" style="margin-left:auto;flex-shrink:0;"
+                    <code class="sv-text-xs sv-text-break">${SeedVR2.escapeHtml(dir)}</code>
+                    <button type="button" class="sv-btn sv-btn-outline sv-btn-sm sv2-allow-dir-del"
                             data-dir-index="${idx}" data-dir="${SeedVR2.escapeHtml(dir)}"
                             title="${isDefault ? SeedVR2.escapeHtml(I['restore.allow_dir_delete_default_warn'] || '删除后该目录将无法扫描') : ''}">${I['restore.allow_dir_delete'] || '删除'}</button>
                 </div>`;
@@ -1720,9 +1719,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             SeedVR2.showCard('progressCard');
-            els.resultCard.style.display = 'none';
-            els.compareCard.style.display = 'none';
-            els.resultVideo.style.display = 'none';
+            SvVisibility.hide(els.resultCard);
+            SvVisibility.hide(els.compareCard);
+            SvVisibility.hide(els.resultVideo);
 
             const res = await SeedVR2.api.submitWithLoading(els.btnStartRestore,
                 SeedVR2.api.uploadRestore(params),
@@ -1822,7 +1821,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     batchStartTime = Date.now();
                     if (els.batchPercentText) els.batchPercentText.textContent = '0%';
                     if (els.batchEta) els.batchEta.textContent = '';
-                    if (els.batchCurrentFile) els.batchCurrentFile.style.display = 'none';
+                    if (els.batchCurrentFile) SvVisibility.hide(els.batchCurrentFile);
                     setBatchRetry(0);
                     SeedVR2.toast(I['video.batch_started'] || '批量处理已启动', 'info');
                     // 桌面壳钩子：批量任务开始 → 标题切"处理中"（浏览器模式自动跳过）
@@ -1873,7 +1872,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // 显示当前处理文件名
                 if (els.batchCurrentFile && cached.current_file) {
-                    els.batchCurrentFile.style.display = '';
+                    SvVisibility.show(els.batchCurrentFile);
                     const nameSpan = els.batchCurrentFile.querySelector('span');
                     if (nameSpan) nameSpan.textContent = cached.current_file;
                     els.batchCurrentFile.title = cached.current_file;
@@ -1902,7 +1901,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     els.batchStatus.textContent = I[`status.${data.status}`] || data.status;
                     if (els.batchPercentText) els.batchPercentText.textContent = data.status === 'completed' ? '100%' : progress + '%';
                     if (els.batchEta) els.batchEta.textContent = data.status === 'completed' ? (I['restore.completed'] || '完成') : '';
-                    if (els.batchCurrentFile) els.batchCurrentFile.style.display = 'none';
+                    if (els.batchCurrentFile) SvVisibility.hide(els.batchCurrentFile);
                     setBatchRetry(failed);
                     SeedVR2.toast(I['video.batch_completed']?.replace('{completed}', completed).replace('{failed}', failed) || '批量处理完成', data.status === 'completed' ? 'success' : 'error');
                     // 桌面壳钩子：批量任务终结 → 空闲标题 + 系统通知（浏览器模式自动跳过）
@@ -1924,7 +1923,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!els.btnRetryBatch) return;
         const count = Number(failed) || 0;
         els.btnRetryBatch.hidden = count <= 0;
-        els.btnRetryBatch.style.display = count > 0 ? '' : 'none';
+        SvVisibility.set(els.btnRetryBatch, count > 0);
         if (count > 0) {
             els.btnRetryBatch.innerHTML = '<i class="bi bi-arrow-repeat"></i> '
                 + SeedVR2.escapeHtml(I['common.retry'] || 'Retry') + ' (' + count + ')';
@@ -2088,13 +2087,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const warnDiv = document.getElementById('restoreRecWarning');
                 const warnText = document.getElementById('restoreRecWarningText');
                 if (d.warning) {
-                    warnDiv.style.display = '';
+                    SvVisibility.show(warnDiv);
                     warnText.textContent = d.warning;
                 } else {
-                    warnDiv.style.display = 'none';
+                    SvVisibility.hide(warnDiv);
                 }
 
-                resultDiv.style.display = '';
+                SvVisibility.show(resultDiv);
             }
         } catch (err) {
             console.error('VRAM recommend failed:', err);
@@ -2242,9 +2241,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (e.key === 'Escape') {
             // Esc 关闭模态框/帮助面板/取消任务
             var obModal = document.getElementById('onboardingModal');
-            if (obModal && obModal.style.display !== 'none') {
+            if (obModal && SvVisibility.isVisible(obModal)) {
                 obModal.classList.remove('show');
-                setTimeout(function() { obModal.style.display = 'none'; }, 300);
+                setTimeout(function() { SvVisibility.hide(obModal); }, 300);
                 return;
             }
             var floatHelp = document.getElementById('floatHelp');
@@ -2261,7 +2260,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             // 如果有正在进行的批量任务，取消批量
-            if (currentBatchId && els.batchProgressCard.style.display !== 'none') {
+            if (currentBatchId && SvVisibility.isVisible(els.batchProgressCard)) {
                 cancelBatch();
             }
             // ESC also clears stale restore session
@@ -2498,8 +2497,8 @@ document.addEventListener('DOMContentLoaded', () => {
             //    注意：只有当用户未上传文件（没有 width/height 元数据）时才做默认同步，
             //    防止 autoSetResolutionFromImage 已经设置过的联动值被默认逻辑覆盖。
             const toggle = document.getElementById('doubleResToggle');
-            const hasUploaded = toggle && (document.getElementById('imagePreviewContainer')?.style.display !== 'none'
-                || document.getElementById('restoreFileInfo')?.style.display !== 'none');
+            const hasUploaded = toggle && (SvVisibility.isVisible(document.getElementById('imagePreviewContainer'))
+                || SvVisibility.isVisible(document.getElementById('restoreFileInfo')));
             if (!hasUploaded) {
                 syncResolutionUI({});
             }
@@ -2643,12 +2642,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 批量路径行工具条（内嵌主区顶部）
         var batchToolbar = document.getElementById('batchToolbar');
-        if (batchToolbar) batchToolbar.style.display = mode === 'batch' ? 'flex' : 'none';
+        if (batchToolbar) SvVisibility.set(batchToolbar, mode === 'batch', 'flex');
 
         // 画布工具条只服务于单文件画布：批量模式下清除/对比/缩放/下载均为死控件，
         // 且「未上传」徽标语义错误，直接隐藏整行减少噪声
         var canvasToolbar = document.getElementById('canvasToolbar');
-        if (canvasToolbar) canvasToolbar.style.display = mode === 'batch' ? 'none' : 'flex';
+        if (canvasToolbar) SvVisibility.set(canvasToolbar, mode !== 'batch', 'flex');
 
         // 侧栏主按钮的标签与提示随模式重算
         if (typeof updateStartButton === 'function') updateStartButton();
@@ -2674,7 +2673,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function setParamsCollapsed(collapsed) {
         if (sv2BodyEl) sv2BodyEl.classList.toggle('sv2-sb-collapsed', collapsed);
         if (paramsSidebarEl) paramsSidebarEl.classList.toggle('collapsed', collapsed);
-        if (sbRestoreBtn) sbRestoreBtn.style.display = collapsed ? 'flex' : 'none';
+        if (sbRestoreBtn) SvVisibility.set(sbRestoreBtn, collapsed, 'flex');
         var label = collapsed
             ? (I['restore.expand_params'] || 'Expand params')
             : (I['restore.collapse_params'] || 'Collapse params');
@@ -2747,11 +2746,11 @@ document.addEventListener('DOMContentLoaded', () => {
             cmp.addEventListener('click', function () {
                 if (cmp.hasAttribute('disabled')) return;
                 compareModeOn = !compareModeOn;
-                var videoActive = videoCompareCard && videoCompareCard.style.display !== 'none';
+                var videoActive = videoCompareCard && SvVisibility.isVisible(videoCompareCard);
                 if (videoActive) {
                     // 视频结果：对比查看器 ⇄ 单视频查看器
-                    if (videoCompareCard) videoCompareCard.style.display = compareModeOn ? 'block' : 'none';
-                    if (videoPlainViewer) videoPlainViewer.style.display = compareModeOn ? 'none' : 'flex';
+                    if (videoCompareCard) SvVisibility.set(videoCompareCard, compareModeOn);
+                    if (videoPlainViewer) SvVisibility.set(videoPlainViewer, !compareModeOn, 'flex');
                     cmp.classList.toggle('active', compareModeOn);
                     var vV = null;
                     if (compareModeOn && typeof window.getActiveVideoCompareSlider === 'function') {
@@ -2759,8 +2758,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     if (vV) try { vV._resetView && vV._resetView(); } catch(e) {}
                 } else {
-                    compareCard.style.display = compareModeOn ? 'block' : 'none';
-                    plainViewer.style.display = compareModeOn ? 'none' : 'flex';
+                    SvVisibility.set(compareCard, compareModeOn);
+                    SvVisibility.set(plainViewer, !compareModeOn, 'flex');
                     cmp.classList.toggle('active', compareModeOn);
                 }
                 // 记住对比模式偏好
@@ -2778,7 +2777,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mgBtn.addEventListener('click', function () {
                 if (mgBtn.hasAttribute('disabled')) return;
                 var resultCardEl = document.getElementById('resultCard');
-                var inResult = resultCardEl && resultCardEl.style.display !== 'none';
+                var inResult = resultCardEl && SvVisibility.isVisible(resultCardEl);
                 var viewer = null;
                 if (inResult && SeedVR2.getActiveCompareSlider) viewer = SeedVR2.getActiveCompareSlider();
                 if (!inResult && SeedVR2.getActivePreviewViewer) viewer = SeedVR2.getActivePreviewViewer();
@@ -2796,7 +2795,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clearBtn.addEventListener('click', function () {
                 clearImg.click();
                 var tbf = document.getElementById('tbFileName');
-                if (tbf) { tbf.style.display = 'none'; tbf.textContent = ''; }
+                if (tbf) { SvVisibility.hide(tbf); tbf.textContent = ''; }
             });
         }
 
@@ -2813,7 +2812,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 var tbf = document.getElementById('tbFileName');
                 if (tbf && fileInputEl.files && fileInputEl.files[0]) {
                     tbf.textContent = fileInputEl.files[0].name;
-                    tbf.style.display = '';
+                    SvVisibility.show(tbf);
                 }
             });
         }

@@ -50,7 +50,10 @@
             <dt>{{ t('downloads.path') }}</dt><dd class="dl-mono" id="dlRuntimePath">—</dd>
         </dl>
         <div class="sv-progress dl-hidden" id="dlRuntimeProgress">
-            <div class="sv-progress-bar" id="dlRuntimeBar" style="width:0%"></div>
+            <!-- 宽度由 JS 经 CSSOM 写入（style-src 收紧后 CSSOM 仍允许）；
+                 全局 .sv-progress-bar{width:100%!important} 会压过该写入，属既有问题，
+                 见 reports/WO-B17-csp-phase2.md「遗留项」。 -->
+            <div class="sv-progress-bar" id="dlRuntimeBar"></div>
         </div>
         <p class="dl-progress-text dl-hidden" id="dlRuntimeProgressText"></p>
     </div>
@@ -72,40 +75,6 @@
     </div>
 </div>
 
-<style>
-.dl-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.dl-summary-main { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.dl-badge {
-    display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px;
-    background: var(--sv-primary-dim); color: var(--sv-text); border: 1px solid var(--sv-border);
-}
-.dl-badge.is-ready { background: var(--sv-success); color: #fff; border-color: transparent; }
-.dl-summary-text { color: var(--sv-text-muted); font-size: 14px; }
-.dl-section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
-.dl-section-title { font-size: 16px; margin: 0 0 4px; }
-.dl-section-desc { margin: 0; font-size: 13px; color: var(--sv-text-muted); }
-.dl-actions { display: flex; gap: 8px; flex-shrink: 0; }
-.dl-kv { display: grid; grid-template-columns: 110px 1fr; gap: 6px 14px; margin: 0; font-size: 13px; }
-.dl-kv dt { color: var(--sv-text-muted); }
-.dl-kv dd { margin: 0; }
-.dl-mono { font-family: var(--sv-font-mono, monospace); font-size: 12px; word-break: break-all; }
-.dl-model-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.dl-model-item {
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    padding: 10px 12px; border: 1px solid var(--sv-border); border-radius: var(--sv-radius);
-    background: var(--sv-bg-elevated, transparent);
-}
-.dl-model-meta { display: flex; flex-direction: column; gap: 2px; }
-.dl-model-name { font-size: 14px; }
-.dl-model-sub { font-size: 12px; color: var(--sv-text-muted); }
-.dl-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
-.dl-dot.on { background: var(--sv-success); }
-.dl-dot.off { background: var(--sv-text-muted); opacity: .4; }
-.dl-muted { color: var(--sv-text-muted); font-size: 13px; }
-.dl-hint { margin: 12px 0 0; font-size: 12px; color: var(--sv-text-muted); font-family: var(--sv-font-mono, monospace); }
-.dl-hidden { display: none !important; }
-.dl-progress-text { margin: 8px 0 0; font-size: 12px; color: var(--sv-text-muted); }
-</style>
 {% endblock %}
 
 {% block scripts %}
