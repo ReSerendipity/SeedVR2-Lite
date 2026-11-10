@@ -116,5 +116,5 @@
 - 想改生成/复原逻辑 → `app/integrated_app/engines/`、`common/diffusion/`、`model_lib/`
 - 想改前端 → `app/integrated_app/static/`、`templates/`
 - 想改配置 → `config.yaml`
-- 想了解功能范围 → `docs/reports/功能实现状态分析报告.md`（维护者本地，未随仓库分发）（2026-11-04 复核：本克隆不存在，待 owner 确认去向）
+- 想了解功能范围 → `docs/reports/功能实现状态分析报告.md`（维护者本地，未随仓库分发；2026-11-10 核实：该文件已于 `8032a3b` 随内部文档移出远程跟踪，当前克隆无本地副本，需要时从该提交的父提交取回）
 - 质量门禁：根目录 `run_checks.bat`（勿移动；维护者本地脚本，未随仓库分发）
