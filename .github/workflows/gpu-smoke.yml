@@ -78,7 +78,7 @@ jobs:
       # fatal: not a git repository" 退出 1），所以本 job 既落一份源码、gh 调用也一律显式
       # 带 -R。下一步的 runners 查询走 gh api repos/${{ github.repository }}/… 全路径，
       # 本来就与 cwd 无关，不受此影响。
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Resolve trigger context and target tag
         id: ctx
         # 评估报告 R4 跟进：触发上下文经 env 注入 shell（GitHub run-shell-injection
