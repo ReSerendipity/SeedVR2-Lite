@@ -488,9 +488,9 @@ imageio-ffmpeg==0.6.0 \
     --hash=sha256:c7e46fcec401dd990405049d2e2f475e2b397779df2519b544b8aab515195282 \
     --hash=sha256:e2556bed8e005564a9f925bb7afa4002d82770d6b08825078b7697ab88ba1755
     # via seedvr2-lite
-importlib-metadata==9.0.0 \
-    --hash=sha256:2d21d1cc5a017bd0559e36150c21c830ab1dc304dedd1b7ea85d20f45ef3edd7 \
-    --hash=sha256:a4f57ab599e6a2e3016d7595cfd72eb4661a5106e787a95bcc90c7105b831efc
+importlib-metadata==10.1.0 \
+    --hash=sha256:82b04047fa09792c1a8cfeddfe08bec79e4b13c29c8469b0d3949860f61017e8 \
+    --hash=sha256:cf45ce66a929c64e994185a809c04840d0501db17e663810d993d0f4829265c7
     # via diffusers
 ipython==9.16.1 \
     --hash=sha256:4acae635506f6d352d94c4899a19d5f85f8bc4d230932342dca556fdab1c69b4 \
