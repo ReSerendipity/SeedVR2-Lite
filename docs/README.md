@@ -78,7 +78,7 @@
 | [METRICS_SPEC.md](METRICS_SPEC.md) | 指标口径规范 | 现行 |
 | [ML_OPS_GATES.md](ML_OPS_GATES.md) | MLOps 质量门禁说明 | 现行 |
 | [agent-contract.md](agent-contract.md) | Agent 契约（v2） | 现行 |
-| [SKILL.md](SKILL.md) | Bilibili 开源仓库批量采集与去重入库（skill） | 现行 |
+| `SKILL.md` | Bilibili 开源仓库批量采集与去重入库（skill；2026-11-10 核实未随仓库分发） | 未分发 |
 | [CSP_TIGHTENING_ROADMAP.md](CSP_TIGHTENING_ROADMAP.md) | CSP 收紧路线图（评估报告 R8 · 2026-09-06） | 进度见文内进度节（S1 完成） |
 
 ### 发布 / 运维 / 治理

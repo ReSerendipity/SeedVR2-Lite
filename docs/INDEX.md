@@ -47,7 +47,7 @@
 | [`METRICS_SPEC.md`](METRICS_SPEC.md) | 指标口径规范（数据治理 P3-2 的单一事实来源） | 现行 | 2026-11-10 |
 | [`ML_OPS_GATES.md`](ML_OPS_GATES.md) | MLOps 质量门禁说明（覆盖率为何只统计 Web 层、引擎核心如何兜底） | 现行 | 2026-11-10 |
 | [`agent-contract.md`](agent-contract.md) | Agent 契约（与 `.github` 治理模板逐字节一致，勿本地改） | 现行 | 2026-11-10 |
-| [`SKILL.md`](SKILL.md) | Bilibili 开源仓库批量采集与去重入库（skill 定义） | 现行 | 2026-11-10 |
+| `SKILL.md` | Bilibili 开源仓库批量采集与去重入库（skill 定义；2026-11-10 核实：该文件未随仓库分发，故不做链接） | 未分发 | 2026-11-10 |
 | [`CSP_TIGHTENING_ROADMAP.md`](CSP_TIGHTENING_ROADMAP.md) | CSP 收紧路线图（R8 · 2026-09-06；进度见文内进度节） | 现行 | 2026-11-10 |
 | [`release-governance.md`](release-governance.md) | 发布 / 回滚 / SLA 规范 | 现行 | 2026-11-10 |
 | [`rollback_sop.md`](rollback_sop.md) | 回滚 SOP（自动化回滚 / 版本化回滚） | 现行 | 2026-11-10 |
