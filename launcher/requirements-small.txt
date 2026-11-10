@@ -8,32 +8,32 @@
 # ============================================================
 
 # Core
-fastapi==0.143.0
+fastapi==0.162.1
 uvicorn[standard]==0.54.0
 gunicorn==26.2.0
-pydantic==2.14.0
+pydantic==2.14.3
 pyyaml==6.0.3
 
 # Template & Frontend
 jinja2==3.1.6
-python-multipart==0.0.32
+python-multipart==0.0.33
 
 # Deep Learning
 
 # Model & Inference
-transformers==5.19.0
+transformers==5.22.2
 safetensors==0.8.0
 huggingface_hub==1.33.0
 einops==0.8.2
 omegaconf==2.4.0
-diffusers==0.41.0
+diffusers==0.42.1
 mediapy==1.2.7
-rotary-embedding-torch==0.9.1
+rotary-embedding-torch==0.9.2
 
 # Video Processing
 opencv-python==5.0.0.93
 imageio==2.38.1
-imageio-ffmpeg==0.6.0
+imageio-ffmpeg==0.8.1
 pillow==13.0.0
 
 # Database
