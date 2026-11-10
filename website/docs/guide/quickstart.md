@@ -49,7 +49,7 @@ python scripts/download_model.py --size 3b
 
 - 这是「3B 模型 + VAE + 文本嵌入」的完整最小集合，约 20 GB
 - 想用更强的 7B / 7B-Sharp，把 `--size` 换成 `7b` / `7b_sharp`
-- 下载慢 / 想手动下，见 [模型下载与选型](./models)
+- 下载慢 / 想手动下，见 [模型下载与选型](./models.md)
 
 ## 第 5 步 · 启动
 
@@ -65,5 +65,5 @@ python scripts/download_model.py --size 3b
 ---
 
 ::: tip 安装报错？
-见 [常见问题（FAQ）](./faq)，或直接到 [GitHub Issues](https://github.com/ReSerendipity/SeedVR2-Lite/issues) 提问。
+见 [常见问题（FAQ）](./faq.md)，或直接到 [GitHub Issues](https://github.com/ReSerendipity/SeedVR2-Lite/issues) 提问。
 :::

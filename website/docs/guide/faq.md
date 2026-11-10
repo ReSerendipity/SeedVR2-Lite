@@ -2,7 +2,7 @@
 
 ## 启动报错模型文件未找到（FileNotFoundError）
 
-核对文件名与位置，见 [模型下载与选型](./models)。
+核对文件名与位置，见 [模型下载与选型](./models.md)。
 最常见的坑是：把权重放进了 `model/SeedVR2-3B/` 这样的子文件夹里——**必须放在 `model/` 根目录**。
 
 ## 项目自带 Python 吗？
@@ -42,7 +42,7 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 
 ## 显存不足（OOM）
 
-改用 FP8 模型 / 开启 BlockSwap / 降低输出分辨率。详见 [显存优化与 BlockSwap](./vram)。
+改用 FP8 模型 / 开启 BlockSwap / 降低输出分辨率。详见 [显存优化与 BlockSwap](./vram.md)。
 
 ## HuggingFace 下载慢
 

@@ -56,4 +56,4 @@ PyWavelets>=1.9.0
 # 如果无法安装，应用将自动回退到标准注意力机制
 
 # D/P2-3: 清单签名非对称化（Ed25519 公钥验证），torch 生态已传递安装，显式声明防遗漏
-cryptography>=41.0
+cryptography>=42.0

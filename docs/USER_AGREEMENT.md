@@ -9,7 +9,7 @@ SeedVR2 是一款基于扩散模型的视频与图像超分辨率修复工具箱
 
 ## 1. 许可与发布形态
 
-1.1 **开源版（Source Release）**：GitHub 公开源码适用 [Apache License 2.0](LICENSE)，可自由使用、修改、再分发，但须遵守 Apache 2.0 第 4 条（保留版权声明、LICENSE 副本与 NOTICE 归属信息）。
+1.1 **开源版（Source Release）**：GitHub 公开源码适用 [Apache License 2.0](../LICENSE)，可自由使用、修改、再分发，但须遵守 Apache 2.0 第 4 条（保留版权声明、LICENSE 副本与 NOTICE 归属信息）。
 
 1.2 本协议为软件使用层面的通用条款，不与第 1.1 条许可冲突；冲突时以对应许可文本为准。
 
@@ -35,7 +35,7 @@ SeedVR2 是一款基于扩散模型的视频与图像超分辨率修复工具箱
 
 ## 4. 模型与第三方组件声明
 
-4.1 SeedVR2 模型权重（SeedVR / SeedVR2）由字节跳动（ByteDance）以 Apache License 2.0 发布；NaDiT、SD3 Video VAE 等组件归属详见 [NOTICE](NOTICE)。
+4.1 SeedVR2 模型权重（SeedVR / SeedVR2）由字节跳动（ByteDance）以 Apache License 2.0 发布；NaDiT、SD3 Video VAE 等组件归属详见 [NOTICE](../NOTICE)。
 
 4.2 FFmpeg 为本地开发依赖，不随本项目分发，由使用者自行安装（详见 NOTICE）。
 

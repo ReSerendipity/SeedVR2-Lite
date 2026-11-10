@@ -112,5 +112,5 @@ Web UI 走上面的 `/api/restore/*`；下列端点是给 MCP / 外部客户端�
 
 ::: warning 网络绑定
 Web UI 默认仅绑定 `127.0.0.1`（`config.yaml` 中 `server.host`），不对外暴露。
-请勿将 `server.host` 修改为 `0.0.0.0` 或公网 IP，详见 [安全与合规](./security)。
+请勿将 `server.host` 修改为 `0.0.0.0` 或公网 IP，详见 [安全与合规](./security.md)。
 :::
