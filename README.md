@@ -51,7 +51,7 @@ SeedVR2-Lite 把字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开源
 
 ![修复工作台](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-seedvr2-lite-2-workbench-20261026.png)
 
-**高级参数** —— 展开 DiT 配置（最大分辨率、色彩校正、块交换数量、批处理大小），并可一键「VRAM 预检 & 推荐参数」。
+**高级参数** —— 展开 DiT 配置（最大分辨率、色彩校正、批处理大小），并可勾选「强制按参数重载模型」与一键「重置」。
 
 ![高级参数](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-seedvr2-lite-3-params-20261026.png)
 
@@ -269,7 +269,7 @@ The supported distribution is a **Tauri v2 desktop build** (offline bundle, extr
 
 ![Restore workbench](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-seedvr2-lite-2-workbench-20261026.png)
 
-**Advanced parameters** — DiT config (max resolution, color correction, block-swap count, batch size) plus a one-click "VRAM preflight & recommendation".
+**Advanced parameters** — DiT config (max resolution, color correction, batch size), plus a "force reload model with parameters" checkbox and a one-click reset.
 
 ![Advanced parameters](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-seedvr2-lite-3-params-20261026.png)
 
