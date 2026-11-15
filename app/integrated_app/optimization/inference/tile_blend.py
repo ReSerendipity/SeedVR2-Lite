@@ -258,6 +258,7 @@ def blend_temporal_segments(
     total_frames: int,
     overlap: int,
     weight_type: str = "cosine",
+    layout: str | None = None,
 ) -> torch.Tensor:
     """Blend overlapping temporal segments using weighted overlap.
 
@@ -270,6 +271,9 @@ def blend_temporal_segments(
         total_frames: Total output frames
         overlap: Number of overlapping frames between segments
         weight_type: 'linear' or 'cosine' for overlap weighting
+        layout: Optional explicit layout, 'tchw' or 'cthw'. None auto-detects:
+            a dimension equal to 3 (and the other not 3) is treated as channels;
+            otherwise the legacy T<=C heuristic is kept.
 
     Returns:
         Blended output tensor with total_frames in temporal dimension
@@ -279,16 +283,19 @@ def blend_temporal_segments(
 
     # Determine tensor layout
     sample = segment_results[0]
-    if sample.ndim == 4:
-        # Could be (T, C, H, W) or (C, T, H, W) - assume T,C,H,W for video
-        if sample.shape[0] <= sample.shape[1]:
-            # (T, C, H, W) layout
-            c_dim = 1
-        else:
-            # (C, T, H, W) layout
-            c_dim = 0
-    else:
+    if sample.ndim != 4:
         raise ValueError(f"Expected 4D tensor, got {sample.ndim}D")
+    if layout is not None:
+        if layout not in ("tchw", "cthw"):
+            raise ValueError(f"layout must be 'tchw' or 'cthw', got {layout!r}")
+        c_dim = 1 if layout == "tchw" else 0
+    elif sample.shape[0] == 3 and sample.shape[1] != 3:
+        c_dim = 0  # (C, T, H, W)
+    elif sample.shape[1] == 3 and sample.shape[0] != 3:
+        c_dim = 1  # (T, C, H, W)
+    else:
+        # 旧启发式（无通道维线索时保持原行为）
+        c_dim = 1 if sample.shape[0] <= sample.shape[1] else 0
 
     if c_dim == 1:
         c = sample.shape[1]

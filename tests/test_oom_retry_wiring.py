@@ -13,18 +13,28 @@
 """
 
 from dataclasses import dataclass
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from app.integrated_app.bad_case_retry import (
     FailureType,
     RetryConfig,
+    RetryResult,
     classify_failure,
     retry_with_bad_case_detection,
 )
+from app.integrated_app.config_models import ImageRestoreParams, VideoRestoreParams
+from app.integrated_app.engine_interface import RestoreResult
 from app.integrated_app.gpu_utils import oom_protect
 from app.integrated_app.routes.restore.common import build_retry_config
-from app.integrated_app.services.restore_service import apply_oom_degradation
+from app.integrated_app.services import restore_service
+from app.integrated_app.services.restore_service import (
+    apply_oom_degradation,
+    process_image_task,
+    process_video_task,
+    resolve_retry_config,
+)
 
 
 @dataclass
@@ -230,3 +240,114 @@ class TestApplyOomDegradation:
 
         # current_config 中没有可降级字段时不应崩溃
         assert isinstance(applied, bool)
+
+
+class TestRetryConfigWiring:
+    """config.yaml runtime.retry → 任务链路（process_image/video_task）。"""
+
+    def test_resolve_prefers_explicit_config(self, monkeypatch):
+        monkeypatch.setattr(
+            restore_service,
+            "_load_app_config_dict",
+            lambda: {"runtime": {"retry": {"max_retries": 9}}},
+        )
+        cfg = resolve_retry_config({"runtime": {"retry": {"max_retries": 5}}})
+        assert cfg.max_retries == 5
+
+    def test_resolve_reads_app_config(self, monkeypatch):
+        monkeypatch.setattr(
+            restore_service,
+            "_load_app_config_dict",
+            lambda: {"runtime": {"retry": {"max_retries": 4}}},
+        )
+        assert resolve_retry_config().max_retries == 4
+
+    def test_resolve_disabled_config(self, monkeypatch):
+        monkeypatch.setattr(
+            restore_service,
+            "_load_app_config_dict",
+            lambda: {"runtime": {"retry": {"enabled": False, "max_retries": 4}}},
+        )
+        cfg = resolve_retry_config()
+        assert cfg.max_retries == 0
+        assert cfg.enable_degradation is False
+
+    @staticmethod
+    def _fake_run_task(engine):
+        async def _fake(task_id, record_id, coro, history_db, task_queue, **kwargs):
+            await coro(engine)
+
+        return _fake
+
+    async def test_process_image_task_uses_app_config(self, monkeypatch, tmp_path):
+        engine = MagicMock()
+        engine.set_progress_callback = MagicMock()
+        captured = {}
+
+        async def fake_retry(generate, params, config, progress_callback=None, **kwargs):
+            captured["config"] = config
+            return RetryResult(
+                success=True,
+                result=RestoreResult(success=True, output_path=None, processing_time=0.1),
+                attempts=1,
+                final_params=params,
+            )
+
+        monkeypatch.setattr(restore_service, "retry_with_bad_case_detection", fake_retry)
+        monkeypatch.setattr(restore_service, "run_task_with_state", self._fake_run_task(engine))
+        monkeypatch.setattr(restore_service, "task_state_store", MagicMock(update_cached=MagicMock()))
+        monkeypatch.setattr(
+            restore_service,
+            "_load_app_config_dict",
+            lambda: {"runtime": {"retry": {"max_retries": 4}}},
+        )
+        history_db = MagicMock(update_record=AsyncMock())
+        task_queue = MagicMock(is_cancelled=MagicMock(return_value=False))
+
+        await process_image_task(
+            "t-cfg-img",
+            1,
+            str(tmp_path / "in.png"),
+            ImageRestoreParams(seed=1),
+            history_db,
+            task_queue,
+        )
+
+        assert captured["config"].max_retries == 4, "图片任务必须读取 config.yaml 的 max_retries"
+
+    async def test_process_video_task_uses_app_config(self, monkeypatch, tmp_path):
+        engine = MagicMock()
+        engine.set_progress_callback = MagicMock()
+        captured = {}
+
+        async def fake_retry(generate, params, config, progress_callback=None, **kwargs):
+            captured["config"] = config
+            return RetryResult(
+                success=True,
+                result=RestoreResult(success=True, output_path=None, processing_time=0.1),
+                attempts=1,
+                final_params=params,
+            )
+
+        monkeypatch.setattr(restore_service, "retry_with_bad_case_detection", fake_retry)
+        monkeypatch.setattr(restore_service, "run_task_with_state", self._fake_run_task(engine))
+        monkeypatch.setattr(restore_service, "task_state_store", MagicMock(update_cached=MagicMock()))
+        monkeypatch.setattr(
+            restore_service,
+            "_load_app_config_dict",
+            lambda: {"runtime": {"retry": {"max_retries": 4}}},
+        )
+        history_db = MagicMock(update_record=AsyncMock())
+        task_queue = MagicMock(is_cancelled=MagicMock(return_value=False))
+
+        await process_video_task(
+            "t-cfg-vid",
+            2,
+            str(tmp_path / "in.mp4"),
+            "3b",
+            VideoRestoreParams(seed=1, batch_size=5),
+            history_db,
+            task_queue,
+        )
+
+        assert captured["config"].max_retries == 4, "视频任务必须读取 config.yaml 的 max_retries"

@@ -14,7 +14,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from app.integrated_app.bad_case_retry import RetryConfig
 from app.integrated_app.config_models import ImageRestoreParams
 from app.integrated_app.engine_interface import RestoreResult
 from app.integrated_app.services import restore_service
@@ -87,8 +86,8 @@ def _patch_service_dependencies(monkeypatch, engine):
         monkeypatch.setattr(restore_service, name, mock)
     monkeypatch.setattr(
         restore_service,
-        "build_retry_config",
-        lambda: RetryConfig(max_retries=0, enable_degradation=False, enable_seed_rotation=False),
+        "_load_app_config_dict",
+        lambda: {"runtime": {"retry": {"enabled": False}}},
     )
     return mocks
 

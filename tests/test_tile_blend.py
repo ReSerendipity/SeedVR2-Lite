@@ -122,8 +122,7 @@ class TestTemporalSegments:
 
 class TestBlendTemporalSegments:
     def test_constant_segments_blend(self):
-        # 布局注意：函数按 shape[0] <= shape[1] 判定 (T,C,H,W)，故 T 需 ≤ C
-        # （T>C 的视频布局会被误判——已记入执行日志「报告外发现」，此处不擅改行为）
+        # 布局注意：两个前维都不是 3 时回退旧启发式 shape[0] <= shape[1] 判 (T,C,H,W)
         seg0 = torch.full((8, 16, 4, 4), 1.0)  # (T=8, C=16, H, W)，全局帧 [0,8)
         seg1 = torch.full((8, 16, 4, 4), 2.0)  # 全局帧 [6,14)，与 seg0 重叠 2 帧
         segs = [(0, 8), (6, 14)]
@@ -144,6 +143,30 @@ class TestBlendTemporalSegments:
     def test_bad_ndim_raises(self):
         with pytest.raises(ValueError):
             blend_temporal_segments([torch.zeros(3, 4, 4)], [(0, 3)], 3, 1)
+
+    def test_video_tchw_layout_with_t_gt_c(self):
+        # 真实视频布局 (T=65, C=3)：T>C，旧启发式会误判为 (C,T,H,W)
+        seg = torch.full((65, 3, 4, 4), 1.0)
+        out = blend_temporal_segments([seg], [(0, 65)], total_frames=65, overlap=1)
+        assert out.shape == (65, 3, 4, 4)
+        assert torch.allclose(out, seg, atol=1e-5)
+
+    def test_cthw_layout_with_channel_first(self):
+        seg = torch.full((3, 65, 4, 4), 2.0)
+        out = blend_temporal_segments([seg], [(0, 65)], total_frames=65, overlap=1)
+        assert out.shape == (65, 3, 4, 4)
+        assert torch.allclose(out, torch.full((65, 3, 4, 4), 2.0), atol=1e-5)
+
+    def test_explicit_layout_override(self):
+        seg = torch.ones((4, 8, 2, 2))  # 无 3 通道线索，自动判定不可靠
+        out_t = blend_temporal_segments([seg], [(0, 4)], total_frames=4, overlap=1, layout="tchw")
+        assert out_t.shape == (4, 8, 2, 2)
+        out_c = blend_temporal_segments([seg], [(0, 4)], total_frames=4, overlap=1, layout="cthw")
+        assert out_c.shape == (4, 4, 2, 2)
+
+    def test_invalid_layout_raises(self):
+        with pytest.raises(ValueError):
+            blend_temporal_segments([torch.zeros(8, 3, 2, 2)], [(0, 8)], 8, 1, layout="hwct")
 
 
 class TestOverlapWeights:

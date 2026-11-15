@@ -448,6 +448,28 @@ def build_retry_config(app_config: dict | None = None) -> RetryConfig:
     )
 
 
+def _load_app_config_dict() -> dict:
+    """读取当前应用配置（config.yaml 验证后）为字典；失败时返回空字典。
+
+    单独抽成函数便于测试替换：任务路径的重试配置必须与 config.yaml
+    的 runtime.retry 保持一致，而不是只吃 dataclass 默认值。
+    """
+    try:
+        from app.integrated_app.config import get_app_config
+
+        return get_app_config().model_dump()
+    except Exception as e:  # noqa: BLE001 — 配置读取失败不能阻断任务
+        logger.warning(f"读取应用配置失败，回退默认重试配置: {e}")
+        return {}
+
+
+def resolve_retry_config(app_config: dict | None = None) -> RetryConfig:
+    """任务路径的重试配置：显式配置优先，否则读取当前应用配置。"""
+    if app_config is None:
+        app_config = _load_app_config_dict()
+    return build_retry_config(app_config)
+
+
 def model_size_from_dit_model(dit_model: str) -> str:
     """根据 dit_model 参数确定使用的模型尺寸。
 
@@ -744,7 +766,7 @@ async def process_image_task(
         retry_result = await retry_with_bad_case_detection(
             _generate,
             {"config": image_config},
-            config=build_retry_config(),
+            config=resolve_retry_config(),
             progress_callback=_on_retry,
         )
         if retry_result.result is None:
@@ -856,7 +878,7 @@ async def process_video_task(
         # 帧级断点续跑（成本治理 P2 + 评估 P2-6）：任务级帧目录隔离后，
         # 续跑意图=崩溃恢复传入 or 自动重试已启用。意图为 True 时引擎在
         # 失败路径保留段帧，重试/恢复才能跳过已完成段（否则退化为整体重跑）
-        resume_frames_flag = {"flag": bool(resume_frames) or build_retry_config().max_retries > 0}
+        resume_frames_flag = {"flag": bool(resume_frames) or resolve_retry_config().max_retries > 0}
         # 任务隔离帧目录：段级续跑只在任务自有目录判定帧完整性，杜绝跨任务污染
         frames_dir_override = os.path.join(output_dir, f"_frames_{task_id}")
 
@@ -895,7 +917,7 @@ async def process_video_task(
         retry_result = await retry_with_bad_case_detection(
             _generate,
             dict(video_params),
-            config=build_retry_config(),
+            config=resolve_retry_config(),
             progress_callback=_on_retry,
         )
         if retry_result.result is None:
