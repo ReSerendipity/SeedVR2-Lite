@@ -115,6 +115,12 @@ jobs:
       contents: read
       packages: read # 拉取本仓库 GHCR 包（含私有可见性场景）
     steps:
+      # trivy-action 的 trivyignores 是「仓库内相对路径」，action 容器只能从
+      # workspace 读取；本 job 原先没有 checkout，导致 `.trivyignore.yaml`
+      # 在容器里不存在（ERROR: cannot find ignorefile）。
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 (SHA pin 2026-11-06)
+
       - name: Lowercase image ref (OCI 命名强制小写；metadata-action 只小写化构建 tags，
           Trivy 的 image-ref 自行拼接须同样处理，大写名 FATAL "could not parse reference")
         id: img
