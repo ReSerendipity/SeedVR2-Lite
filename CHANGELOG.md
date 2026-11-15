@@ -4,6 +4,25 @@
 > `docs/reports/`、`docs/_devarchive/`、`examples/`、`precheck.ps1` 均为维护者本地文件，未随仓库分发；
 > 对外可执行的禁区与门禁口径见 `docs/CODING_STANDARDS.md` 第 5 节。历史记录按原样保留，不改写。
 
+## [1.8.0] - 2026-11-16
+
+### Added
+
+* **段间 Hann 混合与 OOM 分级重试**：长视频分段推理在段边界加入 Hann 窗重叠混合，消除拼接跳变；显存不足时先降 tile、再降分辨率，并记录每次自动降档；修复同一 latent 二次 OOM 时未命中降档缓存的问题。（`ba06fce`、`4d918ea`）
+* **在线运行时安装与官方下载源**：环境包支持安装时直连 PyTorch 官方索引，模型默认改走 Comfy-Org/SeedVR2 官方仓，保留社区仓 `--repo` 覆盖；补权重双命名族映射与完整性校验。
+* **视频画质客观基线与质量熔断**：新增确定性合成剪辑的 PSNR/SSIM 基线门禁、A3 质量熔断与自动回滚、DR 恢复实测记录。（`5d6b2a2`）
+
+### Changed
+
+* **CSP style-src 摘除 `unsafe-inline`**：模板/JS 的内联 display 与静态样式迁移到 `.sv-hidden` / `.sv-vis-*` 状态机与 CSSOM；新增迁移锁测试防止回流。（`b7130ed`）
+* **文档与治理**：建立 `docs/INDEX.md`、ADR-0019 台账入库、README 显存估算与对比图更新；`check_local_only_refs.py` 归一化 `..` 路径，消除已分发文件误报。
+
+### Fixed
+
+* **torchvision Windows 锁哈希**：PyTorch 索引页对 Windows 轮只给 metadata、无 `#sha256` 锚点；用 `generate_lock.py` 从实际 R2 wheel 重生成，增补 `ce0744…`，版本集不变。
+* **CI 环境与跨引擎 E2E**：Linux 视频基线前显式安装 ffmpeg；E2E 样式注入改 CSSOM，htmx 关闭指示器样式注入，WebKit 下改断言可见性状态类而非受祖先影响的 computed display。
+* **Trivy 镜像门禁**：scan job 补 checkout 以读取 `.trivyignore.yaml`；对 updater 钉死的 zip 4.6.1 CVE 按既有政策登记存量豁免并设到期日，扫描仍阻断。
+
 ## [1.7.0] - 2026-10-28
 
 ### Added
