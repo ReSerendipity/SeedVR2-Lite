@@ -429,6 +429,9 @@ def build_retry_config(app_config: dict | None = None) -> RetryConfig:
     读取 config.yaml 的 runtime.retry 段；enabled=false 或 max_retries=0
     时返回不重试的空配置。
 
+    默认 3 次重试对应阶梯 blockswap↑ → tile↓ → resolution↓ → precision↓，
+    保证 tile 档插在分辨率降档之前后，分辨率档仍在默认预算内可达。
+
     Args:
         app_config: 应用配置字典（get_app_config() 或依赖注入的 config）。
 
@@ -439,7 +442,7 @@ def build_retry_config(app_config: dict | None = None) -> RetryConfig:
     if not cfg.get("enabled", True):
         return RetryConfig(max_retries=0, enable_degradation=False, enable_seed_rotation=False)
     return RetryConfig(
-        max_retries=int(cfg.get("max_retries", 2) or 0),
+        max_retries=int(cfg.get("max_retries", 3) or 0),
         base_delay_seconds=float(cfg.get("base_delay_seconds", 1.0) or 0.0),
         max_delay_seconds=float(cfg.get("max_delay_seconds", 30.0) or 1.0),
     )
@@ -829,6 +832,10 @@ async def process_video_task(
         engine.set_progress_callback(progress_callback)
 
         output_dir = os.path.join(os.getcwd(), "outputs", "video")
+        # P0-2: tile 参数以引擎当前 VAE 全局配置为基线，显式传给 infer_video。
+        # 视频侧 _vae_encode/_vae_decode 只读加载期的 _vae_tiled_config，
+        # 不显式透传的话重试里的 TILE_DECREASE 不会生效
+        vae_cfg = (getattr(engine, "config", None) or {}).get("model", {}).get("vae", {}) or {}
         video_params = {
             "resolution": params.resolution,
             "max_resolution": params.max_resolution,
@@ -837,9 +844,14 @@ async def process_video_task(
             "blocks_to_swap": params.blocks_to_swap,
             "batch_size": params.batch_size,
             "force_reload_dit": params.force_reload_dit,
+            "encode_tile_size": int(vae_cfg.get("encode_tile_size", 1024) or 1024),
+            "encode_tile_overlap": int(vae_cfg.get("encode_tile_overlap", 128) or 0),
+            "decode_tile_size": int(vae_cfg.get("decode_tile_size", 1024) or 1024),
+            "decode_tile_overlap": int(vae_cfg.get("decode_tile_overlap", 128) or 0),
         }
 
-        # OOM 坏案例自动重试（成本治理 P0-2）：降级阶梯 blocks_to_swap↑ → resolution↓ → 种子轮换
+        # OOM 坏案例自动重试（成本治理 P0-2）：
+        # blocks_to_swap↑ → VAE tile↓ → resolution↓ → 种子轮换
         force_reload = {"flag": False}
         # 帧级断点续跑（成本治理 P2 + 评估 P2-6）：任务级帧目录隔离后，
         # 续跑意图=崩溃恢复传入 or 自动重试已启用。意图为 True 时引擎在
@@ -869,6 +881,10 @@ async def process_video_task(
                 blocks_to_swap=merged["blocks_to_swap"],
                 batch_size=merged["batch_size"],
                 force_reload_dit=merged["force_reload_dit"],
+                encode_tile_size=merged["encode_tile_size"],
+                encode_tile_overlap=merged["encode_tile_overlap"],
+                decode_tile_size=merged["decode_tile_size"],
+                decode_tile_overlap=merged["decode_tile_overlap"],
                 resume_frames=resume_frames_flag["flag"],
                 frames_dir_override=frames_dir_override,
                 output_name=output_name,
@@ -967,7 +983,17 @@ def apply_oom_degradation(
 # ---------------------------------------------------------------------------
 
 # 降级阶梯可能触及的参数键，写入血缘时逐键对比 from → to
-_DEGRADATION_TRACKED_KEYS = ("blocks_to_swap", "resolution", "max_resolution", "dit_model", "seed")
+_DEGRADATION_TRACKED_KEYS = (
+    "blocks_to_swap",
+    "resolution",
+    "max_resolution",
+    "dit_model",
+    "seed",
+    "encode_tile_size",
+    "encode_tile_overlap",
+    "decode_tile_size",
+    "decode_tile_overlap",
+)
 
 
 def _param_value(params: dict | None, key: str):

@@ -6,10 +6,11 @@
 
 核心策略（按 attempt 递进）：
   1. OOM 第一次重试：增大 blocks_to_swap（更多 transformer 块换出到 CPU）
-  2. OOM 第二次重试：降低 resolution（×0.75）+ 进一步增大 blocks_to_swap
-  3. OOM 第三次重试：精度降级（dit_model fp16 → fp8，若可用）+ 降低 resolution
-  4. 网络抖动/瞬态错误：指数退避 + 重新随机种子，参数不变
-  5. 重试耗尽：接受当前结果（优雅降级），记录 warning
+  2. OOM 第二次重试：缩小 VAE tile（size/overlap 同步减半，先于降分辨率）
+  3. OOM 第三次重试：降低 resolution（×0.75）+ 进一步增大 blocks_to_swap
+  4. OOM 第四次重试：精度降级（dit_model fp16 → fp8，若可用）+ 降低 resolution
+  5. 网络抖动/瞬态错误：指数退避 + 重新随机种子，参数不变
+  6. 重试耗尽：接受当前结果（优雅降级），记录 warning
 
 设计要点：
   - 纯 Python 实现，不依赖 torch（可在任意环境测试）
@@ -56,6 +57,7 @@ class RetryStrategy(Enum):
     """重试策略枚举。"""
 
     BLOCKSWAP_INCREASE = "blockswap_increase"
+    TILE_DECREASE = "tile_decrease"
     RESOLUTION_DECREASE = "resolution_decrease"
     PRECISION_FALLBACK = "precision_fallback"
     SEED_CHANGE = "seed_change"
@@ -120,26 +122,36 @@ class RetryConfig:
     """重试机制配置参数。
 
     Attributes:
-        max_retries: 最大重试次数（不含首次），默认 2。
+        max_retries: 最大重试次数（不含首次），默认 3。
+            阶梯为 blockswap↑ → tile↓ → resolution↓ → precision↓，
+            3 次重试可覆盖到 resolution 档（precision 档需 4 次，按需调大）。
         base_delay_seconds: 基础退避延迟（秒），用于指数退避。
         max_delay_seconds: 最大退避延迟上限（秒）。
         jitter_ratio: 抖动比例（0-1），防止雪崩。
-        enable_degradation: 是否启用参数降级（OOM 时调整 blocks_to_swap/resolution/precision）。
+        enable_degradation: 是否启用参数降级（OOM 时调整 blocks_to_swap/tile/resolution/precision）。
         blocks_to_swap_step: 每次重试增加的 blocks_to_swap 数量。
         blocks_to_swap_max: blocks_to_swap 上限（防止超过模型层数）。
+        enable_tile_decrease: 是否在第二次重试起缩小 VAE tile（先于降分辨率）。
+        tile_scale_factor: 每次 tile 降档的缩放因子（0-1）。
+        tile_size_min: tile size 下限（像素），与 GPU 分档最小值 256 对齐。
+        tile_overlap_min: tile overlap 下限（像素）。
         resolution_scale_factor: OOM 时 resolution 缩放因子（0-1）。
         resolution_min: resolution 下限（像素）。
         enable_precision_fallback: 是否在最后一次重试时尝试 fp16→fp8 降级。
         enable_seed_rotation: 是否在每次重试时轮换随机种子。
     """
 
-    max_retries: int = 2
+    max_retries: int = 3
     base_delay_seconds: float = 1.0
     max_delay_seconds: float = 30.0
     jitter_ratio: float = 0.1
     enable_degradation: bool = True
     blocks_to_swap_step: int = 4
     blocks_to_swap_max: int = 36
+    enable_tile_decrease: bool = True
+    tile_scale_factor: float = 0.5
+    tile_size_min: int = 256
+    tile_overlap_min: int = 32
     resolution_scale_factor: float = 0.75
     resolution_min: int = 256
     enable_precision_fallback: bool = True
@@ -269,8 +281,9 @@ def adjust_params_for_retry(
 
     降级策略（仅 OOM 时启用，其他类型仅退避+换种子）：
       - attempt 1: blocks_to_swap += step
-      - attempt 2: blocks_to_swap += step + resolution × factor
-      - attempt 3+: 上述 + precision fp16→fp8
+      - attempt 2: blocks_to_swap += step + VAE tile size/overlap ↓（先于降分辨率）
+      - attempt 3: 上述 + resolution × factor
+      - attempt 4+: 上述 + precision fp16→fp8
 
     Args:
         params: 当前推理参数字典。
@@ -301,21 +314,50 @@ def adjust_params_for_retry(
         new_params = _replace_nested_config(new_params, blocks_to_swap=new_bts)
         strategies.append(RetryStrategy.BLOCKSWAP_INCREASE)
 
-    # 2. 第二次及以后：降低 resolution
-    if attempt >= 2:
+    # 2. 第二次及以后：缩小 VAE tile（size 与 overlap 同步缩，先于降分辨率）
+    #    必须先缩 tile 再降分辨率：tile 减半只增加分块数与少量耗时，不损失
+    #    输出清晰度；分辨率降档会真实降低成品质量。overlap 同步压到
+    #    new_tile//4（下限 tile_overlap_min），否则 _vae_pipeline 的
+    #    auto_tile_size 会因 overlap >= tile//2 判定 bad_overlap 回填推荐值，
+    #    把手工缩 tile 抵消掉。
+    if attempt >= 2 and cfg.enable_tile_decrease:
+        tile_changed = False
+        for size_key, overlap_key in (
+            ("encode_tile_size", "encode_tile_overlap"),
+            ("decode_tile_size", "decode_tile_overlap"),
+        ):
+            current_tile = _get_param(new_params, size_key, default=0)
+            if not isinstance(current_tile, (int, float)) or current_tile <= 0:
+                continue
+            new_tile = max(int(current_tile * cfg.tile_scale_factor), cfg.tile_size_min)
+            if new_tile >= current_tile:
+                continue
+            current_overlap = _get_param(new_params, overlap_key, default=0) or 0
+            new_overlap = (
+                max(cfg.tile_overlap_min, min(int(current_overlap), new_tile // 4)) if current_overlap > 0 else 0
+            )
+            updated = _replace_nested_config(new_params, **{size_key: new_tile, overlap_key: new_overlap})
+            if _get_param(updated, size_key, default=0) == new_tile:
+                new_params = updated
+                tile_changed = True
+        if tile_changed:
+            strategies.append(RetryStrategy.TILE_DECREASE)
+
+    # 3. 第三次及以后：降低 resolution（tile 已缩过仍 OOM 才牺牲清晰度）
+    if attempt >= 3:
         current_res = _get_param(new_params, "resolution", default=2160)
         new_res = max(int(current_res * cfg.resolution_scale_factor), cfg.resolution_min)
         if new_res < current_res:
             new_params = _replace_nested_config(new_params, resolution=new_res)
             strategies.append(RetryStrategy.RESOLUTION_DECREASE)
 
-    # 3. 第三次及以后：精度降级
+    # 4. 第四次及以后：精度降级
     #    ⚠️ 2026-09-10 修正（P1-5）：历史实现无条件按
     #    fp16 → fp8 → mxfp8 → int8_convrot → nvfp4 一路往下走，
     #    但 mxfp8/int8_convrot/nvfp4 都在**加载期**反量化为 bf16（见 quant_dequant.py），
     #    驻留显存与 fp16 同档 —— fp16→nvfp4 一点显存都不省，只白白降质。
     #    这里只跳到「驻留档位确实更小」的精度（当前实际上只有 fp8）。
-    if attempt >= 3 and cfg.enable_precision_fallback:
+    if attempt >= 4 and cfg.enable_precision_fallback:
         dit_model = _get_param(new_params, "dit_model", default="")
         if dit_model:
             from app.integrated_app.gpu_utils import precision_saves_vram
@@ -374,11 +416,16 @@ def _log_adjustment(attempt: int, params: dict[str, Any], strategies: list[Retry
     res = _get_param(params, "resolution", "N/A")
     seed = _get_param(params, "seed", "N/A")
     dit = _get_param(params, "dit_model", "N/A")
+    enc_tile = _get_param(params, "encode_tile_size", "N/A")
+    dec_tile = _get_param(params, "decode_tile_size", "N/A")
     logger.info(
-        "[BadCaseRetry] 第 %d 次重试参数调整: blocks_to_swap=%s, resolution=%s, dit_model=%s, seed=%s, 策略=%s",
+        "[BadCaseRetry] 第 %d 次重试参数调整: blocks_to_swap=%s, resolution=%s, "
+        "encode_tile=%s, decode_tile=%s, dit_model=%s, seed=%s, 策略=%s",
         attempt,
         bts,
         res,
+        enc_tile,
+        dec_tile,
         dit,
         seed,
         [s.value for s in strategies],

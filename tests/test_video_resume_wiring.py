@@ -83,9 +83,14 @@ class TestProcessVideoTaskWiring:
         # 帧目录必须任务隔离（P2-6 防跨任务污染）
         assert kwargs["frames_dir_override"].endswith("_frames_vt-resume-1")
         assert "outputs" in kwargs["frames_dir_override"]
-        # 默认启用自动重试（build_retry_config max_retries=2）→ 续跑意图开启，
+        # 默认启用自动重试（build_retry_config 默认 max_retries=3）→ 续跑意图开启，
         # 引擎失败路径保留段帧供重试复用
         assert kwargs["resume_frames"] is True
+        # P0-2：tile 参数必须显式透传给引擎，TILE_DECREASE 才能落到 _vae_tiled_config
+        assert kwargs["encode_tile_size"] == 1024
+        assert kwargs["encode_tile_overlap"] == 128
+        assert kwargs["decode_tile_size"] == 1024
+        assert kwargs["decode_tile_overlap"] == 128
 
     @pytest.mark.asyncio
     async def test_recovery_resume_flag_propagates(self, monkeypatch):

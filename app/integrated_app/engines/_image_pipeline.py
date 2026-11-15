@@ -676,6 +676,11 @@ class _ImagePipelineMixin:
                 self.vae.to(device=self.device)
                 logger.info("cache_model=True: 复用已缓存的 VAE 模型（已迁移到 GPU）")
 
+            # P0-2: 请求级 tile 配置在缓存复用时也必须落到引擎字典。
+            # 此前 vae_tiled_config 只在“VAE 未加载”分支传给 _load_vae_model，
+            # 跨任务复用缓存 VAE 时仍沿用旧配置，OOM 重试的 TILE_DECREASE 会失效
+            self._vae_tiled_config = {**(getattr(self, "_vae_tiled_config", None) or {}), **vae_tiled_config}
+
             self._report_progress(current_frame=0, total_frames=4, progress=15.0, message="VAE 编码中...")
             with self._vram_stage("vae_encode"):
                 cond_latents = self._vae_encode([cond_latent])

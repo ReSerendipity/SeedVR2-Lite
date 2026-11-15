@@ -176,7 +176,7 @@ class TestBuildRetryConfig:
 
     def test_defaults(self):
         cfg = build_retry_config({})
-        assert cfg.max_retries == 2
+        assert cfg.max_retries == 3
         assert cfg.enable_degradation
 
     def test_disabled(self):
@@ -194,7 +194,7 @@ class TestBuildRetryConfig:
 
     def test_none_config(self):
         cfg = build_retry_config(None)
-        assert cfg.max_retries == 2
+        assert cfg.max_retries == 3
 
 
 class TestApplyOomDegradation:

@@ -15,6 +15,7 @@
 Key Features:
 - 空间分块线性/余弦权重融合，平滑过渡重叠区域
 - 长视频时序分段处理，可配置重叠帧数
+- 段间重叠帧 Hann+平台 / 线性权重（纯函数，可单测、可回退）
 - 与现有 VAE 分块编解码无缝集成
 - 统一的融合接口，易于扩展新策略
 
@@ -338,3 +339,80 @@ def blend_temporal_segments(
     output = output / weight_sum
 
     return output
+
+
+# ---------------------------------------------------------------------------
+# Segment overlap weights (frame-level, streaming video)
+# ---------------------------------------------------------------------------
+
+
+def linear_overlap_weights(n: int) -> list[float]:
+    """段间重叠的线性权重（当前段占比，随帧序号线性递增）。
+
+    历史实现：第 i 帧（0-based）权重为 (i+1)/(n+1)，整段线性斜坡。
+    保留为 hann 的回退档，数值与旧版 _video_pipeline 内联公式逐位一致。
+
+    Args:
+        n: 重叠帧数。
+
+    Returns:
+        n 个 (0, 1) 区间内的权重；n<=0 返回空列表。
+    """
+    if n <= 0:
+        return []
+    return [(i + 1) / (n + 1) for i in range(n)]
+
+
+def hann_overlap_weights(n: int, plateau: float = 1.0 / 3.0) -> list[float]:
+    """段间重叠的 Hann + 平台权重（当前段占比，单调递增）。
+
+    参考 numz/ComfyUI-SeedVR2 的 overlap 混合做法：重叠区两端各保留
+    plateau 比例的平台（前段全权 / 当前段全权），只在中间窗口用半周期
+    Hann 窗 ``0.5 - 0.5*cos(pi*u)`` 过渡。相比整段线性斜坡让每一帧都
+    "半透明"，平台+Hann 能让段边界附近帧归属明确，减少呼吸/重影。
+
+    Args:
+        n: 重叠帧数。
+        plateau: 两端平台各占重叠区的比例，需 < 0.5；0 表示无平台（纯余弦）。
+
+    Returns:
+        n 个 [0, 1] 权重；n<=2（重叠太短，平台没有意义）时回退线性。
+    """
+    if n <= 0:
+        return []
+    if n <= 2:
+        return linear_overlap_weights(n)
+    p = max(0.0, min(float(plateau), 0.49))
+    inner = 1.0 - 2.0 * p
+    weights: list[float] = []
+    for i in range(n):
+        t = i / (n - 1)
+        if inner > 0:
+            u = min(1.0, max(0.0, (t - p) / inner))
+        else:
+            u = t
+        weights.append(0.5 - 0.5 * math.cos(math.pi * u))
+    return weights
+
+
+def overlap_weights(n: int, weight_type: str = "hann", plateau: float = 1.0 / 3.0) -> list[float]:
+    """段间重叠权重分发：hann（默认）/ linear（回退）。
+
+    未知取值按 linear 保守处理——历史行为是最安全的兼容基线。
+
+    Args:
+        n: 重叠帧数。
+        weight_type: "hann"（Hann+平台）或 "linear"（历史线性斜坡）。
+        plateau: hann 的两端平台占比，透传给 :func:`hann_overlap_weights`。
+
+    Returns:
+        n 个 [0, 1] 权重；n<=0 返回空列表。
+    """
+    if n <= 0:
+        return []
+    kind = (weight_type or "").strip().lower()
+    if kind == "hann":
+        return hann_overlap_weights(n, plateau=plateau)
+    if kind != "linear":
+        logger.warning(f"未知的 segment_overlap_weight={weight_type!r}，回退 linear")
+    return linear_overlap_weights(n)

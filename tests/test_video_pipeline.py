@@ -278,6 +278,34 @@ class TestSegmentedStreamingInference:
         assert engine.vae is None
         assert engine.dit is None
 
+    def test_request_tile_kwargs_flow_into_vae_config(self, tmp_path):
+        """P0-2：重试缩 tile 的 kwargs 必须落到引擎 _vae_tiled_config。"""
+        video_path = _make_test_video(tmp_path / "input.mp4", 10, 64, 64)
+        info = _make_video_info(video_path, 10, 64, 64)
+        engine = MockVideoEngine(info)
+        with (
+            patch("app.integrated_app.engines._video_pipeline._check_memory", return_value=0.0),
+            patch("app.integrated_app.engines._video_pipeline._log_memory"),
+            patch("app.integrated_app.engines._video_pipeline._cleanup_cuda_cache"),
+            patch("app.integrated_app.engines._video_pipeline.shutil.rmtree"),
+        ):
+            result = engine._infer_video_impl(
+                str(video_path),
+                str(tmp_path / "out"),
+                encode_tile_size=512,
+                encode_tile_overlap=128,
+                decode_tile_size=512,
+                decode_tile_overlap=128,
+            )
+        assert result.success
+        cfg = engine._vae_tiled_config
+        assert cfg["encode_tile_size"] == 512
+        assert cfg["encode_tile_overlap"] == 128
+        assert cfg["decode_tile_size"] == 512
+        assert cfg["decode_tile_overlap"] == 128
+        # 未覆盖的键（auto_tile_size）保留配置默认
+        assert cfg["auto_tile_size"] is True
+
     def test_models_destroyed_on_success(self, tmp_path):
         video_path = _make_test_video(tmp_path / "input.mp4", 10, 64, 64)
         info = _make_video_info(video_path, 10, 64, 64)

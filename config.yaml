@@ -52,6 +52,8 @@ inference:
   resolution: 2048
   restoration_guidance_scale: 0.0
   seed: -1
+  # 视频段间重叠帧融合权重：hann（Hann+1/3 平台，默认）/ linear（历史线性回退）
+  segment_overlap_weight: hann
   swap_io_components: true
   temporal_overlap: 0
   temporal_segment_overlap: 0
@@ -202,7 +204,8 @@ runtime:
     base_delay_seconds: 1.0
     enabled: true
     max_delay_seconds: 30.0
-    max_retries: 2
+    # 阶梯 blockswap↑ → VAE tile↓ → resolution↓ → precision↓；3 次重试可覆盖到分辨率档
+    max_retries: 3
     oom_breaker:
       cooldown_seconds: 600.0
       enabled: true

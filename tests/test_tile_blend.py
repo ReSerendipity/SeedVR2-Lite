@@ -4,7 +4,9 @@
 1. 线性/余弦权重图：形状、边缘渐变值、对称性、中心为 1、overlap<=0 全 1；
 2. blend_tiled_output：无重叠区精确还原 tile 常量、重叠区严格介于两值之间、空输入报错；
 3. compute_temporal_segments：docstring 示例序列、边界（total<=segment）、退化重叠回退；
-4. blend_temporal_segments：非重叠帧精确、重叠帧介于两值、形状保持。
+4. blend_temporal_segments：非重叠帧精确、重叠帧介于两值、形状保持；
+5. overlap_weights（P0-1）：hann 平台/对称/单调、linear 与历史公式逐位一致、
+   n<=2 与未知取值的回退语义。
 """
 
 import math
@@ -18,6 +20,9 @@ from app.integrated_app.optimization.inference.tile_blend import (
     compute_temporal_segments,
     create_cosine_weight_map,
     create_linear_weight_map,
+    hann_overlap_weights,
+    linear_overlap_weights,
+    overlap_weights,
 )
 
 
@@ -139,3 +144,64 @@ class TestBlendTemporalSegments:
     def test_bad_ndim_raises(self):
         with pytest.raises(ValueError):
             blend_temporal_segments([torch.zeros(3, 4, 4)], [(0, 3)], 3, 1)
+
+
+class TestOverlapWeights:
+    """P0-1：段间重叠权重纯函数（hann / linear 回退）。"""
+
+    def test_linear_matches_legacy_formula(self):
+        # 旧版 _video_pipeline 内联公式 (i+1)/(n+1) 必须逐位保留，供回退使用
+        n = 8
+        assert linear_overlap_weights(n) == [pytest.approx((i + 1) / (n + 1)) for i in range(n)]
+        assert linear_overlap_weights(1) == [0.5]
+
+    def test_empty_for_non_positive_n(self):
+        assert linear_overlap_weights(0) == []
+        assert hann_overlap_weights(0) == []
+        assert overlap_weights(-1) == []
+
+    def test_hann_endpoints_and_unit_interval(self):
+        w = hann_overlap_weights(8)
+        assert len(w) == 8
+        assert w[0] == pytest.approx(0.0)
+        assert w[-1] == pytest.approx(1.0)
+        assert all(0.0 <= v <= 1.0 for v in w)
+
+    def test_hann_monotonic_non_decreasing(self):
+        w = hann_overlap_weights(16)
+        assert all(b >= a for a, b in zip(w, w[1:], strict=False))
+
+    def test_hann_symmetric_complement(self):
+        # 任意一对对称帧的权重互补（前段占比 + 当前段占比 = 1）
+        for n in (3, 8, 15):
+            w = hann_overlap_weights(n)
+            for i in range(n):
+                assert w[i] + w[n - 1 - i] == pytest.approx(1.0)
+
+    def test_hann_plateau_edges_are_exclusive(self):
+        # n=8、plateau=1/3：两端各 3 帧平台（0 / 1），中间 2 帧过渡
+        w = hann_overlap_weights(8, plateau=1.0 / 3.0)
+        assert w[:3] == pytest.approx([0.0, 0.0, 0.0])
+        assert w[-3:] == pytest.approx([1.0, 1.0, 1.0])
+        assert 0.0 < w[3] < 0.5 < w[4] < 1.0
+
+    def test_hann_zero_plateau_is_pure_cosine(self):
+        w = hann_overlap_weights(5, plateau=0.0)
+        expected = [0.5 - 0.5 * math.cos(math.pi * i / 4) for i in range(5)]
+        assert w == pytest.approx(expected)
+
+    def test_short_overlap_falls_back_to_linear(self):
+        assert hann_overlap_weights(1) == linear_overlap_weights(1)
+        assert hann_overlap_weights(2) == linear_overlap_weights(2)
+
+    def test_dispatch_hann_and_linear(self):
+        n = 8
+        assert overlap_weights(n, "hann") == hann_overlap_weights(n)
+        assert overlap_weights(n, "linear") == linear_overlap_weights(n)
+        # 大小写/空白容错
+        assert overlap_weights(n, " HANN ") == hann_overlap_weights(n)
+
+    def test_dispatch_unknown_falls_back_to_linear(self):
+        n = 8
+        assert overlap_weights(n, "") == linear_overlap_weights(n)
+        assert overlap_weights(n, "triangle") == linear_overlap_weights(n)

@@ -485,6 +485,14 @@ class InferenceConfig(BaseModel):
     一旦超过它就直接拒绝。用于挡住「客户端传 resolution=20000」这类必然 OOM
     且会占用 GPU 数小时的请求（对齐 VOSR2-Lite 的 inference.max_output_side）。
     """
+    segment_overlap_weight: Literal["hann", "linear"] = "hann"
+    """视频段间重叠帧的融合权重类型。
+
+    - ``hann``（默认）：Hann 窗 + 两端 1/3 平台，段边界归属明确，接缝更稳；
+    - ``linear``：历史线性斜坡 ``(i+1)/(n+1)``，作为兼容回退档。
+
+    纯函数实现见 ``optimization/inference/tile_blend.py::overlap_weights``。
+    """
 
 
 class RuntimeSseConfig(BaseModel):

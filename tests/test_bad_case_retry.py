@@ -46,6 +46,10 @@ class _FakeConfig:
     seed: int = -1
     dit_model: str = "3b_fp16"
     max_resolution: int = 0
+    encode_tile_size: int = 1024
+    encode_tile_overlap: int = 512
+    decode_tile_size: int = 1024
+    decode_tile_overlap: int = 512
 
 
 # ---------------------------------------------------------------------------
@@ -108,27 +112,75 @@ class TestAdjustParams:
         adjusted = adjust_params_for_retry(params, FailureType.OOM, 1, self.cfg)
         cfg = adjusted["config"]
         assert cfg.blocks_to_swap == 36  # 32 + 4
+        # 第一次重试不动 tile / resolution（阶梯顺序：blockswap 优先）
+        assert cfg.encode_tile_size == 1024
+        assert cfg.resolution == 2160
 
-    def test_oom_second_attempt_reduces_resolution(self):
+    def test_oom_second_attempt_decreases_tile(self):
+        """P0-2：第二次重试先缩 VAE tile（size 与 overlap 同步缩）。"""
         params = {"config": _FakeConfig(blocks_to_swap=32, resolution=2160)}
         adjusted = adjust_params_for_retry(params, FailureType.OOM, 2, self.cfg)
         cfg = adjusted["config"]
         assert cfg.blocks_to_swap == 36
-        assert cfg.resolution == 1620  # 2160 * 0.75 = 1620
+        assert cfg.resolution == 2160  # 分辨率档在 tile 之后，本次不动
+        assert cfg.encode_tile_size == 512  # 1024 * 0.5
+        assert cfg.encode_tile_overlap == 128  # min(512, 512//4)
+        assert cfg.decode_tile_size == 512
+        assert cfg.decode_tile_overlap == 128
 
-    def test_oom_third_attempt_falls_back_precision(self):
+    def test_oom_third_attempt_reduces_resolution(self):
         params = {"config": _FakeConfig(blocks_to_swap=32, resolution=2160, dit_model="3b_fp16")}
         adjusted = adjust_params_for_retry(params, FailureType.OOM, 3, self.cfg)
         cfg = adjusted["config"]
         assert cfg.blocks_to_swap == 36
+        assert cfg.encode_tile_size == 512
+        assert cfg.resolution == 1620  # 2160 * 0.75 = 1620
+        assert cfg.dit_model == "3b_fp16"  # 精度档还要再晚一档
+
+    def test_oom_fourth_attempt_falls_back_precision(self):
+        params = {"config": _FakeConfig(blocks_to_swap=32, resolution=2160, dit_model="3b_fp16")}
+        adjusted = adjust_params_for_retry(params, FailureType.OOM, 4, self.cfg)
+        cfg = adjusted["config"]
+        assert cfg.blocks_to_swap == 36
+        assert cfg.encode_tile_size == 512
         assert cfg.resolution == 1620
         assert cfg.dit_model == "3b_fp8"
 
     def test_oom_without_config_uses_top_level(self):
         params = {"blocks_to_swap": 32, "resolution": 2048}
-        adjusted = adjust_params_for_retry(params, FailureType.OOM, 2, self.cfg)
+        adjusted = adjust_params_for_retry(params, FailureType.OOM, 3, self.cfg)
         assert adjusted["blocks_to_swap"] == 36
         assert adjusted["resolution"] == 1536
+
+    def test_oom_flat_params_tile_decrease(self):
+        """视频/批量链路走扁平 dict：tile 键存在时同样降档。"""
+        params = {
+            "blocks_to_swap": 32,
+            "resolution": 2048,
+            "encode_tile_size": 1024,
+            "encode_tile_overlap": 512,
+            "decode_tile_size": 1024,
+            "decode_tile_overlap": 512,
+        }
+        adjusted = adjust_params_for_retry(params, FailureType.OOM, 2, self.cfg)
+        assert adjusted["encode_tile_size"] == 512
+        assert adjusted["encode_tile_overlap"] == 128
+        assert adjusted["decode_tile_size"] == 512
+        assert adjusted["decode_tile_overlap"] == 128
+        assert adjusted["resolution"] == 2048  # 本次不降分辨率
+
+    def test_tile_decrease_floors_at_min(self):
+        params = {"config": _FakeConfig(encode_tile_size=256, encode_tile_overlap=64)}
+        adjusted = adjust_params_for_retry(params, FailureType.OOM, 2, self.cfg)
+        assert adjusted["config"].encode_tile_size == 256  # 已在下限，不再缩
+        assert adjusted["config"].encode_tile_overlap == 64
+
+    def test_tile_decrease_can_be_disabled(self):
+        cfg = RetryConfig(enable_tile_decrease=False)
+        params = {"config": _FakeConfig(blocks_to_swap=36)}
+        adjusted = adjust_params_for_retry(params, FailureType.OOM, 2, cfg)
+        assert adjusted["config"].encode_tile_size == 1024
+        assert adjusted["config"].resolution == 2160
 
     def test_network_does_not_degrade_params(self):
         params = {"config": _FakeConfig(blocks_to_swap=32, resolution=2160)}

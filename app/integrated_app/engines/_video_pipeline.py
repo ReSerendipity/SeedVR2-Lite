@@ -327,13 +327,38 @@ class _VideoPipelineMixin:
             os.makedirs(frames_dir, exist_ok=True)
 
             # VAE 常驻, 仅在编码/解码阶段切换到 GPU (DiT 采样阶段在 CPU)
+            # P0-2: 请求级 tile 覆盖。_vae_encode/_vae_decode 只读
+            # _vae_tiled_config，重试缩 tile 必须在这里落到该字典，
+            # 否则视频侧永远使用加载期的全局配置
+            vae_cfg = self.config.get("model", {}).get("vae", {}) or {}
+
+            def _resolve_tile(name: str, default: int) -> int:
+                value = kwargs.get(name)
+                if value is None or value == "":
+                    return int(default)
+                return int(value)
+
+            vae_tiled_config = {
+                "encode_tiled": vae_cfg.get("encode_tiled", True),
+                "encode_tile_size": _resolve_tile("encode_tile_size", vae_cfg.get("encode_tile_size", 1024)),
+                "encode_tile_overlap": _resolve_tile("encode_tile_overlap", vae_cfg.get("encode_tile_overlap", 128)),
+                "decode_tiled": vae_cfg.get("decode_tiled", True),
+                "decode_tile_size": _resolve_tile("decode_tile_size", vae_cfg.get("decode_tile_size", 1024)),
+                "decode_tile_overlap": _resolve_tile("decode_tile_overlap", vae_cfg.get("decode_tile_overlap", 128)),
+                "tile_debug": vae_cfg.get("tile_debug", False),
+                "offload_device": vae_cfg.get("offload_device", "cpu"),
+                "cache_model": vae_cfg.get("cache_model", True),
+                "auto_tile_size": vae_cfg.get("auto_tile_size", True),
+            }
             if self.vae is None:
                 self.vae = self._load_vae_model(
                     model_config=self._model_config,
                     checkpoint_path=self._vae_checkpoint_path,
                     device=self.device,
+                    vae_tiled_config=vae_tiled_config,
                     torch_compile_args=inf.get("torch_compile") or None,
                 )
+            self._vae_tiled_config = vae_tiled_config
 
             # 后处理配置
             postprocess_cfg = self.config.get("postprocessing", {})
@@ -343,6 +368,10 @@ class _VideoPipelineMixin:
             # 跨段时间一致性: FeaturePropagation (Upscale-A-Video inspired)
             temporal_propagator = None
             temporal_propagation_enabled = self.config.get("inference", {}).get("temporal_propagation", True)
+            # P0-1: 段间重叠权重类型（hann 默认，linear 为历史回退档）
+            segment_overlap_weight = str(
+                self.config.get("inference", {}).get("segment_overlap_weight", "hann") or "hann"
+            )
             if temporal_propagation_enabled:
                 try:
                     from app.integrated_app.optimization.inference.temporal_processing import FeaturePropagation
@@ -670,11 +699,15 @@ class _VideoPipelineMixin:
                         watermark_policy = resolve_watermark_failure_policy(self.config)
                         report_missing_watermark_key()
                     overlap_n = min(segment_overlap, len(restored_frames))
+                    # P0-1: 段间重叠权重抽成纯函数（默认 Hann+平台，config 可回退 linear），
+                    # 替代历史整段线性斜坡 ((i+1)/(n+1))，减少段边界呼吸/重影
+                    from app.integrated_app.optimization.inference.tile_blend import overlap_weights
+
+                    seg_weights = overlap_weights(overlap_n, segment_overlap_weight)
                     for i, frame in enumerate(restored_frames):
-                        if prev_tail_out is not None and i < overlap_n:
+                        if prev_tail_out is not None and i < len(seg_weights):
                             prev = prev_tail_out[i]
-                            # 线性斜坡: 段首权重小, 靠近段中部过渡到当前段
-                            weight = (i + 1) / (overlap_n + 1)
+                            weight = seg_weights[i]
                             frame = (
                                 frame.astype(np.float32) * weight + prev.astype(np.float32) * (1.0 - weight)
                             ).astype(np.uint8)

@@ -71,6 +71,26 @@ class TestBuildDegradationMetadata:
         assert meta is not None
         assert meta["adjusted"]["resolution"] == {"from": 2160, "to": 1620}
 
+    def test_degraded_metadata_captures_tile_params(self):
+        """P0-2：TILE_DECREASE 的 tile/overlap 变化必须写入血缘。"""
+        original_cfg = ImageInferenceConfig()
+        final_cfg = ImageInferenceConfig(
+            encode_tile_size=512,
+            encode_tile_overlap=128,
+            decode_tile_size=512,
+            decode_tile_overlap=128,
+        )
+        meta = build_degradation_metadata(
+            {"config": original_cfg},
+            {"config": final_cfg},
+            _degraded_retry_result(final_params={"config": final_cfg}),
+        )
+        assert meta is not None
+        assert meta["adjusted"]["encode_tile_size"] == {"from": 1024, "to": 512}
+        assert meta["adjusted"]["encode_tile_overlap"] == {"from": 512, "to": 128}
+        assert meta["adjusted"]["decode_tile_size"] == {"from": 1024, "to": 512}
+        assert meta["adjusted"]["decode_tile_overlap"] == {"from": 512, "to": 128}
+
 
 class TestMergeDegradationIntoParameters:
     def test_merges_into_valid_json(self):
