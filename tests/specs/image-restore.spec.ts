@@ -72,7 +72,11 @@ test.describe('Image Restore Flow', () => {
 
       // Step 1: Upload an image file
       await imagePage.uploadImage(IMAGE_FILES.jpeg);
-      await expect(imagePage.fileInfo).toHaveCSS('display', 'flex');
+      // 上传后画布切到预览区，含 fileInfo 的父容器被 sv-hidden 隐藏（产品行为）。
+      // WebKit 对 display:none 祖先下的后代 getComputedStyle 返回 none，Chromium
+      // 返回自身指定值，直接断言 CSS display 会跨引擎假红；断言状态机类本身。
+      await expect(imagePage.fileInfo).not.toHaveClass(/sv-hidden/);
+      await expect(imagePage.fileInfo).toHaveClass(/sv-vis-flex/);
       // 上传后画布切到预览区，拖拽占位（含 fileInfo 的父容器）被隐藏属产品行为
 
       // Step 2: Configure parameters
