@@ -13,6 +13,7 @@
 import { test, expect, Page } from '@playwright/test';
 import { setupAllMocks } from '@fixtures/api-mocks';
 import { closeSseBeforeNavigation } from '@utils/wait-helpers';
+import { addCspSafeStyle } from '@utils/csp-style';
 
 // ============================================================
 // Configuration
@@ -163,9 +164,9 @@ test.describe('WCAG 2.1 AA Contrast Compliance', () => {
           // Disable CSS transitions/animations: theme switch animates colors,
           // and contrast checks during the transition see blended mid-state
           // colors with unstable ratios (flaky). Snap to final state instead.
-          await page.addStyleTag({
-            content: '* { transition: none !important; animation: none !important; }',
-          });
+          // CSSOM adopted sheet, not addStyleTag: the app's style-src has no
+          // 'unsafe-inline', so an inline <style> is blocked by CSP.
+          await addCspSafeStyle(page, '* { transition: none !important; animation: none !important; }');
           await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => resolve())));
 
           const failures: string[] = [];

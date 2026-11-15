@@ -302,19 +302,21 @@ test.describe('System Status', () => {
     // 表现为 webkit 独有的点击被 toast 拦截。DOMContentLoaded 兜底三引擎通吃。
     const HIDE_TOASTS_CSS = '#toastContainer{display:none!important}';
     test.beforeEach(async ({ page }) => {
+      // style-src 无 'unsafe-inline'，<style> 节点（无论 addInitScript 还是
+      // addStyleTag）都会被 CSP 拦下；改用 CSSOM 构造样式表。WebKit 在 init
+      // script 阶段 documentElement 可能尚未就绪，故保留 DOMContentLoaded 兜底。
       await page.addInitScript((cssText) => {
         const inject = () => {
-          const style = document.createElement('style');
-          style.textContent = cssText;
-          (document.head || document.documentElement).appendChild(style);
+          const sheet = new CSSStyleSheet();
+          sheet.replaceSync(cssText);
+          document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
         };
-        if (document.head) {
+        if (document.documentElement) {
           inject();
           return;
         }
         document.addEventListener('DOMContentLoaded', inject);
       }, HIDE_TOASTS_CSS);
-      await page.addStyleTag({ content: HIDE_TOASTS_CSS });
     });
 
     test('clicking refresh button reloads the status data', async ({ page }) => {

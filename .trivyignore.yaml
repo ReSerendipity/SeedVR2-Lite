@@ -1,0 +1,23 @@
+# Trivy 存量豁免清单（docker-publish 镜像扫描，阻断模式）
+#
+# 政策来源：.github/workflows/docker-publish.yml 第 140-142 行——扫描保持阻断，
+# 仅对「存量、无法在本仓修复」的 CVE 建本文件并在 Trivy step 传入 trivyignores。
+#
+# 根因：tauri-plugin-updater 2.11.0 的 Cargo.toml 钉死 `zip = "^4"`，本仓无法把
+# 该传递依赖升到修复版 9.0.5/9.0.0；镜像内因此同时存在 zip 2.4.2（desktop 直接
+# 依赖）与 zip 4.6.1（updater 传递依赖）。两者命中同一组 CVE，只能按存量豁免，
+# 待上游 updater 放宽 zip 约束后删除本文件对应条目。expired_at 强制到期复核。
+vulnerabilities:
+  - id: CVE-2026-115905
+    statement: >-
+      zip crate 路径穿越/资源耗尽（CRITICAL，修复版 9.0.5）。tauri-plugin-updater
+      2.11.0 依赖 zip ^4，本仓无法升级；更新包只从 GitHub Releases 下载并校验
+      签名/SHA256，攻击面限于已信任的发布资产。到期前必须随 updater 升级复核。
+    expired_at: 2027-02-15
+
+  - id: CVE-2026-115909
+    statement: >-
+      zip crate 解压边界缺陷（HIGH，修复版 9.0.0）。同上受 updater 的 zip ^4
+      约束；解压目标限定在应用更新目录且入口包已验签。到期前必须随 updater
+      升级复核。
+    expired_at: 2027-02-15

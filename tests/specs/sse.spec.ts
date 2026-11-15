@@ -170,12 +170,14 @@ test.describe('Server-Sent Events', () => {
 
     await videoRestorePage.goto();
 
-    // Simulate starting a restore task so the progress card appears
-    // Inject a visible progress card to test progress updates
+    // Simulate starting a restore task so the progress card appears.
+    // 不能写 inline style：页面 style-src 无 'unsafe-inline'，且 .sv-hidden 是
+    // display:none!important；走产品自己的 .sv-hidden/.sv-vis-block 状态机。
     await page.evaluate(() => {
       const progressCard = document.getElementById('progressCard');
       if (progressCard) {
-        progressCard.style.display = 'block';
+        progressCard.classList.remove('sv-hidden');
+        progressCard.classList.add('sv-vis-block');
       }
       const progressBar = document.getElementById('progressBar');
       if (progressBar) {

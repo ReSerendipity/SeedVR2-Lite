@@ -2141,7 +2141,6 @@ tokenizers==0.22.2 \
     --hash=sha256:1a62ba2c5faa2dd175aaeed7b15abf18d20266189fb3406c5d0550dd34dd5f37 \
     --hash=sha256:143b999bdc46d10febb15cbffb4207ddd1f410e2c755857b5a0797961bbdc113 \
     --hash=sha256:473b83b915e547aa366d1eee11806deaf419e17be16310ac0a14077f1e28f917
-# torch 2.13.0+cu132 的 Windows 轮哈希沿用既有锁记录（同版本同平台，pip 缓存已清理无法重算）
 torch==2.13.0+cu132 \
     --hash=sha256:0bcf7ae00b2e20ef2b53af2e764a4fd8646b913bfaaeba2b9c975e672e8c7902
 torchaudio==2.11.0 \
@@ -2174,6 +2173,7 @@ torchaudio==2.11.0 \
     --hash=sha256:88fb5e29f670a33d9bac6aabb1d2734460cf6e461bde5cdc352826035851b16d \
     --hash=sha256:1424638adb8bb40087bc7b6eb103e8e4fe398210f09076f33b7b5e61501b5d66
 torchvision==0.28.0+cu132 \
+    --hash=sha256:ce0744fde0efdafe4277843afdafa4a886225b11da2f8991d586c8c4c4b6bdeb \
     --hash=sha256:07445dd80e485960b22bddc01527eda9ac79725d865600c68471ed51b0b21cd9 \
     --hash=sha256:8b7d7f4406a008716109b9876aec45600f83f20dab91a7e9239cf314b2e17849 \
     --hash=sha256:956862e2fb1872348a18de3133a889f9788f2fcbd1429292b5a4ef0375a0bbc1 \

@@ -1,5 +1,7 @@
 # REVISION_LOG（自进化修订记录）
 
+> 本地未分发引用：AGENTS.md
+
 > 本文件由自进化协议维护：每次更新根 `AGENTS.md` 后追加一行，不删不改历史行。
 > 路径优先 `local/agents/REVISION_LOG.md`；存量 `docs/agents/REVISION_LOG.md` 视为历史分片。
 > 顶部「自进化版本」必须与最后一行版本对应；有 `scripts/check_revision_log.py` 的仓继续用机械闸。

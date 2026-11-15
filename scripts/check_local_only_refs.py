@@ -22,6 +22,7 @@
 import argparse
 import contextlib
 import json
+import posixpath
 import re
 import subprocess  # nosec B404（仅以参数列表调用 git，无 shell=True）
 import sys
@@ -177,12 +178,18 @@ def read_lines(path):
 
 
 def resolve_candidates(file_rel, token):
-    """token 可能是仓库根相对路径，也可能是同文档目录相对路径；只保留磁盘上真实存在的。"""
+    """token 可能是仓库根相对路径，也可能是同文档目录相对路径；只保留磁盘上真实存在的。
+
+    候选路径先做 `posixpath.normpath`：文档里的 `../CONTRIBUTING.md` 解析后落在
+    `docs/../CONTRIBUTING.md`，若不归一化就永远匹配不上 tracked 集合里的
+    `CONTRIBUTING.md`，已分发的文件会被误报成幻影引用（2026-11-15 实测）。
+    """
     tok = token.rstrip("/")
     parent = Path(file_rel).parent.as_posix()
     cands = {tok}
     if parent != ".":
         cands.add(f"{parent}/{tok}")
+    cands = {posixpath.normpath(c) for c in cands}
     return sorted(c for c in cands if (ROOT / c).is_file() or (ROOT / c).is_dir())
 
 

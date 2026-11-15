@@ -23,7 +23,7 @@
 | [`AGENTS.md`](../AGENTS.md) | 编码代理在本仓的执行契约（维护者本地文件，**未随仓库分发**） | 现行 | 2026-11-10 |
 | [`CHANGELOG.md`](../CHANGELOG.md) | 版本变更记录 | 现行 | 2026-11-10 |
 | [`CONTRIBUTING.md`](../CONTRIBUTING.md) | 贡献指南 | 现行 | 2026-11-10 |
-| [`LOCAL_RULES.md`](../LOCAL_RULES.md) | 本机环境相关的本地约定 | 现行 | 2026-11-10 |
+| [`LOCAL_RULES.md`](../LOCAL_RULES.md) | 本机环境相关的本地约定（维护者本地文件，未随仓库分发） | 现行 | 2026-11-10 |
 | [`LICENSE`](../LICENSE) | 项目主许可（Apache-2.0） | 现行 | 2026-11-10 |
 | [`NOTICE`](../NOTICE) | 模型权重与 engine 组件的归属声明 | 现行 | 2026-11-10 |
 
@@ -66,7 +66,7 @@
 | [`project/ARCHITECTURE.md`](project/ARCHITECTURE.md) | 分层架构、模块关系、请求流程与核心设计决策 | 现行 | 2026-11-10 |
 | [`project/CONSTRAINTS.md`](project/CONSTRAINTS.md) | 项目约束（技术栈 / 依赖 / 运行环境边界） | 现行 | 2026-11-10 |
 | [`project/FIRST_TIME_USER_GUIDE.md`](project/FIRST_TIME_USER_GUIDE.md) | 首次使用指南 | 现行 | 2026-11-10 |
-| [`project/MODULE_MAP.md`](project/MODULE_MAP.md) | 模块边界与关键规则（2026-08-27 由 `AGENTS.md` 移出，内容逐字保留） | 现行 | 2026-11-10 |
+| [`project/MODULE_MAP.md`](project/MODULE_MAP.md) | 模块边界与关键规则（2026-08-27 由维护者本地文件 `AGENTS.md`（未随仓库分发）移出，内容逐字保留） | 现行 | 2026-11-10 |
 | [`project/PROJECT_CONTEXT.md`](project/PROJECT_CONTEXT.md) | 项目高频背景信息（给代理与维护者） | 现行 | 2026-11-10 |
 | [`project/model_algorithm_analysis.md`](project/model_algorithm_analysis.md) | 模型算法复杂度分析 | 历史 | 2026-11-10 |
 

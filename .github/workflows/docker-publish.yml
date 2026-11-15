@@ -144,6 +144,9 @@ jobs:
           ignore-unfixed: true
           vuln-type: os,library
           severity: CRITICAL,HIGH
+          # 存量不可修复项：tauri-plugin-updater 2.11.0 钉死 zip ^4，无法升 9.x；
+          # 豁免条目与到期日见 .trivyignore.yaml，扫描本身仍为阻断模式。
+          trivyignores: .trivyignore.yaml
 
       - name: Scan summary
         run: |
