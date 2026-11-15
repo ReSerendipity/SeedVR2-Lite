@@ -945,9 +945,7 @@ class _VideoPipelineMixin:
                     "blockswap_active": self._blockswap_active,
                     "vram_peak_mb": vram_peak_mb,
                     "vae_decode_oom_fallback": (
-                        self.get_vae_decode_oom_fallback()
-                        if hasattr(self, "get_vae_decode_oom_fallback")
-                        else None
+                        self.get_vae_decode_oom_fallback() if hasattr(self, "get_vae_decode_oom_fallback") else None
                     ),
                     # MLOps P1-1：实际使用的种子（-1 已物化为抽签值），供服务层回写 history parameters
                     "seed_effective": seed,
