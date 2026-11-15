@@ -10,7 +10,7 @@
        S4 Phase 2（WO-B17，2026-11-09）：style-src 去掉 'unsafe-inline'（与
        security_headers.py 的 _DEFAULT_CSP 原子同改，交集语义下两处必须一致）。 #}
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'{% if csp_nonce %} 'nonce-{{ csp_nonce }}'{% else %} 'unsafe-inline'{% endif %}; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self';">
-    {# htmx 默认在首次加载时注入一段 .htmx-indicator 的 <style>，会被 style-src
+    {# htmx 默认在首次加载时注入一段 .htmx-indicator 的页内样式块，会被 style-src
        （无 'unsafe-inline'）拦下并在控制台报 CSP 违规；本项目已在 style.css
        自行定义 .htmx-indicator/.htmx-request，关闭注入不改变可见行为。 #}
     <meta name="htmx-config" content='{"includeIndicatorStyles":false}'>
