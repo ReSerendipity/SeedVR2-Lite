@@ -944,6 +944,11 @@ class _VideoPipelineMixin:
                     "cache_model": cache_model,
                     "blockswap_active": self._blockswap_active,
                     "vram_peak_mb": vram_peak_mb,
+                    "vae_decode_oom_fallback": (
+                        self.get_vae_decode_oom_fallback()
+                        if hasattr(self, "get_vae_decode_oom_fallback")
+                        else None
+                    ),
                     # MLOps P1-1：实际使用的种子（-1 已物化为抽签值），供服务层回写 history parameters
                     "seed_effective": seed,
                     "processing_fps": output_frames / processing_time if processing_time > 0 else 0,

@@ -266,6 +266,13 @@ class _VAEPipelineMixin:
 
         return latents
 
+    def get_vae_decode_oom_fallback(self) -> dict | None:
+        """返回本轮解码是否发生内部 OOM 自动降档及 from→to。
+
+        供结果元数据与外层重试阶梯感知；未发生降档时返回 None。
+        """
+        return getattr(self, "_vae_decode_oom_fallback", None)
+
     @torch.no_grad()
     def _vae_decode(self, latents: list[torch.Tensor]) -> list[torch.Tensor]:
         """VAE 解码: 潜空间 -> 像素空间，支持 tiled 解码
@@ -289,6 +296,10 @@ class _VAEPipelineMixin:
         tile_size = tiled_cfg.get("decode_tile_size", 1024)
         tile_overlap = tiled_cfg.get("decode_tile_overlap", 128)
         auto_tile_size = tiled_cfg.get("auto_tile_size", True)
+
+        # 本轮解码是否发生内部 OOM 自动降档（供结果元数据与外层阶梯感知）。
+        # 内部降档不会抛异常，若不记录，外层 retry 阶梯会误以为「未降档」。
+        self._vae_decode_oom_fallback = None
 
         # 2026-09-10 清理：此前这里会安装 GroupNormAccumulator / TiledVAEHook 并把
         # gaussian_blend / groupnorm_accum 打进日志，但两者都是空转：
@@ -366,21 +377,62 @@ class _VAEPipelineMixin:
                             logger.warning("VAE 解码 OOM，尝试更小的 tile size")
                             empty_gpu_cache()
                             _force_release_memory()
+                            from_tile, from_overlap = current_tile_size, current_tile_overlap
                             # OOM 回退: 像素空间 tile size 减半，最小 256
                             current_tile_size = max(current_tile_size // 2, 256)
                             current_tile_overlap = max(current_tile_overlap // 2, 32)
-                            dec_result = self.vae.decode(
-                                batch,
-                                tiled=True,
-                                tile_size=(current_tile_size, current_tile_size),
-                                tile_overlap=(current_tile_overlap, current_tile_overlap),
+                            self._vae_decode_oom_fallback = {
+                                "reason": "oom",
+                                "stage": "decode",
+                                "from_tile": from_tile,
+                                "to_tile": current_tile_size,
+                                "from_overlap": from_overlap,
+                                "to_overlap": current_tile_overlap,
+                                "disabled_tiled": False,
+                            }
+                            logger.warning(
+                                f"VAE 解码内部自动降档: tile {from_tile}→{current_tile_size}, "
+                                f"overlap {from_overlap}→{current_tile_overlap}"
                             )
-                            oom_fallback_used = True
+                            dec_result = None
+                            try:
+                                dec_result = self.vae.decode(
+                                    batch,
+                                    tiled=True,
+                                    tile_size=(current_tile_size, current_tile_size),
+                                    tile_overlap=(current_tile_overlap, current_tile_overlap),
+                                )
+                                oom_fallback_used = True
+                            except RuntimeError as retry_exc:
+                                if "out of memory" not in str(retry_exc).lower():
+                                    raise
+                                # 同一 latent 内第二次 OOM：完全禁用 tiled
+                                logger.warning("VAE 解码再次 OOM，回退到非 tiled 解码")
+                                empty_gpu_cache()
+                                _force_release_memory()
+                                self._vae_decode_oom_fallback = {
+                                    **(self._vae_decode_oom_fallback or {}),
+                                    "reason": "oom",
+                                    "stage": "decode",
+                                    "to_tile": 0,
+                                    "to_overlap": 0,
+                                    "disabled_tiled": True,
+                                }
+                                dec_result = self.vae.decode(batch)
+                                oom_fallback_used = True
                         elif "out of memory" in str(e).lower():
                             # 第二次 OOM，完全禁用 tiled
                             logger.warning("VAE 解码再次 OOM，回退到非 tiled 解码")
                             empty_gpu_cache()
                             _force_release_memory()
+                            self._vae_decode_oom_fallback = {
+                                **(self._vae_decode_oom_fallback or {}),
+                                "reason": "oom",
+                                "stage": "decode",
+                                "to_tile": 0,
+                                "to_overlap": 0,
+                                "disabled_tiled": True,
+                            }
                             dec_result = self.vae.decode(batch)
                         else:
                             raise
