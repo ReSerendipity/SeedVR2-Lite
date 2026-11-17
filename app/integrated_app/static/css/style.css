@@ -8670,6 +8670,15 @@ input[type="number"].sv-form-control::-webkit-outer-spin-button {
 .sv2-tb-btn:hover:not(:disabled) { color: var(--sv-text-primary); border-color: var(--sv-border-hover); background: var(--sv-surface-2); }
 .sv2-tb-btn.active { color: var(--sv-primary); background: var(--sv-primary-light); border-color: var(--sv-primary); }
 .sv2-tb-btn[disabled] { opacity: 0.6; pointer-events: none; }
+/* 2026-11-18 奶油浅色主题实测：opacity 0.6 叠在 cream 底上有效对比 ≈3.5:1，不满足 axe
+   color-contrast（E2E a11y video restore 页 btnDownload 红）。浅色主题改用显式低强调色，
+   深色主题维持原 opacity（其底色下可通过）。 */
+[data-theme="light"] .sv2-tb-btn[disabled] {
+    opacity: 1;
+    color: var(--sv-text-secondary);
+    background: var(--sv-bg-surface);
+    border-color: var(--sv-border);
+}
 .sv2-tb-btn.sv2-ico { padding: 0; min-width: 44px; min-height: 44px; justify-content: center; }
 .sv2-tb-btn.sv2-primary { background: var(--sv-primary); color: #fff; border-color: transparent; }
 .sv2-tb-btn.sv2-primary:hover:not(:disabled) { filter: brightness(1.08); }

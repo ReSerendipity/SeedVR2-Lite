@@ -3275,7 +3275,7 @@ const SeedVR2 = (() => {
     // ===== 主题管理 =====
     /**
      * @function initTheme
-     * @description 初始化主题切换功能，从LocalStorage读取保存的主题，默认暗色主题
+     * @description 初始化主题切换功能，从LocalStorage读取保存的主题，默认奶油浅色主题（2026-11-17 品牌浅色化）
      * @returns {void}
      */
     function initTheme() {
