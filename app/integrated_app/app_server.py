@@ -792,10 +792,16 @@ async def lifespan(app: FastAPI):
             cooldown = max(float(reason.get("remaining_seconds") or 600.0), 60.0)
             loop.create_task(_rollback_unload_when_idle(max_wait_seconds=cooldown))
 
-        from app.integrated_app.services.restore_service import quality_breaker
-
-        quality_breaker.register_rollback_hook(_quality_rollback_hook)
-        logger.info("输出质量劣化熔断已启用（阈值告警 + 自动回滚钩子已挂载）")
+        try:
+            # restore_service 会链式导入 engines/*，引擎顶层 import torch/common。
+            # 瘦包（bootstrap，无 torch 或未随包带 common）下缺依赖不能让 lifespan
+            # 失败：跳过质量熔断回滚钩子，应用仍在引导态可启动、可进下载管理。
+            from app.integrated_app.services.restore_service import quality_breaker
+        except ImportError as exc:
+            logger.warning(f"输出质量劣化熔断不可用（推理引擎依赖缺失）: {exc}")
+        else:
+            quality_breaker.register_rollback_hook(_quality_rollback_hook)
+            logger.info("输出质量劣化熔断已启用（阈值告警 + 自动回滚钩子已挂载）")
 
     backend_value = gpu_manager.backend.value if gpu_manager.backend else "unavailable"
     logger.info(f"GPU 后端: {backend_value}, 设备: {gpu_manager.device_name}")

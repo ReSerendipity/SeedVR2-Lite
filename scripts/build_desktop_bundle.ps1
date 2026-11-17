@@ -121,7 +121,7 @@ New-Item -ItemType Directory -Path $appDir -Force | Out-Null
 
 # ------------------------------------------------------------ 应用代码 ----
 Write-Step '[打包] 应用代码'
-$codeDirs = @('app', 'scripts')
+$codeDirs = @('app', 'scripts', 'common', 'model_lib')
 $excludeDirs = @('__pycache__', '.pytest_cache', '.mypy_cache', '.ruff_cache', 'tests', 'model',
     'dist', 'build', '.git', 'desktop', 'outputs', 'logs', '.venv', 'node_modules', '.torch_cache',
     # scripts\installer 里有历史安装器 exe（26 MB），绝不能随包分发
