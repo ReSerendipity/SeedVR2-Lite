@@ -44,7 +44,7 @@ const CASES = [
   const ctx = await browser.newContext();
   await ctx.addInitScript((theme) => {
     localStorage.setItem('sv_onboarding_seen_v2', '1');
-    localStorage.setItem('sv-theme', theme);
+    localStorage.setItem('sv-theme-brand', theme);
   }, THEME);
   const page = await ctx.newPage();
   // 拦截外部字体 CDN：无外网时 render-blocking 的样式表会挂住 domcontentloaded

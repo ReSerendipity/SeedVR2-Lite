@@ -66,11 +66,11 @@ async function screenshotPage(page, name, options = {}) {
 }
 
 async function setTheme(page, theme) {
-  // Theme key 'sv-theme' is the real key used by base.html inline script
+  // Theme key 'sv-theme-brand' is the real key used by base.html inline script
   // and static/js/app.js. Setting it before navigation + data-theme attr
   // is enough for a correct visual capture.
   await page.evaluate((t) => {
-    localStorage.setItem('sv-theme', t);
+    localStorage.setItem('sv-theme-brand', t);
     document.documentElement.setAttribute('data-theme', t);
   }, theme);
   await page.waitForTimeout(300);

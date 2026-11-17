@@ -191,7 +191,7 @@ async function runTests() {
         // 切换主题
         await page.evaluate((t) => {
           document.documentElement.setAttribute('data-theme', t);
-          localStorage.setItem('sv-theme', t);
+          localStorage.setItem('sv-theme-brand', t);
         }, theme);
         await page.waitForTimeout(300);
 

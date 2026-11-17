@@ -4,7 +4,7 @@
  * Tests cover:
  * - Default theme detection (system preference or dark fallback)
  * - Switching between light and dark themes
- * - Theme persistence via localStorage ('sv-theme' key)
+ * - Theme persistence via localStorage ('sv-theme-brand' key)
  * - System preference detection with emulated media queries
  * - No flash of unstyled content (FOUC) on page load
  * - Theme toggle availability across all pages
@@ -37,7 +37,7 @@ test.describe('Theme Switching', () => {
     await basePage.navigate('/');
     // Clear localStorage after navigation to ensure consistent theme state
     // (localStorage is not accessible on about:blank)
-    await page.evaluate(() => localStorage.removeItem('sv-theme'));
+    await page.evaluate(() => localStorage.removeItem('sv-theme-brand'));
     // 重新载入以应用清空后的主题状态。
     // 不用 page.reload()：CI run #64-#70 firefox 反复卡 `page.reload: Timeout
     // 60000ms`（与 waitUntil 档位无关，详见 BasePage.reloadApplyingClientState
@@ -111,8 +111,8 @@ test.describe('Theme Switching', () => {
     await basePage.switchTheme('dark');
     await basePage.switchTheme('light');
 
-    // Verify the theme is saved in localStorage with key 'sv-theme'
-    const storedTheme = await page.evaluate(() => localStorage.getItem('sv-theme'));
+    // Verify the theme is saved in localStorage with key 'sv-theme-brand'
+    const storedTheme = await page.evaluate(() => localStorage.getItem('sv-theme-brand'));
     expect(storedTheme).toBe('light');
 
     // Reload the page（goto+断流辅助，理由同 beforeEach：reload 在 firefox 死锁）
@@ -127,23 +127,24 @@ test.describe('Theme Switching', () => {
   // System preference detection
   // ----------------------------------------------------------
 
-  test('should fall back to dark theme when localStorage is cleared', async ({ page, context }) => {
+  test('should fall back to cream light theme when localStorage is cleared', async ({ page, context }) => {
     // The product intentionally does NOT follow prefers-color-scheme: initTheme
-    // defaults to dark when no saved preference exists (see app.js initTheme:
-    // "默认暗色主题，不使用 prefers-color-scheme 自动切换，避免与用户手动选择冲突").
+    // defaults to cream light when no saved preference exists (see app.js initTheme:
+    // "默认奶油浅色主题，不使用 prefers-color-scheme 自动切换，避免与用户手动选择冲突";
+    // 2026-11-17 品牌浅色化把默认值从 dark 换成 light，存储键同步改为 sv-theme-brand）。
     // Emulate light system preference to prove it is ignored.
     await page.emulateMedia({ colorScheme: 'light' });
 
     // Clear the stored theme preference
-    await page.evaluate(() => localStorage.removeItem('sv-theme'));
+    await page.evaluate(() => localStorage.removeItem('sv-theme-brand'));
 
     // Reload the page so the app re-evaluates the theme
     //（goto+断流辅助，理由同 beforeEach）
     await basePage.reloadApplyingClientState();
 
-    // The page should use the dark fallback (system preference is ignored by design)
+    // The page should use the cream light fallback (system preference is ignored by design)
     const theme = await basePage.getCurrentTheme();
-    expect(theme).toBe('dark');
+    expect(theme).toBe('light');
   });
 
   // ----------------------------------------------------------
@@ -152,7 +153,7 @@ test.describe('Theme Switching', () => {
 
   test('should not flash unstyled content on page load', async ({ page }) => {
     // Set a known theme in localStorage before navigation
-    await page.evaluate(() => localStorage.setItem('sv-theme', 'dark'));
+    await page.evaluate(() => localStorage.setItem('sv-theme-brand', 'dark'));
 
     // Navigate to the page to verify that data-theme is set from localStorage
     await basePage.navigate('/');
