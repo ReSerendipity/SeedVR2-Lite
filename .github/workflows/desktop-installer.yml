@@ -55,9 +55,14 @@ jobs:
       - name: Resolve target tag
         id: target
         shell: pwsh
+        env:
+          # github context 不直接进 run: 脚本（semgrep run-shell-injection ERROR，
+          # 2026-11-17 起 main SAST 连红根因）；经 env 中转 + "$env:VAR" 消费。
+          TAG_INPUT: ${{ github.event.inputs.tag }}
+          TAG_REF: ${{ github.ref_name }}
         run: |
-          $tag = "${{ github.event.inputs.tag }}"
-          if ([string]::IsNullOrWhiteSpace($tag)) { $tag = "${{ github.ref_name }}" }
+          $tag = "$env:TAG_INPUT"
+          if ([string]::IsNullOrWhiteSpace($tag)) { $tag = "$env:TAG_REF" }
           if ($tag -notmatch '^v\d+\.\d+\.\d+$') { throw "非法 tag：$tag（要求 vX.Y.Z）" }
           $ver = $tag.Substring(1)
           Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value "tag=$tag" -Encoding utf8
