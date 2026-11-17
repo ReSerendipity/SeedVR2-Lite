@@ -4,6 +4,17 @@
 > `docs/reports/`、`docs/_devarchive/`、`examples/`、`precheck.ps1` 均为维护者本地文件，未随仓库分发；
 > 对外可执行的禁区与门禁口径见 `docs/CODING_STANDARDS.md` 第 5 节。历史记录按原样保留，不改写。
 
+## [Unreleased]
+
+### Added
+
+* **品牌视觉**：桌面壳换奶油浅色主题与绿色品牌图标。（`3c59f31`）
+
+### Fixed
+
+* **瘦包补齐 `common/model_lib`** 并对缺依赖启动路径降级，修复便携包引导失败。（`39787bd`）
+* **桌面壳更新端点**正名为现仓名 `SeedVR2-Lite`（旧 `SeedVR2-lite` 依赖 URL 大小写不敏感兜底，见审查 2026-11-18 F-S1）。
+
 ## [1.8.0] - 2026-11-16
 
 ### Added
