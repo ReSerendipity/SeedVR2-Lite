@@ -130,10 +130,13 @@ jobs:
       - name: Build slim data volume
         shell: pwsh
         run: |
-          & ./scripts/build_desktop_bundle.ps1 -OutDir dist/desktop-release
+          # OutDir 必须是绝对路径：脚本内用 Split-Path -Qualifier 比较盘符，相对路径会直接抛
+          # "Cannot parse path because path ... does not have a qualifier specified."
+          $out = Join-Path $env:GITHUB_WORKSPACE 'dist/desktop-release'
+          & ./scripts/build_desktop_bundle.ps1 -OutDir $out
           if ($LASTEXITCODE -ne 0) { throw "数据卷构建失败：$LASTEXITCODE" }
-          if (-not (Test-Path -LiteralPath 'dist/desktop-release/SeedVR2-Data.7z.001')) {
-            throw '数据卷缺失：dist/desktop-release/SeedVR2-Data.7z.001'
+          if (-not (Test-Path -LiteralPath "$out/SeedVR2-Data.7z.001")) {
+            throw "数据卷缺失：$out/SeedVR2-Data.7z.001"
           }
 
       - name: Compile single-file installer
