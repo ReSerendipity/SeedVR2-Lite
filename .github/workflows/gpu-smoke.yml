@@ -1,29 +1,24 @@
 # .github/workflows/gpu-smoke.yml
-# Weekly + manual + post-release REAL-INFERENCE smoke on a self-hosted GPU runner (label: gpu).
+# 手动触发的 REAL-INFERENCE 冒烟（self-hosted GPU runner，标签 `gpu`）。
 #
-# Closes the hardware blind spot of portable-release.yml: hosted runners have no GPU,
-# so the release gate only proves packaging correctness (boot / route / CSRF / torch
-# import), never "the model actually repairs an image". This workflow downloads a published
-# portable release, unpacks it exactly like an end user, and forces one real restore task
-# (--require-inference).
+# 2026-11-17 维护决策：不再常驻/维护 GPU 机器 runner，因此——
+#   1. 删除 schedule（原周一/周四 15:00 UTC）与 workflow_run（Portable Release 成功后联动），
+#      仓库不再自动触发真机冒烟；
+#   2. 删除 skip-record issue 的建/追加/自动关闭链路：runner 不在线时直接 fail（::error::），
+#      不再产生自动 issue 噪声；
+#   3. 仅保留 workflow_dispatch：确需真机验收时，先确保 gpu runner 在线，再手动触发。
+#   恢复自动触发时：加回 schedule/workflow_run，并先把 runner 服务化（R3）保证常在线。
 #
-# 触发源（评估报告 P1-2：真机验证与发布脱钩的收口）：
-#   1. schedule：周一 + 周四 15:00 UTC 兜底冒烟最新 Release（周四档专为「无发布但
-#      main 有合并」的窗口提供源码级真机回归，见下「双层烟测」）；
-#   2. workflow_dispatch：手动指定/默认最新 Release；
-#   3. workflow_run：Portable Release 成功结束后立即冒烟该 tag —— 通知级联动，
-#      不阻塞发布（workflow_run 无法阻断已发布的 Release；发布前的真机质量阈值
-#      阻断由 portable-release.yml 在 require_gpu_inference=true 时以
-#      --quality-gate --min-psnr 15 --min-ssim 0.5 承担，评估 A3 整改 2026-11-05；
-#      运行时亮度劣化由 app 内 quality_breaker 熔断兜底，见 docs/ML_OPS_GATES.md §4）。
-#      workflow_run 仅按默认分支上的本文件版本触发；tag push 的 head_branch 即 tag 名，
-#      非 v* tag（如手动 dispatch 构建）只记 notice 不冒烟。
-# 双层烟测（报告长期⑨「main 源码级 + 发布包级」的落地形态）：每次触发跑两遍真机——
+# 保留价值：托管 runner 无 GPU，portable-release 只能证明「打包正确」。本工作流下载已发布
+# Release、按用户等价解包，强制一次真实推理（--require-inference），补上「模型是否真能修图」
+# 的硬件盲区。
+#
+# 双层烟测（报告长期⑨「main 源码级 + 发布包级」的落地形态）：每次手动触发跑两遍真机——
 #   第一遍发布包原样（发布可交付性），第二遍把解包目录 app/+config.yaml 换成当前分支源码、
-#   复用同一便携 Python 与权重（main 引擎/显存回归，无发布也随周四/周一与 workflow_run 覆盖）。
-# skip 可观测（R4）：runner-precheck 决定跳过时不再只发 ::notice::，而是建/追加一条
-#   skip-record issue（用 GITHUB_TOKEN，不依赖 REPO_ADMIN_TOKEN），消除「连续 skip 无人察觉」
-#   的静默盲区；冒烟成功后自动关闭未决的 skip-record。
+#   复用同一便携 Python 与权重（main 引擎/显存回归）。
+# 发布前的真机质量阈值阻断仍由 portable-release.yml 在 require_gpu_inference=true 时以
+#   --quality-gate --min-psnr 15 --min-ssim 0.5 承担（评估 A3 整改 2026-11-05）；
+#   运行时亮度劣化由 app 内 quality_breaker 熔断兜底，见 docs/ML_OPS_GATES.md §4。
 #
 # Runner prerequisites (one-time, on the GPU machine):
 #   1. Register a self-hosted runner with the extra label `gpu`
@@ -32,8 +27,7 @@
 #   3. Python 3.11+ on PATH (the smoke script is stdlib-only)
 #   4. NVIDIA driver ready; ~7 GB free disk for download + unpack
 #      (勾选 quant_baseline 时另需 ~8 GB：补下 3B FP8 权重 + 网络可达 hf-mirror/ModelScope)
-# Without an online `gpu` runner the trigger skips itself via runner-precheck (with an
-# issue record since R4).
+# 无在线 `gpu` runner 时，手动触发会直接失败（不再建 skip-record issue）。
 name: GPU Smoke (real inference, self-hosted)
 
 on:
@@ -44,15 +38,10 @@ on:
         required: false
         default: ""
       quant_baseline:
-        description: "额外跑跨精度量化质量基线（MLOps P2-6，追加 fp8 权重下载 + 常驻服务真机对比，耗时显著）；schedule 触发时自动执行"
+        description: "额外跑跨精度量化质量基线（MLOps P2-6，追加 fp8 权重下载 + 常驻服务真机对比，耗时显著）"
         type: boolean
         required: false
         default: false
-  schedule:
-    - cron: "0 15 * * 1,4" # 周一 + 周四 15:00 UTC（北京时间 23 点，GPU 机器空闲时段；原 03:00 UTC=北京时间 11 点，真机推理曾因系统内存被其他负载挤占失败）
-  workflow_run:
-    workflows: ["Portable Release"] # name: 必须与 portable-release.yml 的 name 一致
-    types: [completed]
 
 # 同一时刻只允许一个冒烟排队（self-hosted 单 runner 天然串行；排队而非取消——
 # 真机验证不可丢弃，与 portable-release 的 cancel-in-progress: false 同口径）。
@@ -68,67 +57,17 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      issues: write # R4：skip 记录转 issue（GITHUB_TOKEN 即可建 issue，不依赖 REPO_ADMIN_TOKEN）
     outputs:
       available: ${{ steps.check.outputs.available }}
-      wanted: ${{ steps.ctx.outputs.wanted }}
-      tag: ${{ steps.ctx.outputs.tag }}
     steps:
-      # gh 在非 git 工作目录里无法从 cwd 推断仓库（issue API 直接 "failed to run git:
-      # fatal: not a git repository" 退出 1），所以本 job 既落一份源码、gh 调用也一律显式
-      # 带 -R。下一步的 runners 查询走 gh api repos/${{ github.repository }}/… 全路径，
-      # 本来就与 cwd 无关，不受此影响。
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - name: Resolve trigger context and target tag
-        id: ctx
-        # 评估报告 R4 跟进：触发上下文经 env 注入 shell（GitHub run-shell-injection
-        # 规则消解；workflow_run conclusion/branch 理论上可被同仓工作流影响，env
-        # 注入杜绝直接插值）
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          WF_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
-          WF_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
-        run: |
-          event="$EVENT_NAME"
-          wanted=false
-          tag=""
-          reason=""
-          case "$event" in
-            workflow_dispatch)
-              wanted=true
-              reason="manual dispatch"
-              ;;
-            schedule)
-              wanted=true
-              reason="weekly schedule"
-              ;;
-            workflow_run)
-              wc="$WF_CONCLUSION"
-              hb="$WF_HEAD_BRANCH"
-              if [ "$wc" = "success" ] && printf '%s' "$hb" | grep -Eq '^v[0-9]'; then
-                wanted=true
-                tag="$hb"
-                reason="portable-release succeeded for $hb"
-              else
-                reason="workflow_run (conclusion=$wc, head_branch=$hb) is not a successful v* tag build - nothing to smoke"
-              fi
-              ;;
-          esac
-          echo "wanted=$wanted" >> "$GITHUB_OUTPUT"
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          echo "reason=$reason" >> "$GITHUB_OUTPUT"
-          echo "::notice::gpu-smoke trigger context: event=$event wanted=$wanted tag=${tag:-<newest>} reason=$reason"
-
       - name: Check for an online self-hosted GPU runner
         id: check
-        if: steps.ctx.outputs.wanted == 'true'
         env:
           GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
         run: |
           if [ -z "$GH_TOKEN" ]; then
-            echo "::notice::REPO_ADMIN_TOKEN secret not configured - cannot query runner status, skipping smoke"
-            echo "available=false" >> "$GITHUB_OUTPUT"
-            exit 0
+            echo "::error::REPO_ADMIN_TOKEN secret 未配置，无法查询 runner 状态；冒烟未执行。本仓库已停用自动触发与 skip-record issue（2026-11-17）"
+            exit 1
           fi
           # runners 列表 API 需要管理员级 token（GITHUB_TOKEN 即使 actions:read 也 403）
           COUNT=$(gh api "repos/${{ github.repository }}/actions/runners" \
@@ -137,47 +76,13 @@ jobs:
           if [ "${COUNT}" -gt 0 ]; then
             echo "available=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::notice::no online self-hosted runner with label 'gpu'; smoke skipped"
-            echo "available=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Record skipped smoke as an issue (R4 observability)
-        if: steps.ctx.outputs.wanted == 'true' && steps.check.outputs.available != 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REASON: ${{ steps.ctx.outputs.reason }}
-          TAG: ${{ steps.ctx.outputs.tag }}
-        run: |
-          # 幂等：始终只有一条 open 的 skip-record，后续 skip 追加日期行而非新建。
-          # 标记串 "gpu-smoke skip-record" 保持 ASCII，GitHub 搜索按短语命中标题。
-          marker="gpu-smoke skip-record"
-          title="[gpu-smoke] ${marker}: 真机冒烟未能执行"
-          existing=$(gh issue list -R "$GITHUB_REPOSITORY" --state open --search "in:title \"${marker}\"" --json number --jq '.[0].number' || true)
-          body=$(printf '真机冒烟于 %s 被跳过（事件上下文：%s；目标 tag：%s）。\n\n处置指引：\n- runner 在线后补跑：`gh workflow run gpu-smoke.yml`\n- 机器重启后不登录会掉线 → runner 服务化（遗留清单 R3）\n- 本 issue 由冒烟成功后自动关闭；连续多周存在说明 GPU 真机验收已停摆\n' \
-            "$(date -u '+%Y-%m-%dT%H:%MZ')" "${REASON:-unknown}" "${TAG:-<newest release>}")
-          if [ -n "$existing" ]; then
-            gh issue comment "$existing" -R "$GITHUB_REPOSITORY" --body "$body"
-            echo "::notice::appended skip record to existing issue #$existing"
-            created_or_existing="$existing"
-          else
-            issue_url=$(gh issue create -R "$GITHUB_REPOSITORY" --title "$title" --body "$body")
-            created_or_existing=$(basename "$issue_url")
-            echo "::notice::created skip-record issue #$created_or_existing"
-          fi
-
-          # R4 自证：写完之后回读一次。没这一步，"以为开出来了"与"真开出来了"在日志里
-          # 长得一样——本次修复前的症状正是如此：该步每次都红、且从未真的开出过 issue。
-          # 用 --json number 判定存在性，不依赖标题搜索的分词行为。
-          seen=$(gh issue view "$created_or_existing" -R "$GITHUB_REPOSITORY" --json number --jq '.number' || true)
-          if [ -z "$seen" ]; then
-            echo "::error::skip-record 未能落库：期望 #$created_or_existing 不存在。R4 观测链路失效，真机停摆不会有人看见。"
+            echo "::error::没有在线的 self-hosted gpu runner；冒烟未执行。本仓库已停用自动触发与 skip-record issue（2026-11-17）"
             exit 1
           fi
-          echo "verified: skip-record issue #$seen 已在 $GITHUB_REPOSITORY 落库"
 
   gpu-smoke:
     needs: runner-precheck
-    if: needs.runner-precheck.outputs.available == 'true' && needs.runner-precheck.outputs.wanted == 'true'
+    if: needs.runner-precheck.outputs.available == 'true'
     runs-on: [self-hosted, gpu]
     timeout-minutes: 300
     steps:
@@ -225,15 +130,13 @@ jobs:
       - name: Resolve target release tag
         id: tag
         shell: pwsh
-        # 评估报告 R4 跟进：event.inputs / needs 输出经 env 注入（run-shell-injection 消解）
+        # 评估报告 R4 跟进：event.inputs 经 env 注入（run-shell-injection 消解）
         env:
           GH_TOKEN: ${{ github.token }}
           INPUT_TAG: ${{ github.event.inputs.tag }}
-          PRECHECK_TAG: ${{ needs.runner-precheck.outputs.tag }}
         run: |
-          # 优先级：手动输入 > workflow_run 携带的 tag（precheck 解析）> 最新已发布 Release。
+          # 优先级：手动输入 > 最新已发布 Release。
           $t = $env:INPUT_TAG
-          if (-not $t) { $t = $env:PRECHECK_TAG }
           if (-not $t) {
             $t = gh release list --limit 20 --json tagName,isDraft,isPrerelease |
               ConvertFrom-Json |
@@ -326,10 +229,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "source-overlay smoke failed: main 源码在发布包运行时上未通过真机验收" }
 
       - name: Quant baseline — prepare cross-precision weights (fp8; bundle ships mxfp8)
-        # 评估报告 P1-3 落地：schedule（周一/周四）自动执行量化质量基线并归档，
-        # 消除「评估结果无留档、仅手动 on-demand 才产出」的盲区；workflow_run（发布后）
-        # 不加重负担，仍按 inputs.quant_baseline 决定。
-        if: github.event_name == 'schedule' || inputs.quant_baseline
+        # 量化质量基线：手动勾选 quant_baseline 时执行并归档（原 schedule 定期化已随
+        # 2026-11-17 停用自动触发一并移除）。
+        if: inputs.quant_baseline
         shell: pwsh
         run: |
           # 量化基线需要 ≥2 精度对比。便携包只内置 3B MXFP8（见 SOURCE.md），此处补下
@@ -342,7 +244,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "fp8 权重下载失败：量化基线缺参考精度" }
 
       - name: Quant baseline — serve-and-run cross-precision PSNR/SSIM
-        if: github.event_name == 'schedule' || inputs.quant_baseline
+        if: inputs.quant_baseline
         shell: pwsh
         run: |
           # 常驻模式（smoke --serve-and-run）：由 smoke 起便携服务并复用其 boot/健康/关停链路，
@@ -364,28 +266,9 @@ jobs:
           Get-Content $out -Raw
 
       - name: Upload quant baseline JSON
-        if: (github.event_name == 'schedule' || inputs.quant_baseline) && always()
+        if: inputs.quant_baseline && always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: quant-baseline
           path: quant_baseline.json
           if-no-files-found: warn
-
-      - name: Close stale skip-record issues (R4 loop closure)
-        if: success()
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          # 冒烟成功 → 关闭未决 skip-record，形成「skip 有人看见、恢复有人知道」的闭环。
-          $marker = 'gpu-smoke skip-record'
-          # 同一个 cwd 推断缺陷的另一半：这一步在真机冒烟通过后关闭 skip-record。它跑在
-          # self-hosted GPU runner 上，工作目录是 codeload 解包处、不是 git 仓库，因此
-          # 现在这条闭环在 runner 上线那天同样会 not a git repository 失败。一并显式 -R。
-          $open = @(gh issue list -R $env:GITHUB_REPOSITORY --state open --search "in:title `"$marker`"" --json number --jq '.[].number')
-          if ($open.Count -eq 0) { Write-Host 'no open skip-record issues'; return }
-          $url = "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          foreach ($n in $open) {
-            gh issue close $n -R $env:GITHUB_REPOSITORY --comment "GPU smoke passed with real inference（run: $url）——真机验收已恢复。"
-            Write-Host "closed skip-record issue #$n"
-          }

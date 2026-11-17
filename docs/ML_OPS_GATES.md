@@ -18,7 +18,7 @@
 
 证据：`.github/workflows/gpu-smoke.yml`。
 
- hosted runner 无 GPU，发布门禁只能证明「打包正确」。真机推理验收由 self-hosted GPU runner 承担，**每次触发跑两遍**：
+ hosted runner 无 GPU，发布门禁只能证明「打包正确」。真机推理验收仅在自托管 GPU runner 上**按需手动**执行（2026-11-17 起停用定时与发布联动，不再常驻维护 GPU 机器），**每次触发跑两遍**：
 
 | 层 | 内容 | 证明什么 |
 |---|---|---|
@@ -26,7 +26,7 @@
 | 源码层（source-overlay） | 解包目录的 `app/` + `config.yaml` 换成当前分支源码，复用同一权重再跑一遍 | main 相对上一版在引擎/优化层有无回归 |
 
 两层都带 `--min-psnr 15 --min-ssim 0.5` 硬阈值（`image_metrics.py` 计算），不达标即红。
-触发：周一/周四定时 + Portable Release 成功后联动 + 手动 dispatch。runner 离线时自动建 skip-record issue，恢复后自动关闭，不留静默盲区。
+触发：仅手动 `workflow_dispatch`（原周一/周四定时与 Portable Release 成功后联动已于 2026-11-17 停用）。仓库不再自动建 skip-record issue；runner 不在线时该次手动运行直接失败（`::error::`），不产生自动噪声。
 
 **发布前阻断联动（评估 A3 整改，2026-11-05）**：`portable-release.yml` 的「解包冒烟验收（发布前门禁）」步在 `require_gpu_inference=true`（self-hosted GPU runner 构建）时，同步传 `--quality-gate --min-psnr 15 --min-ssim 0.5`——真机 smoke 的 PSNR/SSIM 结果在**发布前**落阈值判定，未达标即失败（refusing to publish），与 §4 的运行时熔断构成「发布前真机门 + 运行时亮度熔断」两道模型级劣化拦截。托管 runner（无 GPU）构建仍只验打包层，此边界由 `require_gpu_inference` 输入显式声明，非静默豁免。
 
