@@ -3,33 +3,33 @@
 /* ===== CSS 变量 - Dark 主题（默认）· Warm Print 暖暮 ===== */
 :root,
 [data-theme="dark"] {
-    /* 主色调 - VR2 蓝（与 VOSR2 启动页/主按钮同色系） */
-    --sv-primary: #4f8cff;
-    --sv-primary-50: #eef4ff;
-    --sv-primary-100: #dbe8ff;
-    --sv-primary-200: #bcd5ff;
-    --sv-primary-300: #9dc2ff;
-    --sv-primary-hover: #6fa3ff;
-    --sv-primary-400: #79a8ff;
-    --sv-primary-500: #4f8cff;
-    --sv-primary-600: #2f6bd8;
-    --sv-primary-active: #a3c4ff;
-    --sv-primary-700: #2456b0;
-    --sv-primary-800: #1c4288;
-    --sv-primary-900: #14305f;
-    --sv-primary-dim: rgba(79, 140, 255, 0.18);
+    /* 主色调 - 苔绿（Warm Print · 对比度增强） */
+    --sv-primary: #94b88f;
+    --sv-primary-50: #f0f5ee;
+    --sv-primary-100: #dfe9dc;
+    --sv-primary-200: #c2d5bd;
+    --sv-primary-300: #a5c29f;
+    --sv-primary-hover: #a8c9a3;
+    --sv-primary-400: #8fb58a;
+    --sv-primary-500: #94b88f;
+    --sv-primary-600: #7aa375;
+    --sv-primary-active: #b8d4b3;
+    --sv-primary-700: #5e7d5a;
+    --sv-primary-800: #4a5e47;
+    --sv-primary-900: #334030;
+    --sv-primary-dim: rgba(148, 184, 143, 0.18);
     --sv-primary-soft: color-mix(in srgb, var(--sv-primary) 16%, var(--sv-bg-surface));
     /* 浅色主色底：用于工具条激活态与拖拽落区反馈（半透明，可叠加在任意表面上） */
-    --sv-primary-light: rgba(79, 140, 255, 0.16);
-    --sv-primary-glow: rgba(79, 140, 255, 0.32);
-    --sv-primary-glow-strong: rgba(79, 140, 255, 0.50);
+    --sv-primary-light: rgba(148, 184, 143, 0.16);
+    --sv-primary-glow: rgba(148, 184, 143, 0.32);
+    --sv-primary-glow-strong: rgba(148, 184, 143, 0.50);
 
     /* 语义色 - 暖调（同步提升对比度） */
-    --sv-success: #4caf7d;
-    --sv-success-hover: #5fc38f;
-    --sv-success-soft: rgba(76, 175, 125, 0.12);
-    --sv-success-dim: rgba(76, 175, 125, 0.16);
-    --sv-success-border: rgba(76, 175, 125, 0.35);
+    --sv-success: #94b88f;
+    --sv-success-hover: #a8c9a3;
+    --sv-success-soft: rgba(148, 184, 143, 0.12);
+    --sv-success-dim: rgba(148, 184, 143, 0.16);
+    --sv-success-border: rgba(148, 184, 143, 0.35);
     --sv-warning: #c9a55a;
     --sv-warning-hover: #d4b572;
     --sv-warning-soft: rgba(201, 165, 90, 0.10);
@@ -56,40 +56,40 @@
     --sv-accent-moss: #82a87e;
     --sv-accent-moss-dim: rgba(130, 168, 126, 0.16);
 
-    /* 深色背景 - 深海蓝（与 VOSR2 启动页同一色系） */
-    --sv-bg-base: #14161c;
-    --sv-bg-surface: #181b22;
-    --sv-bg-elevated: #1f232b;
-    --sv-bg-overlay: #272c36;
-    --sv-bg-hover: #333a46;
-    --sv-bg-active: #3d4554;
-    --sv-bg-glass: rgba(20, 22, 28, 0.92);
-    --sv-bg-glass-strong: rgba(20, 22, 28, 0.97);
+    /* 深色背景 - 暖暮（Warm Print）· 暖灰基调 · 提亮减轻眼疲劳 */
+    --sv-bg-base: #1e1c19;
+    --sv-bg-surface: #272421;
+    --sv-bg-elevated: #302d29;
+    --sv-bg-overlay: #3a3631;
+    --sv-bg-hover: #45403b;
+    --sv-bg-active: #504a44;
+    --sv-bg-glass: rgba(30, 28, 25, 0.92);
+    --sv-bg-glass-strong: rgba(30, 28, 25, 0.97);
 
     /* 四步表面阶梯（拉开明度差） */
-    --sv-surface-0: #14161c;
-    --sv-surface-1: #181b22;
-    --sv-surface-2: #1f232b;
-    --sv-surface-3: #272c36;
-    --sv-surface-4: #333a46;
+    --sv-surface-0: #1e1c19;
+    --sv-surface-1: #272421;
+    --sv-surface-2: #302d29;
+    --sv-surface-3: #3a3631;
+    --sv-surface-4: #45403b;
 
     /* 边框 - 暖墨淡入（a11y对比度增强至≥3:1） */
-    --sv-border: rgba(232, 236, 244, 0.18);
-    --sv-border-light: rgba(232, 236, 244, 0.10);
-    --sv-border-hover: rgba(232, 236, 244, 0.26);
+    --sv-border: rgba(234, 230, 225, 0.18);
+    --sv-border-light: rgba(234, 230, 225, 0.10);
+    --sv-border-hover: rgba(234, 230, 225, 0.26);
     --sv-border-focus: var(--sv-primary);
-    --sv-border-active: rgba(232, 236, 244, 0.34);
+    --sv-border-active: rgba(234, 230, 225, 0.34);
 
     /* 文字（保持充足对比度但不过于刺眼） */
-    --sv-text-primary: #e8ecf4;
-    --sv-text-secondary: #c2cad8;
-    --sv-text-muted: #9aa4b6;
-    --sv-text-inverse: #14161c;
-    --sv-text-placeholder: #6f7a8c;
+    --sv-text-primary: #e8e4de;
+    --sv-text-secondary: #c8c1b9;
+    --sv-text-muted: #a89f96;
+    --sv-text-inverse: #1e1c19;
+    --sv-text-placeholder: #756d66;
 
     /* Tooltip 专用背景 */
-    --sv-tooltip-bg: rgba(31, 35, 43, 0.96);
-    --sv-tooltip-border: rgba(232, 236, 244, 0.15);
+    --sv-tooltip-bg: rgba(42, 38, 34, 0.96);
+    --sv-tooltip-border: rgba(234, 230, 225, 0.15);
     --sv-tooltip-color: #ffffff;
 
     /* 阴影 - 暗色主题减轻，依赖边框区分层级 */
@@ -103,8 +103,8 @@
     --sv-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.03), inset 0 -1px 0 rgba(0, 0, 0, 0.10);
 
     /* 滚动条 */
-    --sv-scrollbar-thumb: rgba(232, 236, 244, 0.12);
-    --sv-scrollbar-thumb-hover: rgba(232, 236, 244, 0.20);
+    --sv-scrollbar-thumb: rgba(234, 230, 225, 0.12);
+    --sv-scrollbar-thumb-hover: rgba(234, 230, 225, 0.20);
 
     /* 开关 */
     --sv-switch-track-off: var(--sv-bg-overlay);
@@ -115,11 +115,11 @@
     --sv-hero-gradient: var(--sv-text-primary);
     --sv-hero-gradient-subtle: rgba(201, 138, 114, 0.05);
 
-    /* 对比滑块（毛玻璃 + 蓝色点缀） */
-    --sv-compare-line: rgba(232, 236, 244, 0.55);
-    --sv-compare-line-active: rgba(79, 140, 255, 0.85);
+    /* 对比滑块（毛玻璃 + 苔绿点缀） */
+    --sv-compare-line: rgba(234, 230, 225, 0.55);
+    --sv-compare-line-active: rgba(148, 184, 143, 0.85);
     --sv-compare-glass-bg: rgba(30, 28, 25, 0.55);
-    --sv-compare-glass-border: rgba(232, 236, 244, 0.16);
+    --sv-compare-glass-border: rgba(234, 230, 225, 0.16);
     --sv-compare-label-bg: rgba(30, 28, 25, 0.58);
     --sv-compare-label-color: #ece7dd;
 
@@ -136,9 +136,9 @@
     /* Tab 激活态文字 */
     --sv-tab-active-text: #1a1917;
 
-    /* 导航毛玻璃（深海蓝） */
+    /* 导航毛玻璃（暖暮） */
     --sv-glass-bg: rgba(32, 30, 27, 0.90);
-    --sv-glass-border: rgba(232, 236, 244, 0.12);
+    --sv-glass-border: rgba(234, 230, 225, 0.12);
     --sv-glass-blur: 14px;
 
     /* 纸张颗粒纹理（Warm Print）- 减轻噪点避免眼疲劳 */
@@ -148,31 +148,31 @@
 
 /* ===== CSS 变量 - Light 主题 · Warm Print 暖纸 ===== */
 [data-theme="light"] {
-    --sv-primary: #2f6bd8;
-    --sv-primary-50: #eef4ff;
-    --sv-primary-100: #dbe8ff;
-    --sv-primary-200: #bcd5ff;
-    --sv-primary-300: #9dc2ff;
-    --sv-primary-hover: #2456b0;
-    --sv-primary-400: #79a8ff;
-    --sv-primary-500: #4f8cff;
-    --sv-primary-600: #2f6bd8;
-    --sv-primary-active: #1c4288;
-    --sv-primary-700: #2456b0;
-    --sv-primary-800: #1c4288;
-    --sv-primary-900: #14305f;
-    --sv-primary-dim: rgba(47, 107, 216, 0.08);
+    --sv-primary: #45633f;
+    --sv-primary-50: #eef3ec;
+    --sv-primary-100: #dce7d9;
+    --sv-primary-200: #bcd1b7;
+    --sv-primary-300: #9fbb9a;
+    --sv-primary-hover: #3d5a38;
+    --sv-primary-400: #7fa37a;
+    --sv-primary-500: #5e7d5a;
+    --sv-primary-600: #506c4d;
+    --sv-primary-active: #385233;
+    --sv-primary-700: #435a40;
+    --sv-primary-800: #374934;
+    --sv-primary-900: #2b3828;
+    --sv-primary-dim: rgba(69, 99, 63, 0.08);
     --sv-primary-soft: color-mix(in srgb, var(--sv-primary) 12%, var(--sv-bg-surface));
     /* 浅色主色底：用于工具条激活态与拖拽落区反馈（半透明，可叠加在任意表面上） */
-    --sv-primary-light: rgba(47, 107, 216, 0.10);
-    --sv-primary-glow: rgba(47, 107, 216, 0.15);
-    --sv-primary-glow-strong: rgba(47, 107, 216, 0.28);
+    --sv-primary-light: rgba(69, 99, 63, 0.10);
+    --sv-primary-glow: rgba(69, 99, 63, 0.15);
+    --sv-primary-glow-strong: rgba(69, 99, 63, 0.28);
 
-    --sv-success: #3f7d52;
-    --sv-success-hover: #4a8c5e;
-    --sv-success-soft: rgba(63, 125, 82, 0.10);
-    --sv-success-dim: rgba(63, 125, 82, 0.12);
-    --sv-success-border: rgba(63, 125, 82, 0.30);
+    --sv-success: #45633f;
+    --sv-success-hover: #4f7049;
+    --sv-success-soft: rgba(94, 125, 90, 0.10);
+    --sv-success-dim: rgba(94, 125, 90, 0.12);
+    --sv-success-border: rgba(94, 125, 90, 0.30);
     --sv-warning: #71541d;
     --sv-warning-hover: #8f6f2c;
     --sv-warning-soft: rgba(113, 84, 29, 0.10);
@@ -195,7 +195,7 @@
     --sv-accent-coral-dim: rgba(160, 96, 80, 0.10);
     --sv-accent-gold: #967a4d;
     --sv-accent-gold-dim: rgba(150, 122, 77, 0.10);
-    --sv-accent-moss: #2f6bd8;
+    --sv-accent-moss: #5e7d5a;
     --sv-accent-moss-dim: rgba(94, 125, 90, 0.10);
 
     --sv-bg-base: #faf7f2;
@@ -222,7 +222,7 @@
 
     /* Tooltip 专用背景 */
     --sv-tooltip-bg: rgba(44, 36, 32, 0.94);
-    --sv-tooltip-border: rgba(44, 36, 32, 0.12);
+    --sv-tooltip-border: rgba(234, 230, 225, 0.12);
     --sv-tooltip-color: #ffffff;
 
     --sv-text-primary: #2c2420;
@@ -8391,7 +8391,7 @@ input[type="number"].sv-form-control::-webkit-outer-spin-button {
 .sv-font-group{padding:7px 10px 3px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.55}
 .sv-font-item{display:block;width:100%;text-align:left;border:none;background:none;padding:7px 10px;font-size:16px;color:#222;border-radius:8px;cursor:pointer;line-height:1.35}
 .sv-font-item:hover{background:rgba(120,120,120,.13)}
-.sv-font-item.active{color:#2456b0;font-weight:600}
+.sv-font-item.active{color:#5e7d5a;font-weight:600}
 [data-theme="dark"] .sv-font-item{color:#eee}
 [data-theme="dark"] .sv-font-item:hover{background:rgba(255,255,255,.08)}
 [data-theme="dark"] .sv-font-item.active{color:#9cc59a}
@@ -9447,9 +9447,9 @@ a,
 }
 
 /* ② 主 CTA 去塑料感：暗色下真正显「塑料」的是拿最浅档苔绿做大块填充。
-      取 --sv-primary-800（#1c4288）做底 + 恒亮文字 #f2f5f0 = 6.40:1 过 WCAG AA，
+      取 --sv-primary-800（#4a5e47）做底 + 恒亮文字 #f2f5f0 = 6.40:1 过 WCAG AA，
       且与亮色主题 --sv-primary(#45633f)+白字(6.75:1) 视觉同档，两主题观感一致。
-      ⚠️ 暗色主题的色阶方向与亮色相反（dark: 600=#2f6bd8 比 700=#2456b0 更亮），
+      ⚠️ 暗色主题的色阶方向与亮色相反（dark: 600=#7aa375 比 700=#5e7d5a 更亮），
       选档必须实测对比度：700 配亮字只有 4.19:1、600 只有 2.61:1，均被
       wcag-contrast.spec 拦下。hover 走更深一档 --sv-primary-900（9.96:1）。 */
 [data-theme="dark"] .sv-btn-primary {

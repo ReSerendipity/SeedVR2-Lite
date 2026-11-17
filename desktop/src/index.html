@@ -10,9 +10,9 @@
     body {
       display: flex; flex-direction: column;
       background:
-        radial-gradient(1100px 480px at 50% -12%, rgba(79,140,255,0.16) 0%, rgba(79,140,255,0) 60%),
-        linear-gradient(180deg, #1f232b 0%, #181b22 46%, #14161c 100%);
-      color: rgba(232,236,244,0.92);
+        radial-gradient(1100px 480px at 50% -12%, rgba(94,125,90,0.12) 0%, rgba(94,125,90,0) 60%),
+        linear-gradient(180deg, #faf7f2 0%, #f4eee4 52%, #efe7da 100%);
+      color: rgba(44,36,32,0.92);
       font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
       overflow: hidden;
       user-select: none;
@@ -27,19 +27,19 @@
     }
     .winbar-brand {
       font-size: 12px; letter-spacing: 1.5px;
-      color: rgba(232,236,244,0.45);
+      color: rgba(44,36,32,0.42);
       font-weight: 600;
     }
     .win-controls { margin-left: auto; display: flex; gap: 2px; -webkit-app-region: no-drag; app-region: no-drag; }
     .win-btn {
       width: 36px; height: 30px;
       display: inline-flex; align-items: center; justify-content: center;
-      border: none; background: transparent; color: rgba(232,236,244,0.72);
+      border: none; background: transparent; color: rgba(44,36,32,0.70);
       border-radius: 6px; cursor: pointer; font-size: 14px;
       transition: background .15s ease, color .15s ease;
     }
-    .win-btn:hover { background: #333a46; color: #fff; }
-    .win-btn-close:hover { background: #e0554a; color: #fff; }
+    .win-btn:hover { background: #e8dfd2; color: #2c2420; }
+    .win-btn-close:hover { background: #c96b5e; color: #fff; }
     /* 主内容区 */
     .main {
       flex: 1; display: flex; flex-direction: column;
@@ -49,8 +49,8 @@
     .logo-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
     .logo-mark {
       width: 52px; height: 52px; border-radius: 13px;
-      background: linear-gradient(145deg, #4f8cff 0%, #26c6da 100%);
-      box-shadow: 0 6px 22px rgba(38,98,180,0.38), inset 0 1px 0 rgba(255,255,255,0.18);
+      background: linear-gradient(145deg, #7aa375 0%, #5e7d5a 100%);
+      box-shadow: 0 6px 22px rgba(94,125,90,0.28), inset 0 1px 0 rgba(255,255,255,0.35);
       display: flex; align-items: center; justify-content: center;
     }
     .logo-mark span {
@@ -60,36 +60,36 @@
     }
     .logo-text {
       font-size: 30px; font-weight: 600; letter-spacing: 1px;
-      color: rgba(244,246,250,0.96);
+      color: rgba(44,36,32,0.95);
       font-family: "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
     }
     .subtitle {
-      font-size: 13px; color: rgba(232,236,244,0.48);
+      font-size: 13px; color: rgba(92,82,73,0.62);
       letter-spacing: 0.5px; margin-bottom: 34px;
     }
     .spinner {
       width: 38px; height: 38px;
-      border: 3px solid rgba(79,140,255,0.18);
-      border-top-color: #4f8cff;
+      border: 3px solid rgba(94,125,90,0.20);
+      border-top-color: #5e7d5a;
       border-radius: 50%;
       animation: spin 0.85s linear infinite;
       margin-bottom: 22px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .status { font-size: 13px; color: rgba(232,236,244,0.66); min-height: 20px; }
+    .status { font-size: 13px; color: rgba(74,65,57,0.72); min-height: 20px; }
     .error {
-      color: #e08b80; margin-top: 14px;
+      color: #b3564a; margin-top: 14px;
       font-size: 12.5px; max-width: 420px;
-      text-align: center; line-height: 1.7;
+      text-align: center; line-height: 1.7; white-space: pre-wrap;
     }
     .btn {
       margin-top: 18px; padding: 8px 26px;
-      background: #2f6bd8; color: #f7fbff;
+      background: #5e7d5a; color: #faf7f2;
       border: none; border-radius: 7px;
       cursor: pointer; font-size: 13px; font-family: inherit;
       transition: background .15s ease;
     }
-    .btn:hover { background: #4f8cff; }
+    .btn:hover { background: #7aa375; }
     .hidden { display: none; }
   </style>
 </head>

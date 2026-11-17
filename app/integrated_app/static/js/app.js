@@ -2774,7 +2774,7 @@ const SeedVR2 = (() => {
             themeSelect.value = current === 'light' ? 'light' : 'dark';
             themeSelect.addEventListener('change', () => {
                 applyTheme(themeSelect.value);
-                try { localStorage.setItem('sv-theme', themeSelect.value); } catch (e) { /* ignore */ }
+                try { localStorage.setItem('sv-theme-brand', themeSelect.value); } catch (e) { /* ignore */ }
             });
         }
     }
@@ -3279,19 +3279,19 @@ const SeedVR2 = (() => {
      * @returns {void}
      */
     function initTheme() {
-        // 与base.html内联脚本保持一致：默认暗色主题，仅当用户明确选择过才使用保存的主题
+        // 与base.html内联脚本保持一致：默认奶油浅色主题（品牌绿），仅当用户明确选择过才使用保存的主题
         // 不使用prefers-color-scheme自动切换，避免与用户手动选择冲突
-        const saved = localStorage.getItem('sv-theme');
-        const theme = saved || 'dark';
+        const saved = localStorage.getItem('sv-theme-brand');
+        const theme = saved || 'light';
         applyTheme(theme);
 
         const btn = document.getElementById('btnThemeToggle');
         if (btn) {
             btn.addEventListener('click', () => {
-                const current = document.documentElement.getAttribute('data-theme') || 'dark';
+                const current = document.documentElement.getAttribute('data-theme') || 'light';
                 const next = current === 'dark' ? 'light' : 'dark';
                 applyTheme(next);
-                localStorage.setItem('sv-theme', next);
+                localStorage.setItem('sv-theme-brand', next);
             });
         }
     }

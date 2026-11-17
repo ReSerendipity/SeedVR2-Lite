@@ -335,7 +335,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // 主题（与全局主题按钮共用 localStorage('sv-theme')）
     var themeSel = document.getElementById('settingsTheme');
     if (themeSel) {
-        themeSel.value = localStorage.getItem('sv-theme') || 'dark';
+        themeSel.value = localStorage.getItem('sv-theme-brand') || 'light';
         themeSel.addEventListener('change', function () {
             SeedVR2.applyTheme(themeSel.value);
         });
