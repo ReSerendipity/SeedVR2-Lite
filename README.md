@@ -69,7 +69,7 @@ SeedVR2-Lite 把字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开源
 
 ### 快速开始
 
-> 推荐普通用户直接下载[桌面版离线完整包](https://github.com/ReSerendipity/SeedVR2-Lite/releases)，解压即用。以下为从源码运行的路径。
+> 推荐普通用户到 [Releases](https://github.com/ReSerendipity/SeedVR2-Lite/releases) 下载 `SeedVR2-Setup-v<版本>.exe`（单文件安装包，便携运行环境与数据卷已内嵌，无需另外下载分卷），双击安装即可；同批发布 `.sha256` 供校验。以下为从源码运行的路径。
 
 **1. 环境**
 
@@ -232,7 +232,7 @@ docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-lite:1.7.0
 
 参与贡献请遵循上述[组织级贡献指南](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md)（Conventional Commits + DCO 签名）。Issue 与 Discussion 请在仓库内发起；安全问题请按仓库安全政策私下报告，勿公开提 issue。
 
-- Releases（桌面版 / 便携包 / 增量更新）：<https://github.com/ReSerendipity/SeedVR2-Lite/releases>
+- Releases（单文件安装器 `SeedVR2-Setup-v<版本>.exe` / 便携包 / 增量更新）：<https://github.com/ReSerendipity/SeedVR2-Lite/releases>
 
 ### 许可证
 
@@ -246,7 +246,7 @@ docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-lite:1.7.0
 
 SeedVR2-Lite packages the [SeedVR2](https://huggingface.co/ByteDance-Seed) one-step diffusion restoration model (jointly open-sourced by ByteDance's Seed team and NTU S-Lab) into a **standalone local web app**: upload an image or video and get super-resolution / detail enhancement on the spot, with all data staying on your machine. It does **not** depend on ComfyUI or any external inference service.
 
-The supported distribution is a **Tauri v2 desktop build** (offline bundle, extract-and-run); developers can also run it from source or via the portable bundle in a browser. Current stable release: **v1.7.0** (as of 2026-11-04).
+The supported distribution is a **Tauri v2 desktop build**, shipped as a single-file Windows installer (`SeedVR2-Setup-v<version>.exe`, bundled runtime and data volume, no separate parts to download); developers can also run it from source or via the portable bundle in a browser. Current stable release: **v1.8.0** (as of 2026-11-15).
 
 ### Highlights
 
@@ -254,7 +254,7 @@ The supported distribution is a **Tauri v2 desktop build** (offline bundle, extr
 - **Three model tiers**: 3B / 7B / 7B-Sharp, with FP16 / FP8 and MXFP8 / NVFP4 / INT8-convrot quantized variants (`.safetensors`; GGUF is not supported).
 - **VRAM friendly**: GPU Block Swap dynamically swaps Transformer blocks in/out during inference; 3B FP8 starts from 8 GB VRAM.
 - **Batch & resumable**: single-file repair plus folder batch scanning, with progress persisted under `data/checkpoints/`.
-- **Extract-and-run desktop**: native Tauri window, system tray, Windows toast notifications, drag & drop, single-instance + auto-restart, tray-based incremental updates.
+- **Single-file Windows installer**: native Tauri window, system tray, Windows toast notifications, drag & drop, single-instance + auto-restart, tray-based incremental updates.
 - **i18n & live monitoring**: UI in Simplified/Traditional Chinese, English, Japanese and French; GPU/VRAM/memory and task progress streamed over SSE.
 
 ### Screenshots
@@ -287,7 +287,7 @@ The supported distribution is a **Tauri v2 desktop build** (offline bundle, extr
 
 ### Quick start
 
-> Regular users should download the [desktop offline bundle](https://github.com/ReSerendipity/SeedVR2-Lite/releases) and extract it. Below is the from-source path.
+> Regular users should download the [single-file Windows installer, `SeedVR2-Setup-v<version>.exe`](https://github.com/ReSerendipity/SeedVR2-Lite/releases), and run it. Below is the from-source path.
 
 **1. Requirements**
 
