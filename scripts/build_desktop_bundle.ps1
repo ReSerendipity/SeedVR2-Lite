@@ -183,7 +183,15 @@ if (-not $RuntimeDir) {
         Invoke-WebRequest -Uri $WinPythonUrl -OutFile $installer -UseBasicParsing
     }
     Write-Host '    解压 WinPython ...'
-    & $installer /S /D=$prep | Out-Null
+    # WinPython 安装器是 7z SFX：/S 不是它的静默参数，直接执行会弹窗并永久等待（CI 里表现为挂起）。
+    # 用 7-Zip 按归档解压，不执行安装器本体。
+    $sevenZipForWp = @(
+        'C:\Program Files\7-Zip\7z.exe',
+        'C:\Program Files (x86)\7-Zip\7z.exe'
+    ) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+    if (-not $sevenZipForWp) { throw '未找到 7z.exe，无法解压 WinPython（安装器是 7z SFX，不能靠 /S 静默）' }
+    & $sevenZipForWp x $installer "-o$prep" -y -bso0 -bsp0 | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "解压 WinPython 失败：$LASTEXITCODE" }
     $wpRoot = Get-ChildItem -LiteralPath $prep -Directory -Filter 'WPy64-*' | Select-Object -First 1
     if (-not $wpRoot) { throw 'WinPython 解压后未找到 WPy64-* 目录' }
     $RuntimeDir = $wpRoot.FullName
