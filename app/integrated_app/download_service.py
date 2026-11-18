@@ -664,7 +664,8 @@ def catalog_view(config: dict) -> dict:
                 "size_bytes": item["size_bytes"],
                 "min_vram_gb": item["min_vram_gb"],
                 "is_default": item["is_default"],
-                "source": "huggingface / modelscope",
+                # 主权重/VAE 走魔搭 Comfy-Org/SeedVR2 官方公开仓
+                "source": "modelscope（Comfy-Org/SeedVR2）",
             }
         )
     return {"runtime": runtime, "models": models, "catalog_present": bool(load_catalog())}

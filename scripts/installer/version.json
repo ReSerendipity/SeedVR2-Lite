@@ -1,6 +1,6 @@
 {
-  "version": "1.7.0",
-  "release_date": "2026-10-28",
+  "version": "1.9.0",
+  "release_date": "2026-11-18",
   "minimum_shell_version": "1.0.0",
-  "changelog": "新增 Ctrl+V 粘贴上传（截图直接入队，五语言提示）；新增服务端输出长边硬上限 inference.max_output_side（默认 6144，超限前置拒绝并给出可用上限）；移除 gaussian_blend / groupnorm_accumulate 两个无消费方的配置键（接缝融合一直由上游余弦斜坡负责，见 ADR-0006）；记录事件总线不引入 VOSR2 EventBus 的决策（ADR-0005）。"
+  "changelog": "1.9.0：模型/运行时下载源迁移至魔搭公开仓——主权重与 VAE 走 Comfy-Org/SeedVR2 官方仓，pos_emb/neg_emb 优先使用安装包内置 scripts/bundle_assets；运行时改用 ReSerendipity/VOSR2Lite-Runtime（与 VOSR2-Lite 共用 runtime-v1，Python 3.12.10 + torch 2.10.0+cu128）；品牌视觉统一为奶油底绿色图标并同步桌面/任务栏/开始菜单/窗口图标。"
 }

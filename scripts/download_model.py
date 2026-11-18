@@ -31,6 +31,8 @@
     - 断点续传：HF 由 huggingface_hub 内部机制保证；ModelScope 直下用 .part 续传
     - 双源路由：seedvr2_ema_* 走 HuggingFace（--repo），Comfy-Org 量化文件走 ModelScope，
       文件名与哈希以 config.yaml 为唯一事实来源，两套转换产物互不兼容、严禁混用
+    - 嵌入文件内置：pos_emb.pt / neg_emb.pt 随安装包放在 scripts/bundle_assets/，
+      下载时优先复制内置资产，不依赖公开仓是否提供
     - 镜像加速：--endpoint https://hf-mirror.com 或 HF_ENDPOINT 环境变量（P1-3）
     - 下载后校验：立即按 config.yaml 中的 sha256_* 期望哈希校验完整性，
       损坏文件当场暴露，而不是拖到推理加载时才失败（P1-3）
@@ -43,6 +45,7 @@ import hashlib
 import importlib.util
 import os
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -204,6 +207,17 @@ def _download_file(
     if target.exists() and target.stat().st_size > 0:
         print(f"  [跳过] 已存在: {target.name} ({target.stat().st_size / 1024**3:.2f} GB)")
         return True
+
+    # pos_emb / neg_emb 等公开仓缺失的小文件随安装包内置在 scripts/bundle_assets/。
+    # 这里优先从内置资产复制，避免离线安装后仍去 HuggingFace 找一个不存在的文件。
+    bundled = Path(__file__).resolve().parent / "bundle_assets" / target.name
+    if bundled.is_file():
+        try:
+            shutil.copy2(bundled, target)
+            print(f"  [内置] 已复制: {target.name} ({target.stat().st_size / 1024**2:.1f} MB)")
+            return True
+        except OSError as e:
+            print(f"  [警告] 内置资产复制失败，继续尝试线上源: {e}")
 
     try:
         if subfolder:

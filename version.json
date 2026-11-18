@@ -1,6 +1,6 @@
 {
-  "version": "1.8.0",
-  "release_date": "2026-11-16",
+  "version": "1.9.0",
+  "release_date": "2026-11-18",
   "minimum_shell_version": "1.0.0",
-  "changelog": "新增段间 Hann 混合与 OOM 先缩 tile 的自动降档重试，修复同 latent 二次 OOM；新增在线运行时安装与官方模型下载源；CSP style-src 摘除 unsafe-inline，内联样式迁移至类名/CSSOM；新增视频画质基线与 A3 质量熔断回滚；修复 torchvision Windows 锁哈希、Linux ffmpeg 门禁与 E2E 跨引擎假红。"
+  "changelog": "1.9.0：模型/运行时下载源迁移至魔搭公开仓——主权重与 VAE 走 Comfy-Org/SeedVR2 官方仓，pos_emb/neg_emb 优先使用安装包内置 scripts/bundle_assets；运行时改用 ReSerendipity/VOSR2Lite-Runtime（与 VOSR2-Lite 共用 runtime-v1，Python 3.12.10 + torch 2.10.0+cu128）；品牌视觉统一为奶油底绿色图标并同步桌面/任务栏/开始菜单/窗口图标。"
 }

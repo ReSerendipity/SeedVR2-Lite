@@ -1,10 +1,10 @@
 {
   "schema": 1,
-  "note": "下载管理页的环境包清单基线。发版时由 scripts/build_desktop_bundle.ps1 -Mode runtime 覆盖为含真实分卷名与 SHA256 的版本；volumes 为空表示尚未发布环境包，页面会提示清单缺失。",
+  "note": "下载管理页的环境包清单基线。当前 runtime 指向魔搭公开仓 ReSerendipity/VOSR2Lite-Runtime（与 VOSR2-Lite 共用），按分卷下载后离线安装。",
   "runtime": {
     "version": "1",
     "tag": "runtime-v1",
-    "base_url": "https://github.com/ReSerendipity/SeedVR2-Lite/releases/download/runtime-v1",
+    "base_url": "https://modelscope.cn/models/ReSerendipity/VOSR2Lite-Runtime/resolve/master",
     "python": "3.12.10",
     "torch": "2.10.0+cu128",
     "cuda": "cu128",
@@ -15,11 +15,23 @@
     "size_bytes": 2907703182,
     "built_at": "2026-11-01T01:54:25Z",
     "min_app_version": "1.7.0",
-    "volumes": [],
-    "install_mode": "online",
+    "volumes": [
+      {
+        "name": "VOSR2-Lite-Runtime-cu128.zip.001",
+        "size": 1992294400,
+        "sha256": "ae2adbd04bf615503abdd8c9dc4a4d805c5373f364595993b24128e561ce3012"
+      },
+      {
+        "name": "VOSR2-Lite-Runtime-cu128.zip.002",
+        "size": 915408782,
+        "sha256": "12c6b461795dad34e6cebe8353bdb9a68bbe4718bae174fac24eb002d3783bdd"
+      }
+    ],
+    "install_mode": "archive",
     "index_url": "https://download.pytorch.org/whl/cu128",
     "pip_extra_index": "https://pypi.tuna.tsinghua.edu.cn/simple",
-    "note": "install_mode=online：页内点安装时后端直接 pip 官方索引安装 （torch 家族 + 生态包），无需下载预置分卷。"
+    "note": "install_mode=archive：从 ModelScope 公开仓（ReSerendipity/VOSR2Lite-Runtime）分卷下载；SeedVR2-Lite 与 VOSR2-Lite 共用同一 runtime-v1 归档（Python 3.12.10 + torch 2.10.0+cu128）。",
+    "size_bytes_kind": "download"
   },
   "models": []
 }

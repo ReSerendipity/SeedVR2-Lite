@@ -4,10 +4,11 @@
 > `docs/reports/`、`docs/_devarchive/`、`examples/`、`precheck.ps1` 均为维护者本地文件，未随仓库分发；
 > 对外可执行的禁区与门禁口径见 `docs/CODING_STANDARDS.md` 第 5 节。历史记录按原样保留，不改写。
 
-## [Unreleased]
+## [1.9.0] - 2026-11-18
 
 ### Added
 
+* **魔搭公开源迁移**：主权重与 VAE 走 `Comfy-Org/SeedVR2` 官方公开仓；`pos_emb.pt` / `neg_emb.pt` 优先从安装包内置的 `scripts/bundle_assets/` 复制；运行时改为 `ReSerendipity/VOSR2Lite-Runtime`（与 VOSR2-Lite 共用 `runtime-v1`，Python 3.12.10 + torch 2.10.0+cu128）。
 * **品牌视觉**：桌面壳换奶油浅色主题与绿色品牌图标。（`3c59f31`）
 
 ### Fixed
