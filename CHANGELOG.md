@@ -4,6 +4,12 @@
 > `docs/reports/`、`docs/_devarchive/`、`examples/`、`precheck.ps1` 均为维护者本地文件，未随仓库分发；
 > 对外可执行的禁区与门禁口径见 `docs/CODING_STANDARDS.md` 第 5 节。历史记录按原样保留，不改写。
 
+## [1.9.1] - 2026-11-18
+
+### Fixed
+
+* **安装包**：`scripts/build_desktop_bundle.ps1` 将根目录的 `configs_3b`、`configs_7b` 复制进数据卷 `app/`，修复安装后启动时报 `Config file not found: configs_3b/config.json`。
+
 ## [1.9.0] - 2026-11-18
 
 ### Added

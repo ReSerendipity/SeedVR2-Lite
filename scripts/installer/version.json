@@ -1,6 +1,6 @@
 {
-  "version": "1.9.0",
+  "version": "1.9.1",
   "release_date": "2026-11-18",
   "minimum_shell_version": "1.0.0",
-  "changelog": "1.9.0：模型/运行时下载源迁移至魔搭公开仓——主权重与 VAE 走 Comfy-Org/SeedVR2 官方仓，pos_emb/neg_emb 优先使用安装包内置 scripts/bundle_assets；运行时改用 ReSerendipity/VOSR2Lite-Runtime（与 VOSR2-Lite 共用 runtime-v1，Python 3.12.10 + torch 2.10.0+cu128）；品牌视觉统一为奶油底绿色图标并同步桌面/任务栏/开始菜单/窗口图标。"
+  "changelog": "1.9.1：修复桌面安装包未携带 configs_3b/configs_7b 的问题——构建脚本把两个模型配置目录复制到安装卷根，避免启动时报 Config file not found: configs_3b/config.json。"
 }

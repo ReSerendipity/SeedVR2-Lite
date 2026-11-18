@@ -149,6 +149,18 @@ foreach ($f in @('config.yaml', 'version.json', 'pyproject.toml', 'README.md', '
     $src = Join-Path $Root $f
     if (Test-Path -LiteralPath $src) { Copy-Item -LiteralPath $src -Destination $appDir -Force }
 }
+# 模型配置目录必须随包：后端按 PROJECT_ROOT/configs_3b、configs_7b 加载，
+# 漏掉会在启动时报 Config file not found: configs_3b/config.json。
+foreach ($d in @('configs_3b', 'configs_7b')) {
+    $src = Join-Path $Root $d
+    if (Test-Path -LiteralPath $src) {
+        Copy-TreeBulk -Source $src -Dest (Join-Path $appDir $d)
+        $st = Get-TreeStats (Join-Path $appDir $d)
+        Write-Host ("    · {0,-10} {1,6} 文件 / {2}" -f $d, $st.Files, (Format-Size $st.Bytes))
+    } else {
+        throw "缺少模型配置目录：$d"
+    }
+}
 # downloads_catalog.json 的种子在仓库 app\ 下（与后端源码态 PROJECT_ROOT 同级），
 # 但要拷到数据卷根（安装态 PROJECT_ROOT 这一级），不能随 app 包多套一层。
 $catalogSeed = Join-Path $Root 'app\downloads_catalog.json'

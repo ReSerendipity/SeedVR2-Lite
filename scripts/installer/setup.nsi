@@ -17,7 +17,7 @@ BrandingText "SeedVR2"
 ; 脱离参数编译时兜底，务必与 pyproject.toml / scripts/installer/version.json 保持一致
 ; （历史上就因为这里停在 1.5.4，装完提示「已是最新版本 1.5.4」而实际代码是 1.7.0）。
 !ifndef APP_VERSION
-  !define APP_VERSION "1.9.0"
+  !define APP_VERSION "1.9.1"
 !endif
 !define DATA_PREFIX "SeedVR2-Data.7z"
 !define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\SeedVR2"
