@@ -1336,7 +1336,8 @@ tokenizers==0.23.3 \
     --hash=sha256:ec82e80e65a862275b97c3d90b7a523df8d9519ee48aeb4e9625b2cc909274e0 \
     --hash=sha256:efa3d7318406b4d115dce61ad5061953f1f44b128e79c020ce4615d763e23b6e
     # via transformers
-torch==2.13.0+cu132
+torch==2.13.0+cu132 \
+    --hash=sha256:4c1800e216b46bae03483bc94dd73a23ea43c265ab51f865e28070ca045d10a8
     # via
     #   rotary-embedding-torch
     #   seedvr2-lite
