@@ -721,11 +721,12 @@ test.describe('Cross-browser rendering', () => {
           !err.includes('Mixed Content') &&
           !err.includes('Failed to find a valid digest') &&
           !err.includes('integrity') &&
-          // WebKit 特有 CSP 噪音（run 44138549802 实测，Chromium/Firefox 干净）：
-          // ensureWebfonts 动态 <link> fonts.googleapis.com 在 style-src 收紧
-          // （S4 Phase 2，WO-B17）后被 WebKit 判「Refused to apply a stylesheet」，
-          // 页面回退系统字体渲染完好（actual 截图核过）。真修方向：webfont link
-          // 静态化进 base.html head 后在 webkit 复测（local/agents/GOTCHAS.md #47）。
+          // WebKit 引擎层噪音（2026-11-18 本地最小复现实证，GOTCHAS #48）：
+          // 裸 <select>（零 CSS/零 JS）在 style-src 无 'unsafe-inline' 时即触发
+          // style-src-attr 违规（WebKit 对 select 内部样式走 CSP 检查；
+          // Chromium/Firefox 不报）。应用代码零内联样式、零动态注入
+          // （MutationObserver/createElement/CSSOM 钩子全零命中），
+          // 加 S4 Phase 2 收紧是既定安全决策，此过滤为正确处置而非遮蔽。
           !err.includes('Refused to apply a stylesheet'),
       );
 
