@@ -1,5 +1,7 @@
 # SeedVR2-Lite CHANGELOG — 2026 Q3 及更早
 
+> **本地未分发引用**：下文出现的 `AGENTS.md`、`precheck.ps1` 均为维护者本地文件，未随仓库分发。
+
 ## [1.5.8] - 未发版（原记 2026-09-13；无 tag、无 Release，条目随 1.6.0 一并发布）
 
 ### Fixed
