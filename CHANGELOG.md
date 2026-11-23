@@ -6,6 +6,25 @@
 
 > 2026 Q3 及更早版本已分片到 [CHANGELOG-2026-Q3.md](CHANGELOG-2026-Q3.md)（C 轨，单片 ≤128 KiB）。
 
+## [2.0.0] - 2026-11-23
+
+### Added
+
+* **Agent CLI `restore`**：`seedvr2 restore -i photo.png -o outputs` 通过已运行的 Web 服务提交修复任务并等待结果——直调引擎会绕过显存预检 / 精度降级 / 坏案例重试保护，故推理只有 HTTP 一条路。`status/check/models/launch` 保持本地直调。
+* **CLI 全局命令**：安装器把安装目录加入当前用户 PATH（幂等 + 广播 WM_WININICHANGE），新开终端可直接敲 `seedvr2 --help`；开始菜单新增「SeedVR2 CLI」快捷方式；卸载时精确移除 PATH 条目。
+* **CLI 契约测试**：`tests/test_agent_cli.py` 覆盖 JSON 输出 / 退出码 / stdout 隔离 / restore 参数校验。
+
+### Changed
+
+* **更新路线收敛为单一完整安装包**：官网下载与「检查更新」拿同一个 `SeedVR2-Setup-v{version}.exe`；更新器改为下载 → SHA256 → `update-installing` 事件 → `/S` 静默安装 → 用户手动重开。删除 `app-v*.zip` 增量产线（解压 / 原子换载 / 回滚 / PRESERVE 整套），`updater.rs` 1407 → 965 行。
+* **安装器保留用户配置**：覆盖解压前备份 `config.yaml`、解压后还原，避免 CSRF / Basic Auth 等安全开关被数据卷默认配置冲掉。
+* **壳版本 1.0.0 → 1.0.1**（三处镜像），应用版本 1.9.1 → 2.0.0；`minimum_shell_version` 保持 1.0.0。
+* 文档同步：`desktop/README.md` 更新契约与 CLI 用法、`portable-release.yml` 注释、根 README 与用户手册（CLI 段）。
+
+### Removed
+
+* **官方 updater 死配置**：`tauri-plugin-updater` 依赖 / 插件注册 / `updater:default` 权限 / `tauri.conf.json` 的 pubkey+endpoint、tracked 公钥 `desktop/tauri.key.pub`（私钥本地保留、不入库）。
+
 ## [1.9.1] - 2026-11-18
 
 ### Fixed

@@ -1,6 +1,6 @@
 {
-  "version": "1.9.1",
-  "release_date": "2026-11-18",
+  "version": "2.0.0",
+  "release_date": "2026-11-23",
   "minimum_shell_version": "1.0.0",
-  "changelog": "1.9.1：修复桌面安装包未携带 configs_3b/configs_7b 的问题——构建脚本把两个模型配置目录复制到安装卷根，避免启动时报 Config file not found: configs_3b/config.json。"
+  "changelog": "2.0.0：更新路线收敛为单一完整安装包（官网与检查更新同拿 SeedVR2-Setup-v<ver>.exe，SHA256 校验后 /S 静默覆盖安装，用户数据全保留）；删除增量 app-v*.zip 产线与官方 tauri-plugin-updater 死配置；新增 Agent CLI restore 命令（走常驻服务保留显存预检/精度降级/重试保护）并把安装目录注册进用户 PATH，任意目录可直接敲 seedvr2；覆盖安装保留用户 config.yaml。"
 }

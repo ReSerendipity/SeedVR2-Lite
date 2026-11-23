@@ -28,7 +28,7 @@ A standalone video & image super-resolution toolkit powered by SeedVR2 diffusion
 
 SeedVR2-Lite 把字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开源的 [SeedVR2](https://huggingface.co/ByteDance-Seed) 单步扩散修复模型，包装成一个**独立运行的本地 Web 应用**：上传一张图片或一段视频，即可完成超分辨率与细节增强，数据全程不出本机。它不依赖 ComfyUI，也不需要任何外部推理服务。
 
-对外正式分发为 **Tauri v2 桌面版**（离线完整包解压即用）；开发者也可以直接用源码或便携分卷包在浏览器中运行。当前稳定版本为 **v1.7.0**（截至 2026-11-04）。
+对外正式分发为 **Tauri v2 桌面版**（单文件安装包 `SeedVR2-Setup-v<版本>.exe`，离线完整包解压即用）；开发者也可以直接用源码或便携分卷包在浏览器中运行。当前稳定版本为 **v2.0.0**（截至 2026-11-23）。
 
 ### 核心特性
 
@@ -36,7 +36,8 @@ SeedVR2-Lite 把字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开源
 - **三档模型**：3B / 7B / 7B-Sharp，支持 FP16 / FP8 及 MXFP8 / NVFP4 / INT8-convrot 量化变体（`.safetensors`，不兼容 GGUF）。
 - **显存友好**：GPU Block Swap 在推理时动态换入换出 Transformer 块；3B FP8 可在 8 GB 显存起步运行。
 - **批量与断点续跑**：单文件修复 + 文件夹批量扫描，批量任务在 `data/checkpoints/` 记录进度，中断后可续跑。
-- **开箱即用的桌面版**：Tauri 原生窗口、系统托盘、Windows Toast 通知、文件拖拽、单实例与崩溃自动恢复、托盘增量更新。
+- **开箱即用的桌面版**：Tauri 原生窗口、系统托盘、Windows Toast 通知、文件拖拽、单实例与崩溃自动恢复；官网与「检查更新」统一走完整安装包，覆盖安装保留模型与用户配置。
+- **Agent CLI**：`seedvr2 status/check/models/launch/restore` 全局命令，JSON 输出 + 语义退出码，供脚本与 AI agent 自动化调用。
 - **多语言与实时监控**：界面支持简体中文、繁体中文、英文、日文、法文；GPU/显存/内存与任务进度经 SSE 实时推送。
 
 ### 界面展示
@@ -215,6 +216,19 @@ docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-lite:1.7.0
 - **视频修复没有输出？** 需自行安装 FFmpeg 并加入 PATH（图片修复开箱即用）。
 - **HuggingFace 下载慢？** 设置 `HF_ENDPOINT=https://hf-mirror.com` 后重跑下载脚本。
 
+### Agent CLI（桌面版 / 源码均可用）
+
+安装桌面版后安装目录已加入当前用户 PATH，新开终端即可；源码环境用 `python scripts/agent_cli.py`：
+
+```bat
+seedvr2 status --json
+seedvr2 check --json
+seedvr2 models --json
+seedvr2 restore -i photo.png -o outputs --server-url http://127.0.0.1:7870
+```
+
+`restore` 通过已运行的 Web 服务提交任务，保留显存预检 / 精度降级 / 坏案例重试保护；首次使用需在程序内「下载管理」页装好运行环境与模型。所有命令支持 `--json`（任意位置），stdout 仅输出结构化结果、日志走 stderr，退出码语义见 `scripts/agent_cli.py` 文件头。
+
 ### 安全与合规
 
 > **网络绑定警告**：Web UI 默认仅绑定 `127.0.0.1`（`config.yaml` 的 `server.host`），默认未开启认证。**严禁改为 `0.0.0.0` 或公网 IP**，否则任何人都可调用推理 API、上传恶意文件或下载 outputs/uploads。如需局域网共享，请开启 Basic Auth 并在反向代理后启用 HTTPS。
@@ -232,7 +246,7 @@ docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-lite:1.7.0
 
 参与贡献请遵循上述[组织级贡献指南](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md)（Conventional Commits + DCO 签名）。Issue 与 Discussion 请在仓库内发起；安全问题请按仓库安全政策私下报告，勿公开提 issue。
 
-- Releases（单文件安装器 `SeedVR2-Setup-v<版本>.exe` / 便携包 / 增量更新）：<https://github.com/ReSerendipity/SeedVR2-Lite/releases>
+- Releases（单文件安装器 `SeedVR2-Setup-v<版本>.exe` / 便携分卷包）：<https://github.com/ReSerendipity/SeedVR2-Lite/releases>
 
 ### 许可证
 
