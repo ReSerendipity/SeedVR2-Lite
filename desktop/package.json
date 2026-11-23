@@ -1,6 +1,6 @@
 {
   "name": "seedvr2-desktop",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "SeedVR2 桌面应用壳",
   "scripts": {
