@@ -64,7 +64,7 @@ class CLIResult:
 def _emit(result: CLIResult, use_json: bool) -> None:
     """输出结果（JSON 或纯文本）。"""
     if use_json:
-        print(result.to_json())
+        print(result.to_json(), file=_result_stream())
     else:
         status = "OK" if result.success else "FAIL"
         print(f"[{status}] {result.message}")
@@ -222,7 +222,98 @@ def cmd_launch(args: argparse.Namespace) -> CLIResult:
     )
 
 
-def main() -> int:
+def cmd_restore(args: argparse.Namespace) -> CLIResult:
+    """图像超分：通过已运行的服务提交任务并等待结果。
+
+    SeedVR2 的推理编排含显存预检 / 精度降级 / 坏案例重试，CLI 直调引擎会绕过
+    这些保护，因此 restore 默认走 HTTP 复用常驻服务（与 VOSR2-Lite 的
+    ``--server-url`` 同构，只是这里推理只有这一条路）。
+    """
+    import os
+    import time
+
+    import httpx
+
+    server = args.server_url.rstrip("/")
+    source = args.input
+    if not os.path.isfile(source):
+        return CLIResult(False, EXIT_MISSING_RESOURCE, "restore", f"输入文件不存在: {source}")
+    os.makedirs(args.output_dir, exist_ok=True)
+
+    try:
+        with httpx.Client(base_url=server, timeout=30.0) as client:
+            with open(source, "rb") as fh:
+                resp = client.post(
+                    "/api/restore/",
+                    files={"file": (os.path.basename(source), fh, "image/png")},
+                    data={
+                        "model_size": args.model_size,
+                        "seed": str(args.seed),
+                        "output_format": args.output_format,
+                    },
+                )
+            resp.raise_for_status()
+            payload = resp.json()
+            if payload.get("success") is False:
+                return CLIResult(False, EXIT_GENERAL_ERROR, "restore", str(payload.get("error")))
+            data = payload.get("data") or payload
+            task_id = data.get("task_id", "")
+            if not task_id:
+                return CLIResult(False, EXIT_GENERAL_ERROR, "restore", "服务未返回 task_id")
+
+            deadline = time.time() + args.timeout
+            while time.time() < deadline:
+                result_resp = client.get(f"/api/restore/{task_id}/result")
+                result_resp.raise_for_status()
+                info = result_resp.json()
+                info = info.get("data") or info
+                status = info.get("status", "")
+                if status == "completed":
+                    out_path = info.get("output_path", "")
+                    target = os.path.join(args.output_dir, f"{os.path.splitext(os.path.basename(source))[0]}.png")
+                    if out_path and os.path.isfile(out_path) and os.path.abspath(out_path) != os.path.abspath(target):
+                        import shutil
+
+                        shutil.copy2(out_path, target)
+                        out_path = target
+                    return CLIResult(
+                        True,
+                        EXIT_OK,
+                        "restore",
+                        "修复完成",
+                        {"output": out_path, "task_id": task_id, "server": server},
+                    )
+                if status in ("failed", "cancelled"):
+                    return CLIResult(
+                        False,
+                        EXIT_GENERAL_ERROR,
+                        "restore",
+                        f"任务 {status}: {info.get('error', '')}",
+                    )
+                time.sleep(0.5)
+            return CLIResult(False, EXIT_GENERAL_ERROR, "restore", f"任务 {task_id} 超时")
+    except Exception as exc:
+        return CLIResult(False, EXIT_GENERAL_ERROR, "restore", f"调用服务失败: {exc}")
+
+
+_ORIGINAL_STDOUT = None
+
+
+def _begin_json_mode() -> None:
+    """把第三方 print 隔离到 stderr，JSON 结果由 _emit 写回原始 stdout。"""
+    global _ORIGINAL_STDOUT
+    if _ORIGINAL_STDOUT is None:
+        _ORIGINAL_STDOUT = sys.stdout
+        sys.stdout = sys.stderr
+
+
+def _result_stream():
+    return _ORIGINAL_STDOUT if _ORIGINAL_STDOUT is not None else sys.stdout
+
+
+def main(argv: list[str] | None = None) -> int:
+    # argv=None 时用 sys.argv（正常 CLI）；显式传参供进程内测试调用。
+    _argv = list(sys.argv[1:] if argv is None else argv)
     parser = argparse.ArgumentParser(
         description="SeedVR2 Agent CLI — 自动化接口契约",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -260,13 +351,29 @@ def main() -> int:
     launch_parser.add_argument("--port", type=int, default=7870, help="端口号（默认 7870）")
     launch_parser.add_argument("--json", action="store_true", help="以 JSON 格式输出")
 
-    args = parser.parse_args()
+    # restore：图像超分（走已运行的服务，保留显存预检/精度降级/重试保护）
+    p_restore = subparsers.add_parser("restore", help="图像超分（需先启动 Web 服务）")
+    p_restore.add_argument("-i", "--input", required=True, help="输入图片路径")
+    p_restore.add_argument("-o", "--output-dir", default="outputs", help="输出目录")
+    p_restore.add_argument("--server-url", default="http://127.0.0.1:7870", help="服务地址")
+    p_restore.add_argument("--model-size", default="3b", help="模型规格（默认 3b）")
+    p_restore.add_argument("--seed", type=int, default=12345, help="随机种子")
+    p_restore.add_argument("--output-format", default="png", help="输出格式")
+    p_restore.add_argument("--timeout", type=float, default=3600, help="任务超时秒数")
+
+    # --json 任意位置生效：顶层与各子命令各自声明，取并集
+    use_json = "--json" in _argv
+    if use_json:
+        _argv = [a for a in _argv if a != "--json"]
+        _begin_json_mode()
+    args = parser.parse_args(_argv)
 
     commands = {
         "status": cmd_status,
         "check": cmd_check,
         "models": cmd_models,
         "launch": cmd_launch,
+        "restore": cmd_restore,
     }
 
     try:
@@ -279,7 +386,12 @@ def main() -> int:
             message=f"执行异常: {e}",
         )
 
-    _emit(result, args.json)
+    _emit(result, use_json or args.json)
+    # 恢复 stdout：进程退出可省略，但便于进程内多次调用 / 测试
+    global _ORIGINAL_STDOUT
+    if _ORIGINAL_STDOUT is not None:
+        sys.stdout = _ORIGINAL_STDOUT
+        _ORIGINAL_STDOUT = None
     return result.exit_code
 
 

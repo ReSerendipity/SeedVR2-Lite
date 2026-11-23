@@ -282,8 +282,9 @@ desktop/src-tauri/gen/schemas/
 desktop/src-tauri/*.txt
 desktop/**/*.log
 
-# Tauri 更新签名私钥（绝不可提交，泄露则攻击者可伪造更新包）
-desktop/tauri.key
+# Tauri 更新签名密钥：2026-11-23 收敛为自研 updater + SHA256 校验后已整体退役，
+# 私钥与公钥均不入库；历史密钥文件（desktop/tauri.key*）一律不跟踪。
+desktop/tauri.key*
 
 # Runtime cache (contains machine-absolute paths, must NOT be committed)
 data/model_hash_cache.json

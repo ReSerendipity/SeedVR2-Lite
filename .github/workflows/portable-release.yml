@@ -5,9 +5,11 @@
 # Two trigger paths, deliberately split (2026-09-10):
 #   - `push: tags: ["v*"]` -> BUILD ONLY: builds the bundles, runs the unpack + smoke
 #     gates, and keeps them as a workflow artifact (5 days). It never touches a GitHub
-#     Release. Rationale: the incremental-update release (app-v<ver>.zip) is published by
-#     hand for the same tag, and the previous unconditional `gh release edit` + volume
-#     upload overwrote its notes and appended ~5.6 GB of portable volumes (GOTCHAS #113).
+#     Release. Rationale: the single full-installer release (SeedVR2-Setup-v<ver>.exe,
+#     published by desktop-installer.yml) lives on the same tag, and the previous
+#     unconditional `gh release edit` + volume upload overwrote its notes and appended
+#     ~5.6 GB of portable volumes (GOTCHAS #113). The old incremental app-v<ver>.zip
+#     route was retired on 2026-11-23; this split stays for the same reason.
 #   - `workflow_dispatch` with `upload_to_release: true` -> PUBLISH: the only path that
 #     creates/edits a draft Release and uploads the volumes.
 #
