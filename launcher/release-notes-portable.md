@@ -7,7 +7,27 @@
   纪律：本文件描述的每个文件名与步骤都必须与当次 manifest.json 一致，不得凭印象改。
 -->
 
-# SeedVR2 {{VERSION}} — 便携离线分卷包
+# SeedVR2 {{VERSION}} — 桌面安装包 / 便携离线分卷包
+
+## 桌面版（推荐普通用户）
+
+下载同 tag 的 **`SeedVR2-Setup-v{{VERSION}}.exe`**（单文件安装包，由 `desktop-installer.yml` 挂载）：
+双击安装 → 首次启动进「下载管理」页装运行环境与模型 → 手动重开即可。
+覆盖安装保留模型、环境与用户配置（`config.yaml` 自动备份还原）。
+
+安装后安装目录已加入当前用户 PATH，新开终端可直接用 CLI：
+
+```bat
+seedvr2 --help
+seedvr2 status --json
+seedvr2 models --json
+seedvr2 restore -i photo.png -o outputs --server-url http://127.0.0.1:7870
+```
+
+`restore` 走已运行的 Web 服务（保留显存预检 / 精度降级 / 失败重试保护），`--json` 可放任意位置，
+stdout 仅输出结构化结果。开始菜单也有「SeedVR2 CLI」快捷方式。
+
+## 便携离线分卷包
 
 完全离线的便携发行包：解压即可运行，全过程不需要联网下载依赖。
 合计约 **{{TOTAL_GB}} GB**，拆成多个分卷，**每个文件都小于 GitHub 的 2 GB 上限**。
@@ -69,9 +89,12 @@ powershell -ExecutionPolicy Bypass -File .\unpack_portable_bundle.ps1 -VerifyOnl
 - 本包只内置 **3B MXFP8** 权重（Comfy-Org 量化格式）。`config.yaml` 的默认精度是 `fp16`，在只有 MXFP8 权重时程序会自动回退（日志里有一条 WARNING，属预期行为）。
 - 想要 FP16 或 7B 权重，按仓库 README 的直链自行下载放入 `SeedVR2-Portable\model\` 即可，无需重新打包。
 
-## 与 exe 安装包的区别
+## 与 exe 安装包的取舍
 
-本页只提供分卷压缩包。历史上另有 `SeedVR2-Setup-Full-*.exe` / `SeedVR2-Torch-Installer-*`（Inno Setup 路线），自 v1.27 起不再随 tag 自动发布。**推荐直接使用本页的分卷压缩包**：不需要管理员权限、不写注册表、不装第二遍。
+- **桌面安装包** `SeedVR2-Setup-v<ver>.exe`：双击安装、写 HKCU 注册表与 PATH、安装器内嵌数据卷；适合想要原生窗口 / 托盘 / 通知的普通用户。
+- **本页便携分卷包**：不需管理员权限、不写 PATH、可增量解包复用未变组件；适合已有旧安装或偏好绿色软件的用户。
+
+两者运行时与模型来源相同，功能一致；不必同时安装。旧 Inno Setup 路线（`SeedVR2-Setup-Full-*` / `SeedVR2-Torch-Installer-*`）已移除。
 
 ## 校验
 
