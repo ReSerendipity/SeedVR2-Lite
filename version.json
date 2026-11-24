@@ -1,6 +1,6 @@
 {
-  "version": "2.0.1",
+  "version": "2.0.2",
   "release_date": "2026-11-24",
   "minimum_shell_version": "1.0.0",
-  "changelog": "2.0.1：安全依赖修复——删除已零使用的 zip 2.4.2 直接依赖（消除 CVE-2026-115905 critical 等 3 条 Rust 告警），文档站 vite overrides 6.4.3 → 6.4.6（消除 5 条 dev-server 告警，vitepress build 实测通过）；壳版本 1.0.1 → 1.0.2。2.0.0：更新路线收敛为单一完整安装包（官网与检查更新同拿 SeedVR2-Setup-v<ver>.exe，SHA256 校验后 /S 静默覆盖安装，用户数据全保留）；删除增量 app-v*.zip 产线与官方 tauri-plugin-updater 死配置；新增 Agent CLI restore 命令并把安装目录注册进用户 PATH。"
+  "changelog": "2.0.2：补齐桌面自更新最后一环——安装完自动重启应用。更新器传 /S /RELAUNCH 并有序退出，NSIS 检测标志后自动拉起主程序，实现「点一下→退出→自动安装→自动回来」闭环。2.0.1：安全依赖修复——删除已零使用的 zip 2.4.2 直接依赖（消除 CVE-2026-115905 critical 等 3 条 Rust 告警），文档站 vite overrides 6.4.3 → 6.4.6（消除 5 条 dev-server 告警，vitepress build 实测通过）；壳版本 1.0.1 → 1.0.2。2.0.0：更新路线收敛为单一完整安装包（官网与检查更新同拿 SeedVR2-Setup-v<ver>.exe，SHA256 校验后 /S 静默覆盖安装，用户数据全保留）；删除增量 app-v*.zip 产线与官方 tauri-plugin-updater 死配置；新增 Agent CLI restore 命令并把安装目录注册进用户 PATH。"
 }

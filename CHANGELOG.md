@@ -6,6 +6,12 @@
 
 > 2026 Q3 及更早版本已分片到 [CHANGELOG-2026-Q3.md](CHANGELOG-2026-Q3.md)（C 轨，单片 ≤128 KiB）。
 
+## [2.0.2] - 2026-11-24
+
+### Added
+
+* **desktop**: 补齐桌面自更新第七步——安装完自动重启应用。更新器传 `/S /RELAUNCH` 静默安装并有序退出，NSIS 用 `$CMDLINE` + `StrStr` 检测标志后 `Exec` 拉起主程序，实现「点一下 → 退出 → 自动安装 → 自动回来」闭环；新增 `update-installing` 前端提示、4 项契约测试与 CI 端到端验收 workflow（runner 内网取包，绕开本机 GitHub 大文件下载限制）。应用版本 2.0.1 → 2.0.2；壳 1.0.2 不变。
+
 ## [2.0.1] - 2026-11-24
 
 ### Security
