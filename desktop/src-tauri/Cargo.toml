@@ -1,6 +1,6 @@
 [package]
 name = "seedvr2-desktop"
-version = "1.0.1"
+version = "1.0.2"
 description = "SeedVR2 桌面应用壳"
 authors = ["SeedVR2"]
 edition = "2021"
@@ -28,7 +28,8 @@ chrono = { version = "0.4", features = ["serde"] }
 semver = "1"
 sha2 = "0.10"
 base64 = "0.22"
-zip = { version = "2", default-features = false, features = ["deflate"] }
+# zip 依赖已移除（2026-11-24）：增量更新路线删除后 Rust 源码零使用，
+# 且 zip 2.4.2 命中 CVE-2026-115905（critical）等 3 条告警；需用时直接升 9.x。
 open = "5"
 
 [dev-dependencies]
