@@ -223,6 +223,15 @@ Section "SeedVR2 桌面版" SEC_APP
   ; 卸载器
   WriteUninstaller "$INSTDIR\uninstall.exe"
 
+  ; ---------- 更新器自动重启（自更新七步的第 7 步）----------
+  ; 应用内更新器下载本安装包后以 `/S /RELAUNCH` 启动，安装完自动拉起主程序，
+  ; 普通安装不带该标志，不受影响。用 $CMDLINE + StrStr 检测为主程序名留通用性。
+  ${StrStr} $0 "$CMDLINE" "/RELAUNCH"
+  ${If} $0 != ""
+    DetailPrint "更新安装完成，正在重新启动 SeedVR2…"
+    Exec '"$INSTDIR\SeedVR2.exe"'
+  ${EndIf}
+
   ; 清理临时工具目录
   RMDir /r "$TOOLSDIR"
 SectionEnd

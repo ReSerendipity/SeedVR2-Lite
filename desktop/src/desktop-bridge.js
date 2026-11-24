@@ -345,6 +345,13 @@
       else tryShowOnUpdateWindow(info);
     });
     listen("update-progress", function (p) { renderProgress(p); });
+    // 自更新：/S /RELAUNCH 安装完自动重启，不会出现 update-done。
+    listen("update-installing", function (r) {
+      var body = document.getElementById("sdu-body");
+      var actions = document.getElementById("sdu-actions");
+      if (body) body.innerHTML = '<div style="color:#27ae60;font-weight:600;font-size:16px;text-align:center;padding:20px 0">✓ ' + escapeHtml((r && r.message) || "应用即将关闭，安装程序将自动完成更新并重新启动。") + "</div>";
+      if (actions) actions.innerHTML = "";
+    });
     listen("update-done", function (r) {
       notifyShell("SeedVR2 更新完成", (r && r.message) || "应用已更新到最新版本");
       var body = document.getElementById("sdu-body");
