@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "SeedVR2",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "identifier": "com.seedvr2.desktop",
   "build": {
     "beforeDevCommand": "",

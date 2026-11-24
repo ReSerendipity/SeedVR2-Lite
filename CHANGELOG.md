@@ -6,6 +6,18 @@
 
 > 2026 Q3 及更早版本已分片到 [CHANGELOG-2026-Q3.md](CHANGELOG-2026-Q3.md)（C 轨，单片 ≤128 KiB）。
 
+## [2.0.1] - 未发版（随 tag v2.0.1 发布）
+
+### Security
+
+* **Rust 依赖**：删除 `desktop/src-tauri/Cargo.toml` 的 `zip = "2"` 直接依赖。该依赖在增量更新路线删除后已零使用（`grep` 确认 Rust 源码无 `zip::` / `ZipArchive` 引用），却把 zip 2.4.2 带入 Cargo.lock，命中 CVE-2026-115905（critical）、CVE-2026-115906、CVE-2026-115909 三条告警。删依赖后 `Cargo.lock` 自动清理，`cargo check` / `cargo test` 40 项全过。
+* **文档站依赖**：`website/package.json` 的 vite overrides `^6.4.3` → `^6.4.6`，修复 5 条 vite / launch-editor 告警（CVE-2026-112942/943/944/945/946）。各 advisory 均有 `vite <= 6.4.3 → 6.4.4` 的 6.x backport，无需升级到 vite 8（VitePress 1.6.4 仅支持 vite ^5/6）。`npm ci` + `vitepress build` 实测 9.76s 通过。
+
+### Changed
+
+* 应用版本 2.0.0 → 2.0.1；壳版本 1.0.1 → 1.0.2（Cargo.toml 变更按家族口径升位）；`minimum_shell_version` 保持 1.0.0。
+* GOTCHAS #57（告警聚合数 ≠ 包数 / 先过滤 state=open）、#58（advisory 多修复分支，勿只看首个）、#59（安全修复优先删死依赖）。
+
 ## [2.0.0] - 2026-11-23
 
 ### Added
