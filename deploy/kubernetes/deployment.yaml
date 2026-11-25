@@ -61,7 +61,7 @@ spec:
         - name: seedvr2
           # TODO: 替换为实际镜像 tag（由 docker-publish.yml 产出，禁 latest；
           # 原 1.0.0 为过期示例，项目当前版本见 pyproject.toml）
-          image: ghcr.io/reserendipity/seedvr2-lite:REPLACE_ME
+          image: ghcr.io/reserendipity/seedvr2-turbo:REPLACE_ME
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

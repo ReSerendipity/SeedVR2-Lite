@@ -30,7 +30,7 @@
     "install_mode": "archive",
     "index_url": "https://download.pytorch.org/whl/cu128",
     "pip_extra_index": "https://pypi.tuna.tsinghua.edu.cn/simple",
-    "note": "install_mode=archive：从 ModelScope 公开仓（ReSerendipity/VOSR2Lite-Runtime）分卷下载；SeedVR2-Lite 与 VOSR2-Lite 共用同一 runtime-v1 归档（Python 3.12.10 + torch 2.10.0+cu128）。",
+    "note": "install_mode=archive：从 ModelScope 公开仓（ReSerendipity/VOSR2Lite-Runtime）分卷下载；SeedVR2-Turbo 与 VOSR2-Lite 共用同一 runtime-v1 归档（Python 3.12.10 + torch 2.10.0+cu128）。",
     "size_bytes_kind": "download"
   },
   "models": []

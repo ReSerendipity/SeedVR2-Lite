@@ -1,4 +1,4 @@
-# SeedVR2-lite 数据管理与数据治理体系 —— 深度完整性评估报告
+# SeedVR2-Turbo 数据管理与数据治理体系 —— 深度完整性评估报告
 
 > 📅 评估日期：2026-08-30
 > 🔍 评估方式：全仓静态审查（routes/ engines/ services/ security/ training/ tests/ perf/ CI workflows 逐点取证，所有结论均绑定 `文件:行号` 证据）

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SeedVR2-lite — Portable Launcher (SCAFFOLD, cross-platform)
+# SeedVR2-Turbo — Portable Launcher (SCAFFOLD, cross-platform)
 # ============================================================
 # Mie-Package-Launcher style: every path is resolved relative to this
 # script; it bootstraps a local Python env, installs deps, then starts the app.

@@ -4,7 +4,7 @@
 
 ## 就地升级
 
-1. 到 [Releases 页面](https://github.com/ReSerendipity/SeedVR2-lite/releases) 下载新版的全部分卷（`.zip.001/.002 …`）+ `manifest.json` + `SHA256SUMS.txt` + 两个 `.ps1` 脚本，放进**同一个文件夹**；
+1. 到 [Releases 页面](https://github.com/ReSerendipity/SeedVR2-Turbo/releases) 下载新版的全部分卷（`.zip.001/.002 …`）+ `manifest.json` + `SHA256SUMS.txt` + 两个 `.ps1` 脚本，放进**同一个文件夹**；
 2. 双击运行 `unpack_portable_bundle.ps1`（或 `powershell -ExecutionPolicy Bypass -File .\unpack_portable_bundle.ps1`）；
 3. 解包器会先逐卷校验 SHA256，再覆盖式解压到该目录下的 `SeedVR2-Portable\`，并自动离线重装 torch。
 
@@ -57,7 +57,7 @@ Get-Content SHA256SUMS.txt | ForEach-Object {
 
 ```bash
 sha256sum -c SHA256SUMS.txt
-gpg --import release-signing-key.asc   # 公钥：<https://github.com/ReSerendipity/SeedVR2-lite/raw/main/website/docs/guide/release-signing-key.asc>
+gpg --import release-signing-key.asc   # 公钥：<https://github.com/ReSerendipity/SeedVR2-Turbo/raw/main/website/docs/guide/release-signing-key.asc>
 gpg --verify SHA256SUMS.gpg SHA256SUMS.txt
 ```
 

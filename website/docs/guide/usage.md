@@ -1,6 +1,6 @@
 # 界面与功能
 
-SeedVR2-lite 提供完整的 Web UI（FastAPI + Jinja2 + HTMX），包含以下页面：
+SeedVR2-Turbo 提供完整的 Web UI（FastAPI + Jinja2 + HTMX），包含以下页面：
 
 ## 修复工作台
 

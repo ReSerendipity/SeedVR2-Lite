@@ -5,7 +5,7 @@
 
 ## 项目主许可
 
-SeedVR2-lite 项目代码采用 [Apache License 2.0](../LICENSE)。
+SeedVR2-Turbo 项目代码采用 [Apache License 2.0](../LICENSE)。
 模型权重与引擎许可见 [NOTICE](../NOTICE)，不由本文件管理。
 
 ## 主要 Python 依赖（许可类型为常见归类，以各包 LICENSE 为准）

@@ -1,6 +1,6 @@
 @echo off
 REM ============================================================================
-REM  seedvr2.cmd - CLI launcher for the SeedVR2 Lite desktop installer
+REM  seedvr2.cmd - CLI launcher for the SeedVR2 Turbo desktop installer
 REM ============================================================================
 REM  Installed to <InstallDir>\seedvr2.cmd by setup.nsi, and the install dir is
 REM  added to the current user's PATH, so `seedvr2 ...` works in any terminal

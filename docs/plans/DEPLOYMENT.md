@@ -62,8 +62,8 @@ nvidia-smi  # 确认 GPU 可见且驱动正常
 
 ```bash
 # 克隆仓库
-git clone https://github.com/ReSerendipity/SeedVR2-Lite.git
-cd SeedVR2-Lite
+git clone https://github.com/ReSerendipity/SeedVR2-Turbo.git
+cd SeedVR2-Turbo
 
 # 安装（本仓无 Linux/macOS 一键脚本，install.bat/start.bat 仅 Windows；以下走 venv 手动安装）
 python3.12 -m venv .venv
@@ -111,7 +111,7 @@ python scripts/verify_engine.py
 sudo tee /etc/systemd/system/seedvr2.service << 'EOF'
 [Unit]
 Description=SeedVR2 Video & Image Super-Resolution Toolkit
-Documentation=https://github.com/ReSerendipity/SeedVR2-Lite
+Documentation=https://github.com/ReSerendipity/SeedVR2-Turbo
 After=network.target
 
 [Service]

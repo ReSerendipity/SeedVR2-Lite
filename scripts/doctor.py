@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""doctor.py — SeedVR2-lite 一键环境诊断。
+"""doctor.py — SeedVR2-Turbo 一键环境诊断。
 
 聚合此前散落在 install.bat / clean_launch.py / verify_engine.py 各自为政的
 环境检查，一次跑完并给出 PASS / WARN / FAIL 分级结论（DX 评估 P2-8）。
@@ -219,7 +219,7 @@ def run_all(
 
 def main(argv: list[str] | None = None) -> int:
     """CLI 入口：打印报告，存在 FAIL 项时退出码 1。"""
-    parser = argparse.ArgumentParser(description="SeedVR2-lite 一键环境诊断")
+    parser = argparse.ArgumentParser(description="SeedVR2-Turbo 一键环境诊断")
     parser.add_argument("--json", action="store_true", help="输出 JSON（供 CI/脚本消费）")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="服务端口（默认 7870）")
     parser.add_argument("--min-free-gb", type=float, default=DEFAULT_MIN_FREE_GB, help="磁盘预检线（GB）")
@@ -239,7 +239,7 @@ def main(argv: list[str] | None = None) -> int:
         icon = {PASS: "✅", WARN: "⚠️ ", FAIL: "❌", SKIP: "⏭️ "}
         width = max(len(name) for name, _ in results) + 2
         print("=" * 70)
-        print("SeedVR2-lite 环境诊断 (doctor)")
+        print("SeedVR2-Turbo 环境诊断 (doctor)")
         print("=" * 70)
         for name, res in results:
             print(f"{icon[res.status]} {name:<{width}} [{res.status}] {res.detail}")

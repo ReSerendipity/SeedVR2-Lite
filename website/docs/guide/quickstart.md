@@ -11,8 +11,8 @@
 ## 第 2 步 · 获取本项目代码
 
 ```bash
-git clone https://github.com/ReSerendipity/SeedVR2-Lite.git
-cd SeedVR2-Lite
+git clone https://github.com/ReSerendipity/SeedVR2-Turbo.git
+cd SeedVR2-Turbo
 ```
 
 > 没装 Git？打开仓库主页点绿色 `Code` → `Download ZIP`，解压到本地即可（Git 非必须）。
@@ -65,5 +65,5 @@ python scripts/download_model.py --size 3b
 ---
 
 ::: tip 安装报错？
-见 [常见问题（FAQ）](./faq.md)，或直接到 [GitHub Issues](https://github.com/ReSerendipity/SeedVR2-Lite/issues) 提问。
+见 [常见问题（FAQ）](./faq.md)，或直接到 [GitHub Issues](https://github.com/ReSerendipity/SeedVR2-Turbo/issues) 提问。
 :::

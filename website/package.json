@@ -1,9 +1,9 @@
 {
-  "name": "seedvr2-lite-docs",
+  "name": "seedvr2-turbo-docs",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "SeedVR2-lite 官方文档站（VitePress）",
+  "description": "SeedVR2-Turbo 官方文档站（VitePress）",
   "scripts": {
     "dev": "vitepress dev docs",
     "build": "vitepress build docs",

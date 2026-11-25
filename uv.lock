@@ -2428,7 +2428,7 @@ wheels = [
 ]
 
 [[package]]
-name = "seedvr2-lite"
+name = "seedvr2-turbo"
 version = "1.9.1"
 source = { virtual = "." }
 dependencies = [

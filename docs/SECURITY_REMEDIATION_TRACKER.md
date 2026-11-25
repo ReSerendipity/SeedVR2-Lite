@@ -1,14 +1,14 @@
-# SeedVR2-lite 安全整改追踪表
+# SeedVR2-Turbo 安全整改追踪表
 
 > 配套 Image-DuoModel 家族安全深度评估（`SECURITY_ASSESSMENT_v2.0.0.md`，17 项发现）。
-> 本文记录 SeedVR2-lite 已落地的安全整改项与剩余项，便于跨仓统一对账。
-> 【对账注 2026-09-15】09-06 增量审计（docs/reports/SECURITY_AUDIT_SeedVR2-lite_2026-09-06.md，R1–R4；该报告属维护者本地文件，未随仓库分发）此前未纳入本表；经核对：R1 browse-dir/open-explorer 纳入 PathGuard 白名单、R2 水印 fail-open → 侧车元数据策略均已随 1.5.6 修复（见 .github/SECURITY.md 与 CHANGELOG 1.5.6）。
+> 本文记录 SeedVR2-Turbo 已落地的安全整改项与剩余项，便于跨仓统一对账。
+> 【对账注 2026-09-15】09-06 增量审计（docs/reports/SECURITY_AUDIT_SeedVR2-Turbo_2026-09-06.md，R1–R4；该报告属维护者本地文件，未随仓库分发）此前未纳入本表；经核对：R1 browse-dir/open-explorer 纳入 PathGuard 白名单、R2 水印 fail-open → 侧车元数据策略均已随 1.5.6 修复（见 .github/SECURITY.md 与 CHANGELOG 1.5.6）。
 > 【核实注 2026-11-10】R3/R4 已核对并闭合：**R3 留存清理缺口**已由数据治理 P0-1 落地——`app/integrated_app/services/output_retention.py`（按年龄/数量/磁盘水位回收）配套 `tests/test_output_retention_watermark.py`、`tests/test_pinned_retention.py`，outputs 与 uploads 均有周期清理任务（`app/integrated_app/app_server.py`）；**R4 SAST 名实不符**已证实为实——`.github/workflows/security.yml` 名为 `Security Scan (SAST)` 且实际运行 Semgrep 1.173.0 ERROR 硬门禁 + Trivy secret scan，另有 `codeql.yml` 覆盖 python/javascript/typescript/rust。
 
 ## 1. 根因门禁（最高优先级，已落地）
 
 **配置幻觉（Phantom Control）**：config.yaml 声明了安全控制，但代码未消费、
-不报错、不告警、测试不失败 → 假安全感。SeedVR2-lite 的根因门禁为
+不报错、不告警、测试不失败 → 假安全感。SeedVR2-Turbo 的根因门禁为
 `scripts/check_config_refs.py`（SeedVR2 适配版），作为 CI 质量门禁接入
 `.github/workflows/ci.yml` 的 `quality-gate` job。
 
@@ -66,7 +66,7 @@
 > by this PR"的清单来判断某条告警是否已消除——那个口径只覆盖**改动行上**的实例，旧实例即使
 > 仍在报也不会出现在里面。只有分支重扫后的 `alert.state` 算数。
 
-> 注：SeedVR2-lite 安全基线较成熟（auth/CSRF/rate-limit/path-guard/完整性校验/
+> 注：SeedVR2-Turbo 安全基线较成熟（auth/CSRF/rate-limit/path-guard/完整性校验/
 > 权重加密/水印均已具备），本仓重点补强的是「配置-实现一致性根因门禁」与「安全
 > 响应头中间件」两项此前缺口。
 
@@ -84,7 +84,7 @@
 |------|----------|--------------|----------|
 | Image-DuoModel | ✅ | ✅ | 已提交 |
 | TTS-MultiModel | ✅ | ✅ | 已提交（本地） |
-| SeedVR2-lite | ✅ | ✅ | 本次落地 |
+| SeedVR2-Turbo | ✅ | ✅ | 本次落地 |
 | MiniMax-H3-Lite | 待适配（@dataclass 无 config.yaml） | 审计中 | 只读审计 |
 | SpiritPal | 不适用（Rust） | 审计中 | 只读审计 |
 | DraftPeek | 不适用（Kotlin） | 审计中 | 只读审计 |

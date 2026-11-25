@@ -1,4 +1,4 @@
-# 🚀 第一次使用 SeedVR2-lite？从这里开始！
+# 🚀 第一次使用 SeedVR2-Turbo？从这里开始！
 
 > **适合人群**：从未接触过 GitHub、Python 或 AI 工具的新手用户
 
@@ -8,16 +8,16 @@
 
 ### 方法 A：下载 ZIP（推荐给不懂 Git 的用户）
 
-1. 点击这个链接：**[Download ZIP](https://github.com/ReSerendipity/SeedVR2-Lite/archive/refs/heads/main.zip)**
+1. 点击这个链接：**[Download ZIP](https://github.com/ReSerendipity/SeedVR2-Turbo/archive/refs/heads/main.zip)**
 2. 等待下载完成（约 50-100MB，取决于网速）
 3. 找到下载的 ZIP 文件，**右键 → 解压到当前文件夹**
-4. 进入解压后的文件夹 `SeedVR2-Lite-main`
+4. 进入解压后的文件夹 `SeedVR2-Turbo-main`
 
 ### 方法 B：使用 Git（推荐有技术基础的用户）
 
 ```bash
-git clone https://github.com/ReSerendipity/SeedVR2-Lite.git
-cd SeedVR2-lite
+git clone https://github.com/ReSerendipity/SeedVR2-Turbo.git
+cd SeedVR2-Turbo
 ```
 
 > 💡 **没装 Git？** 直接使用方法 A 下载 ZIP 即可！
@@ -39,7 +39,7 @@ cd SeedVR2-lite
 
 > ⚠️ **重要提醒**：
 > - ❌ **不要**把项目放在中文路径下（如 `C:\用户\张三\...`）
-> - ✅ **建议**放在简单路径下，如 `D:\SeedVR2-lite`
+> - ✅ **建议**放在简单路径下，如 `D:\SeedVR2-Turbo`
 > - ❌ **不要**放在 OneDrive 同步文件夹（会被锁定）
 
 ---
@@ -143,7 +143,7 @@ python scripts\download_model.py --size 3b
 
 ### 获取帮助
 
-如果以上方法都无效，请提供以下信息到 [GitHub Issues](https://github.com/ReSerendipity/SeedVR2-Lite/issues)：
+如果以上方法都无效，请提供以下信息到 [GitHub Issues](https://github.com/ReSerendipity/SeedVR2-Turbo/issues)：
 
 1. **你的操作系统版本**（Win+Pause 查看）
 2. **显卡型号和显存大小**（NVIDIA 控制面板查看）
@@ -154,9 +154,9 @@ python scripts\download_model.py --size 3b
 
 ## 📚 进阶阅读
 
-- [完整文档站](https://reserendipity.github.io/SeedVR2-Lite/docs/) - 详细的安装和使用指南
-- [模型选型指南](https://reserendipity.github.io/SeedVR2-Lite/docs/guide/models.html) - 根据你的显卡选择合适模型
-- [常见问题 FAQ](https://reserendipity.github.io/SeedVR2-Lite/docs/guide/faq.html) - 更多问题的解答
+- [完整文档站](https://reserendipity.github.io/SeedVR2-Turbo/docs/) - 详细的安装和使用指南
+- [模型选型指南](https://reserendipity.github.io/SeedVR2-Turbo/docs/guide/models.html) - 根据你的显卡选择合适模型
+- [常见问题 FAQ](https://reserendipity.github.io/SeedVR2-Turbo/docs/guide/faq.html) - 更多问题的解答
 
 ---
 
@@ -166,8 +166,8 @@ python scripts\download_model.py --size 3b
 
 ```bash
 # 1. 克隆或下载项目
-git clone https://github.com/ReSerendipity/SeedVR2-Lite.git
-cd SeedVR2-Lite
+git clone https://github.com/ReSerendipity/SeedVR2-Turbo.git
+cd SeedVR2-Turbo
 
 # 2. 安装依赖（本仓无 Linux/macOS 一键脚本，走 venv 手动安装）
 python3.12 -m venv .venv
@@ -182,7 +182,7 @@ python scripts/download_model.py --size 3b
 python app/clean_launch.py
 ```
 
-> ⚠️ 注意：Linux/macOS 可能需要额外配置 CUDA 环境，详见 [官方文档](https://reserendipity.github.io/SeedVR2-Lite/docs/guide/install.html)
+> ⚠️ 注意：Linux/macOS 可能需要额外配置 CUDA 环境，详见 [官方文档](https://reserendipity.github.io/SeedVR2-Turbo/docs/guide/install.html)
 
 ---
 

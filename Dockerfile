@@ -37,7 +37,7 @@ ARG APP_VERSION=0.0.0-dev
 LABEL org.opencontainers.image.title="SeedVR2" \
       org.opencontainers.image.description="AI-powered video & image super-resolution backend (FastAPI + CUDA)" \
       org.opencontainers.image.version="${APP_VERSION}" \
-      org.opencontainers.image.source="https://github.com/ReSerendipity/SeedVR2-lite" \
+      org.opencontainers.image.source="https://github.com/ReSerendipity/SeedVR2-Turbo" \
       org.opencontainers.image.licenses="Apache-2.0"
 
 ENV PYTHONUNBUFFERED=1 \

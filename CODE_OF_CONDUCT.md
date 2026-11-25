@@ -1,4 +1,4 @@
-# 行为准则 — SeedVR2-Lite
+# 行为准则 — SeedVR2-Turbo
 
 ## 我们的承诺
 

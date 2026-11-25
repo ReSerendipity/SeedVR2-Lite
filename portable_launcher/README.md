@@ -1,4 +1,4 @@
-# SeedVR2-lite 便携启动器（Portable Launcher）— SCAFFOLD
+# SeedVR2-Turbo 便携启动器（Portable Launcher）— SCAFFOLD
 
 > 参考 **Mie-Package-Launcher** 模式：把 Python 环境 + 权重 + 模型依赖打包进一个
 > 可移动目录；启动器通过**相对自身路径**自动定位一切并引导（bootstrap）环境，

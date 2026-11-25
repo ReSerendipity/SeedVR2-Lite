@@ -1,4 +1,4 @@
-# SeedVR2-lite — 文档与项目速览
+# SeedVR2-Turbo — 文档与项目速览
 
 > 图像/视频超分与修复（Restore）Web 应用。FastAPI + HTMX。
 > 入口：`app/integrated_app/app_server.py` / `start.bat`。

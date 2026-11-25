@@ -1,4 +1,4 @@
-# SeedVR2-lite 许可证合规台账（License Compliance）
+# SeedVR2-Turbo 许可证合规台账（License Compliance）
 
 > 最后更新：2026-08-30（新增 §3.2 Comfy-Org 转包权重目录，ModelScope API 实测枚举）。
 > ⚠️「商用合规 / 合规要求」两列仅记录**事实与风险提示**，不构成法律意见；标「需人工确认」者必须人工补查后再分发。
@@ -7,7 +7,7 @@
 
 | 组件 | 许可证 | 商用合规 | 合规要求 |
 |---|---|---|---|
-| SeedVR2-lite 项目代码 | Apache-2.0（以根级 LICENSE 为准） | 宽松许可 | 保留版权声明与 NOTICE |
+| SeedVR2-Turbo 项目代码 | Apache-2.0（以根级 LICENSE 为准） | 宽松许可 | 保留版权声明与 NOTICE |
 
 ## 2. 随仓内嵌模型实现（`model_lib/`，ByteDance 上游派生）
 

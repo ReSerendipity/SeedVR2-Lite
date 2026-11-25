@@ -30,7 +30,7 @@ from pathlib import Path
 TOOL_NAME = "seedvr2-generate-sbom"
 TOOL_VERSION = "1.0.0"
 #: serialNumber 稳定命名空间：同内容锁文件 → 同 serial（便于幂等核对）
-_NS_URL = "https://github.com/ReSerendipity/SeedVR2-lite/sbom"
+_NS_URL = "https://github.com/ReSerendipity/SeedVR2-Turbo/sbom"
 
 _PIN_RE = re.compile(r"^([A-Za-z0-9][A-Za-z0-9._-]*)==([^\s]+)((?:\s+--hash=[A-Za-z0-9-]+:[A-Za-z0-9]+)*)\s*$")
 _HASH_RE = re.compile(r"--hash=([A-Za-z0-9-]+):([A-Za-z0-9]+)")
@@ -122,9 +122,9 @@ def build_bom(
             "timestamp": timestamp,
             "tools": {"components": [{"type": "application", "name": TOOL_NAME, "version": TOOL_VERSION}]},
             "component": {
-                "bom-ref": "seedvr2-lite",
+                "bom-ref": "seedvr2-turbo",
                 "type": "application",
-                "name": "seedvr2-lite",
+                "name": "seedvr2-turbo",
                 "version": component_version,
             },
         },

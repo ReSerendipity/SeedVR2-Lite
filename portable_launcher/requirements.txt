@@ -1,4 +1,4 @@
-# SeedVR2-lite Portable Launcher — dependency manifest (SCAFFOLD)
+# SeedVR2-Turbo Portable Launcher — dependency manifest (SCAFFOLD)
 #
 # 本启动器运行时并不从「这个文件」安装依赖。它会到包根（PKG_ROOT）解析应用依赖：
 #   - <pkg>/requirements-lock.txt   （首选，已钉版）[确切集合暂未固化]

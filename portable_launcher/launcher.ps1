@@ -1,6 +1,6 @@
 ﻿#Requires -Version 5.1
 <#
-  SeedVR2-lite — 便携启动器（SCAFFOLD）
+  SeedVR2-Turbo — 便携启动器（SCAFFOLD）
   ====================================================
   Mie-Package-Launcher 风格：所有路径都相对于本脚本自身解析，
   自动引导（bootstrap）一个本地 Python 环境，安装依赖，然后启动应用。

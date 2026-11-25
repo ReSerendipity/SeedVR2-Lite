@@ -15,7 +15,7 @@ SeedVR2 的 Web UI **默认仅绑定 `127.0.0.1`**（`config.yaml` 中 `server.h
 ## ©️ 归属权与版权
 
 - **版权所有**: Copyright 2024-2026 ReSerendipity
-- **开源协议**: [Apache License 2.0](https://github.com/ReSerendipity/SeedVR2-lite/blob/main/LICENSE)
+- **开源协议**: [Apache License 2.0](https://github.com/ReSerendipity/SeedVR2-Turbo/blob/main/LICENSE)
 
 **根据 Apache 2.0 协议第 4 条，任何再分发或衍生作品必须：**
 1. 保留本项目的版权声明与 LICENSE 文件副本
@@ -25,7 +25,7 @@ SeedVR2 的 Web UI **默认仅绑定 `127.0.0.1`**（`config.yaml` 中 `server.h
 
 ## 合规说明
 
-使用本项目请遵守 [USER_AGREEMENT.md](https://github.com/ReSerendipity/SeedVR2-lite/blob/main/docs/USER_AGREEMENT.md)。
+使用本项目请遵守 [USER_AGREEMENT.md](https://github.com/ReSerendipity/SeedVR2-Turbo/blob/main/docs/USER_AGREEMENT.md)。
 模型权重（SeedVR/SeedVR2）为 Apache 2.0；FFmpeg 为本地开发依赖，不随仓库分发，由用户自行安装。
 
 ## ⚖️ 独立第三方声明

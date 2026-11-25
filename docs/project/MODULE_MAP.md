@@ -5,7 +5,7 @@
 ### 3.1 目录结构 & 职责
 > 结构以 2026-10-21 复核的实际物理布局为准；历史文档中的 `api/`、`core/`、`db/` 顶层目录均为早期目标结构，实际已收敛到 `app/integrated_app/` 单包体系。
 ```
-SeedVR2-lite/
+SeedVR2-Turbo/
 ├── app/                  ← 主应用包（FastAPI + 集成层，实际全部业务代码所在）
 │   └── integrated_app/
 │       ├── app_server.py  ← FastAPI 组装入口（create_app / lifespan；无 api/ 子目录，路由在 routes/）

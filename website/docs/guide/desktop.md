@@ -1,6 +1,6 @@
 # 桌面版（Tauri）
 
-SeedVR2-lite 除「浏览器 + 本地服务」形态外，还提供 **Tauri v2 原生桌面版**：Rust 外壳 +
+SeedVR2-Turbo 除「浏览器 + 本地服务」形态外，还提供 **Tauri v2 原生桌面版**：Rust 外壳 +
 侧载 Python 运行时 + WebView2，把 Web UI 封装为原生桌面应用。壳源码位于仓库
 `desktop/` 目录，壳与前端通过 `desktop/src/desktop-bridge.js` 桥接（浏览器模式自动降级，
 所有桌面增强功能在纯浏览器访问时静默不可用）。

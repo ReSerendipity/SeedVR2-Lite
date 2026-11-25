@@ -1,6 +1,6 @@
 # API 参考
 
-SeedVR2-lite 基于 FastAPI 提供 REST API，启动后可在 <http://127.0.0.1:7870/docs> 查看完整的 Swagger UI。
+SeedVR2-Turbo 基于 FastAPI 提供 REST API，启动后可在 <http://127.0.0.1:7870/docs> 查看完整的 Swagger UI。
 
 ::: tip 本文与代码同源
 本文每一条路径都由 `tests/test_api_contract.py::test_documented_api_paths_exist`

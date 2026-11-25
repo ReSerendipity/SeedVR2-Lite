@@ -1,17 +1,17 @@
 <div align="center">
 
-# SeedVR2-Lite
+# SeedVR2-Turbo
 
 **基于 SeedVR2 扩散模型的视频与图像超分辨率修复工具箱 —— 独立运行、一键修复，无需 ComfyUI。**
 
 A standalone video & image super-resolution toolkit powered by SeedVR2 diffusion models. One-click restoration via Web UI — no ComfyUI required.
 
-[![CI](https://github.com/ReSerendipity/SeedVR2-Lite/actions/workflows/ci.yml/badge.svg)](https://github.com/ReSerendipity/SeedVR2-Lite/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/ReSerendipity/SeedVR2-Lite?logo=github)](https://github.com/ReSerendipity/SeedVR2-Lite/releases/latest)
+[![CI](https://github.com/ReSerendipity/SeedVR2-Turbo/actions/workflows/ci.yml/badge.svg)](https://github.com/ReSerendipity/SeedVR2-Turbo/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/ReSerendipity/SeedVR2-Turbo?logo=github)](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/latest)
 [![Python](https://img.shields.io/badge/Python-3.12+-blue?logo=python&logoColor=white)](pyproject.toml)
 [![CUDA](https://img.shields.io/badge/GPU-NVIDIA%20CUDA-76B900?logo=nvidia&logoColor=white)](#系统要求与兼容性)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green)](LICENSE)
-[![Last commit](https://img.shields.io/github/last-commit/ReSerendipity/SeedVR2-Lite)](https://github.com/ReSerendipity/SeedVR2-Lite/commits/main)
+[![Last commit](https://img.shields.io/github/last-commit/ReSerendipity/SeedVR2-Turbo)](https://github.com/ReSerendipity/SeedVR2-Turbo/commits/main)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](#-贡献与支持)
 
 **[中文](#中文) · [English](#english)**
@@ -26,7 +26,7 @@ A standalone video & image super-resolution toolkit powered by SeedVR2 diffusion
 
 ### 项目简介
 
-SeedVR2-Lite 把字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开源的 [SeedVR2](https://huggingface.co/ByteDance-Seed) 单步扩散修复模型，包装成一个**独立运行的本地 Web 应用**：上传一张图片或一段视频，即可完成超分辨率与细节增强，数据全程不出本机。它不依赖 ComfyUI，也不需要任何外部推理服务。
+SeedVR2-Turbo 把字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开源的 [SeedVR2](https://huggingface.co/ByteDance-Seed) 单步扩散修复模型，包装成一个**独立运行的本地 Web 应用**：上传一张图片或一段视频，即可完成超分辨率与细节增强，数据全程不出本机。它不依赖 ComfyUI，也不需要任何外部推理服务。
 
 对外正式分发为 **Tauri v2 桌面版**（单文件安装包 `SeedVR2-Setup-v<版本>.exe`，离线完整包解压即用）；开发者也可以直接用源码或便携分卷包在浏览器中运行。当前稳定版本为 **v2.0.0**（截至 2026-11-23）。
 
@@ -46,31 +46,31 @@ SeedVR2-Lite 把字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开源
 
 **首页仪表盘** —— 一句话定位、入口卡片与状态角标。本图在无 GPU 云环境启动，角标显示「未检测到可用 GPU · 未加载」；有 GPU 时此处显示设备型号与当前模型。
 
-![首页仪表盘](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-seedvr2-lite-1-home-20261026.png)
+![首页仪表盘](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-seedvr2-turbo-1-home-20261026.png)
 
 **修复工作台** —— 左侧拖拽上传图片/视频，右侧参数面板选择模型、输出分辨率与 VAE。无 GPU 时顶部提示「需要 NVIDIA CUDA GPU 才能执行修复」，界面与参数仍可完整查看。
 
-![修复工作台](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-seedvr2-lite-2-workbench-20261026.png)
+![修复工作台](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-seedvr2-turbo-2-workbench-20261026.png)
 
 **高级参数** —— 展开 DiT 配置（最大分辨率、色彩校正、批处理大小），并可勾选「强制按参数重载模型」与一键「重置」。
 
-![高级参数](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-seedvr2-lite-3-params-20261026.png)
+![高级参数](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-seedvr2-turbo-3-params-20261026.png)
 
 **历史记录** —— 表格视图管理已完成任务，支持状态筛选与结果回看。
 
-![历史记录](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-seedvr2-lite-4-history-20261026.png)
+![历史记录](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-seedvr2-turbo-4-history-20261026.png)
 
 **系统状态** —— GPU/显存/利用率与内存监控。本图为无 GPU 云环境：GPU 卡片标记 UNAVAILABLE、显存字段为 `--`；真实 GPU 环境此处显示显卡型号、显存占用与利用率曲线。
 
-![系统状态](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-seedvr2-lite-5-system-status-20261026.png)
+![系统状态](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-seedvr2-turbo-5-system-status-20261026.png)
 
 **整体架构** —— 浏览器/桌面壳 → FastAPI 后端 → 扩散推理引擎（DiT + Video VAE + Block Swap），本地存储模型、历史与输出。
 
-![架构图](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-seedvr2-lite-7-architecture.svg)
+![架构图](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-seedvr2-turbo-7-architecture.svg)
 
 ### 快速开始
 
-> 推荐普通用户到 [Releases](https://github.com/ReSerendipity/SeedVR2-Lite/releases) 下载 `SeedVR2-Setup-v<版本>.exe`（单文件安装包，便携运行环境与数据卷已内嵌，无需另外下载分卷），双击安装即可；同批发布 `.sha256` 供校验。以下为从源码运行的路径。
+> 推荐普通用户到 [Releases](https://github.com/ReSerendipity/SeedVR2-Turbo/releases) 下载 `SeedVR2-Setup-v<版本>.exe`（单文件安装包，便携运行环境与数据卷已内嵌，无需另外下载分卷），双击安装即可；同批发布 `.sha256` 供校验。以下为从源码运行的路径。
 
 **1. 环境**
 
@@ -80,8 +80,8 @@ SeedVR2-Lite 把字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开源
 **2. 安装依赖**
 
 ```bash
-git clone https://github.com/ReSerendipity/SeedVR2-Lite.git
-cd SeedVR2-Lite
+git clone https://github.com/ReSerendipity/SeedVR2-Turbo.git
+cd SeedVR2-Turbo
 
 # Windows 一键安装（推荐）
 install.bat
@@ -154,7 +154,7 @@ python .github/scripts/check_layout.py
 
 > 站点 rewq.cn 实验区原有的交互式估算器（2026-11-08 下线）口径存档于此。官方值只取 [ByteDance-Seed/SeedVR](https://github.com/ByteDance-Seed/SeedVR) README 的 GPU Requirement 与 3B/7B 模型名（configs_3b / configs_7b）；**权重显存与相对负载是派生值，不含激活与框架开销**。官方没有给吞吐与单价，这里只算显存与配置，不编价格。
 
-**在线交互版**：<https://reserendipity.github.io/SeedVR2-Lite/vram.html>（调 3B/7B、输出高度、帧数、GPU 数，实时读数；源文件 [docs/vram.html](docs/vram.html)，经 GitHub Pages 发布）。
+**在线交互版**：<https://reserendipity.github.io/SeedVR2-Turbo/vram.html>（调 3B/7B、输出高度、帧数、GPU 数，实时读数；源文件 [docs/vram.html](docs/vram.html)，经 GitHub Pages 发布）。
 
 **官方参考档位**：
 
@@ -189,7 +189,7 @@ python .github/scripts/check_layout.py
 
 | 480 档（rewq.cn 省流档默认） | 1024 档 |
 |---|---|
-| ![480 档](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-res-cmp-259472-w480-20261108.webp) | ![1024 档](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-res-cmp-259472-w1024-20261108.webp) |
+| ![480 档](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-res-cmp-259472-w480-20261108.webp) | ![1024 档](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-res-cmp-259472-w1024-20261108.webp) |
 | 28.4 KB | 102.2 KB |
 
 同一张图，字节差 **3.6×**——这是 rewq.cn 省流档把 w480 设为默认档的数据依据；两档的细节差异看发簪、竹叶和衣袖。
@@ -202,8 +202,8 @@ docker build -t seedvr2 .
 docker run --gpus all -p 7870:7870 seedvr2
 
 # 或使用随 v* 标签发布的 GHCR 镜像
-docker pull ghcr.io/reserendipity/seedvr2-lite:1.7.0
-docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-lite:1.7.0
+docker pull ghcr.io/reserendipity/seedvr2-turbo:1.7.0
+docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-turbo:1.7.0
 ```
 
 环境变量模板见 `.env.example`，常用 `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`。
@@ -246,7 +246,7 @@ seedvr2 restore -i photo.png -o outputs --server-url http://127.0.0.1:7870
 
 参与贡献请遵循上述[组织级贡献指南](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md)（Conventional Commits + DCO 签名）。Issue 与 Discussion 请在仓库内发起；安全问题请按仓库安全政策私下报告，勿公开提 issue。
 
-- Releases（单文件安装器 `SeedVR2-Setup-v<版本>.exe` / 便携分卷包）：<https://github.com/ReSerendipity/SeedVR2-Lite/releases>
+- Releases（单文件安装器 `SeedVR2-Setup-v<版本>.exe` / 便携分卷包）：<https://github.com/ReSerendipity/SeedVR2-Turbo/releases>
 
 ### 许可证
 
@@ -258,7 +258,7 @@ seedvr2 restore -i photo.png -o outputs --server-url http://127.0.0.1:7870
 
 ### Introduction
 
-SeedVR2-Lite packages the [SeedVR2](https://huggingface.co/ByteDance-Seed) one-step diffusion restoration model (jointly open-sourced by ByteDance's Seed team and NTU S-Lab) into a **standalone local web app**: upload an image or video and get super-resolution / detail enhancement on the spot, with all data staying on your machine. It does **not** depend on ComfyUI or any external inference service.
+SeedVR2-Turbo packages the [SeedVR2](https://huggingface.co/ByteDance-Seed) one-step diffusion restoration model (jointly open-sourced by ByteDance's Seed team and NTU S-Lab) into a **standalone local web app**: upload an image or video and get super-resolution / detail enhancement on the spot, with all data staying on your machine. It does **not** depend on ComfyUI or any external inference service.
 
 The supported distribution is a **Tauri v2 desktop build**, shipped as a single-file Windows installer (`SeedVR2-Setup-v<version>.exe`, bundled runtime and data volume, no separate parts to download); developers can also run it from source or via the portable bundle in a browser. Current stable release: **v1.8.0** (as of 2026-11-15).
 
@@ -277,31 +277,31 @@ The supported distribution is a **Tauri v2 desktop build**, shipped as a single-
 
 **Home dashboard** — tagline, entry cards and status pill. This shot was taken on a GPU-less cloud box, so the pill reads "No GPU detected · model not loaded"; on a GPU box it shows the device name and current model.
 
-![Home dashboard](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-seedvr2-lite-1-home-20261026.png)
+![Home dashboard](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-seedvr2-turbo-1-home-20261026.png)
 
 **Restore workbench** — drag & drop upload on the left; model / output resolution / VAE panel on the right. With no GPU the top shows "NVIDIA CUDA GPU required to run restoration", yet the UI and parameters remain fully inspectable.
 
-![Restore workbench](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-seedvr2-lite-2-workbench-20261026.png)
+![Restore workbench](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-seedvr2-turbo-2-workbench-20261026.png)
 
 **Advanced parameters** — DiT config (max resolution, color correction, batch size), plus a "force reload model with parameters" checkbox and a one-click reset.
 
-![Advanced parameters](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-seedvr2-lite-3-params-20261026.png)
+![Advanced parameters](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-seedvr2-turbo-3-params-20261026.png)
 
 **History** — table view of completed tasks with status filters and result review.
 
-![History](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-seedvr2-lite-4-history-20261026.png)
+![History](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-seedvr2-turbo-4-history-20261026.png)
 
 **System status** — GPU/VRAM/utilization and memory monitoring. This is the GPU-less cloud state: the GPU card is marked UNAVAILABLE and VRAM fields read `--`; on a real GPU box it shows the card model, VRAM usage and utilization curves.
 
-![System status](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-seedvr2-lite-5-system-status-20261026.png)
+![System status](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-seedvr2-turbo-5-system-status-20261026.png)
 
 **Architecture** — browser/desktop shell → FastAPI backend → diffusion engine (DiT + Video VAE + Block Swap), with local model/history/output storage.
 
-![Architecture](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-seedvr2-lite-7-architecture.svg)
+![Architecture](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-seedvr2-turbo-7-architecture.svg)
 
 ### Quick start
 
-> Regular users should download the [single-file Windows installer, `SeedVR2-Setup-v<version>.exe`](https://github.com/ReSerendipity/SeedVR2-Lite/releases), and run it. Below is the from-source path.
+> Regular users should download the [single-file Windows installer, `SeedVR2-Setup-v<version>.exe`](https://github.com/ReSerendipity/SeedVR2-Turbo/releases), and run it. Below is the from-source path.
 
 **1. Requirements**
 
@@ -311,8 +311,8 @@ The supported distribution is a **Tauri v2 desktop build**, shipped as a single-
 **2. Install dependencies**
 
 ```bash
-git clone https://github.com/ReSerendipity/SeedVR2-Lite.git
-cd SeedVR2-Lite
+git clone https://github.com/ReSerendipity/SeedVR2-Turbo.git
+cd SeedVR2-Turbo
 
 # Windows one-click (recommended)
 install.bat
@@ -369,7 +369,7 @@ Model precision (`.safetensors`):
 
 > This archives the sizing logic of the interactive estimator that used to live in the rewq.cn lab section (retired 2026-11-08). Official values come only from the GPU Requirement section of the [ByteDance-Seed/SeedVR](https://github.com/ByteDance-Seed/SeedVR) README and the 3B/7B model names (configs_3b / configs_7b); **weight VRAM and relative load are derived values, excluding activations and framework overhead**. No throughput or pricing has been published officially, so this covers VRAM and configuration only — no invented prices.
 
-**Interactive version**: <https://reserendipity.github.io/SeedVR2-Lite/vram.html> (tune 3B/7B, output height, frames and GPU count with live readouts; source at [docs/vram.html](docs/vram.html), served via GitHub Pages).
+**Interactive version**: <https://reserendipity.github.io/SeedVR2-Turbo/vram.html> (tune 3B/7B, output height, frames and GPU count with live readouts; source at [docs/vram.html](docs/vram.html), served via GitHub Pages).
 
 **Official reference tiers**:
 
@@ -404,7 +404,7 @@ Examples (readings the original estimator would show):
 
 | 480 tier (rewq.cn data-saver default) | 1024 tier |
 |---|---|
-| ![480 tier](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-res-cmp-259472-w480-20261108.webp) | ![1024 tier](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Lite@main/docs/assets/readme-res-cmp-259472-w1024-20261108.webp) |
+| ![480 tier](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-res-cmp-259472-w480-20261108.webp) | ![1024 tier](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-res-cmp-259472-w1024-20261108.webp) |
 | 28.4 KB | 102.2 KB |
 
 Same image, **3.6×** byte difference — the data basis for rewq.cn's data-saver mode defaulting to w480; the detail differences are in the hairpin, the bamboo leaves and the sleeves.
@@ -417,8 +417,8 @@ docker build -t seedvr2 .
 docker run --gpus all -p 7870:7870 seedvr2
 
 # Or use the GHCR image published with v* tags
-docker pull ghcr.io/reserendipity/seedvr2-lite:1.7.0
-docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-lite:1.7.0
+docker pull ghcr.io/reserendipity/seedvr2-turbo:1.7.0
+docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-turbo:1.7.0
 ```
 
 Environment variables: see `.env.example`; a common one is `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`.
@@ -448,7 +448,7 @@ Please read [USER_AGREEMENT.md](docs/USER_AGREEMENT.md) before use. This is an i
 
 Follow the [org-level contributing guide](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md) (Conventional Commits + DCO sign-off). Open issues and discussions in the repository; report security problems privately per the security policy rather than in a public issue.
 
-- Releases (desktop / portable bundle / incremental updates): <https://github.com/ReSerendipity/SeedVR2-Lite/releases>
+- Releases (desktop / portable bundle / incremental updates): <https://github.com/ReSerendipity/SeedVR2-Turbo/releases>
 
 ### License
 

@@ -1,7 +1,7 @@
 {
   "_comment": "分支保护单一来源。改这里 → 跑 scripts/apply_branch_protection.py --apply。",
   "owner": "ReSerendipity",
-  "repo": "SeedVR2-lite",
+  "repo": "SeedVR2-Turbo",
   "branch": "main",
   "policy": {
     "required_approving_review_count": 1,
@@ -27,6 +27,6 @@
     "Typecheck (mypy ratchet) / Typecheck (mypy ratchet)"
   ],
   "required_conversation_resolution": false,
-  "_measured_at": "2026-09-28T10:25Z（gh api repos/ReSerendipity/SeedVR2-lite/branches/main/protection，启用 PR 要求 + enforce_admins=false）",
+  "_measured_at": "2026-09-28T10:25Z（gh api repos/ReSerendipity/SeedVR2-Turbo/branches/main/protection，启用 PR 要求 + enforce_admins=false）",
   "_meets_reality": "live 已改为：require PR(1 approval) + enforce_admins=false；owner/admin 直推 main 免 PR，其余账号强制 PR。"
 }

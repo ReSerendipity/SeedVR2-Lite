@@ -1,6 +1,6 @@
 ﻿#Requires -Version 5.1
 # scripts/build_desktop_bundle.ps1
-# 构建 SeedVR2-Lite 桌面版**瘦包**数据卷（供 scripts/installer/setup.nsi 分发）。
+# 构建 SeedVR2-Turbo 桌面版**瘦包**数据卷（供 scripts/installer/setup.nsi 分发）。
 #
 # 产物（默认 dist\desktop-release\）：
 #   SeedVR2-Data.7z.001..NNN   数据卷：app/（应用代码 + 引导解释器，**不含 torch/权重**）
@@ -110,7 +110,7 @@ if (-not $Version) {
 }
 
 Write-Host "=============================================="
-Write-Host " SeedVR2-Lite 瘦包构建 v$Version"
+Write-Host " SeedVR2-Turbo 瘦包构建 v$Version"
 Write-Host " 产物目录：$OutDir"
 Write-Host "=============================================="
 
@@ -297,7 +297,7 @@ Set-Content -LiteralPath (Join-Path $OutDir 'SHA256SUMS.txt') -Value $sumLines -
 
 $manifest = [pscustomobject]@{
     schema            = 1
-    product           = 'SeedVR2-Lite-Desktop'
+    product           = 'SeedVR2-Turbo-Desktop'
     app_version       = $Version
     arch              = 'win-x64'
     created_utc       = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')

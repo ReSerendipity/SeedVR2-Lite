@@ -21,7 +21,7 @@ from importlib.metadata import version as _dist_version
 from pathlib import Path
 
 _FALLBACK_VERSION = "unknown"
-_DIST_NAME = "seedvr2-lite"
+_DIST_NAME = "seedvr2-turbo"
 
 
 @lru_cache(maxsize=1)

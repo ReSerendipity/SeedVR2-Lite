@@ -85,7 +85,7 @@ jobs:
           $marker = 'x $installer "-o$prep"'
           if (-not (Select-String -LiteralPath scripts/build_desktop_bundle.ps1 -SimpleMatch $marker -Quiet)) {
             Write-Host 'tag 内 bundler 仍是 /S 解压，从 main 取修复后的脚本'
-            Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/ReSerendipity/SeedVR2-Lite/main/scripts/build_desktop_bundle.ps1' -OutFile scripts/build_desktop_bundle.ps1
+            Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/ReSerendipity/SeedVR2-Turbo/main/scripts/build_desktop_bundle.ps1' -OutFile scripts/build_desktop_bundle.ps1
             if (-not (Select-String -LiteralPath scripts/build_desktop_bundle.ps1 -SimpleMatch $marker -Quiet)) {
               throw 'bundler overlay 失败：修复标记仍缺失'
             }

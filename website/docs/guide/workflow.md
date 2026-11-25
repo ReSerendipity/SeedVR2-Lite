@@ -25,7 +25,7 @@ SeedVR2 既可以在本项目以**内置管线**一键运行，也可以在 **Co
 
 ## 与 ComfyUI 工作流对比
 
-| 维度 | 本项目（SeedVR2-lite） | ComfyUI 工作流 |
+| 维度 | 本项目（SeedVR2-Turbo） | ComfyUI 工作流 |
 |---|---|---|
 | 组织方式 | ✅ 一键内置 pipeline | ⚠️ 需手动连线节点 |
 | 模型格式 | safetensors（FP16 / FP8） | safetensors（FP16 / FP8） |
@@ -43,5 +43,5 @@ SeedVR2 既可以在本项目以**内置管线**一键运行，也可以在 **Co
 
 ## 在演示站查看可视化
 
-访问 [在线模拟演示](https://reserendipity.github.io/SeedVR2-lite/) → 顶部导航「工作流」，
+访问 [在线模拟演示](https://reserendipity.github.io/SeedVR2-Turbo/) → 顶部导航「工作流」，
 可以交互查看处理管线图与 ComfyUI 对比（纯前端模拟，无需 GPU）。

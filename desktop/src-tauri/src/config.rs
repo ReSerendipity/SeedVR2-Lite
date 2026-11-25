@@ -44,7 +44,7 @@ impl Default for UpdateSource {
         // 默认指向本仓库（与 origin 一致）
         UpdateSource::Github {
             owner: "ReSerendipity".into(),
-            repo: "SeedVR2-lite".into(),
+            repo: "SeedVR2-Turbo".into(),
         }
     }
 }
@@ -199,7 +199,7 @@ mod tests {
         match back.update_source {
             UpdateSource::Github { owner, repo } => {
                 assert_eq!(owner, "ReSerendipity");
-                assert_eq!(repo, "SeedVR2-lite");
+                assert_eq!(repo, "SeedVR2-Turbo");
             }
             UpdateSource::Custom { .. } => panic!("default should be github"),
         }

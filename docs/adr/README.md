@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADR)
 
-> 本目录是 SeedVR2-lite 项目的架构决策记录库。
+> 本目录是 SeedVR2-Turbo 项目的架构决策记录库。
 > 每个 ADR 编号唯一、只追加不删除（被推翻的标记为 Superseded）。
 
 ## 索引

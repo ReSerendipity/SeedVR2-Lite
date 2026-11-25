@@ -1,4 +1,4 @@
-# 架构 — SeedVR2-Lite
+# 架构 — SeedVR2-Turbo
 
 > 治理定位：`delivery=release`、`lifecycle=active`（`governance/desired-state.json`）。
 > 本文按 2026-11-03 的实际目录结构生成；数据流与边界须由维护者在实现变更时同步复核。

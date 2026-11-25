@@ -27,7 +27,7 @@ ByteDance 研究代码，ruff 命名规则与 mypy 均豁免，CI 不构建它�
 从而豁免表不会变成永久盲区。禁区的实际编辑仍按 AGENTS.md 留痕文化执行，本哨兵只兜底
 机械可查的部分。
 
-所属项目：SeedVR2-lite (SeedVR2 视频/图像修复工具)
+所属项目：SeedVR2-Turbo (SeedVR2 视频/图像修复工具)
 """
 
 from __future__ import annotations

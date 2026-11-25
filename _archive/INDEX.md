@@ -1,4 +1,4 @@
-# SeedVR2-Lite 归档索引（_archive/）
+# SeedVR2-Turbo 归档索引（_archive/）
 
 > 归档区按治理规范 §12.1 使用仓根 `_archive/`（下划线前缀＝非活动区，§10 审计自动豁免）。
 > 归档只移动文件、不改写正文；`docs/SRE_RUNBOOK.md` 中的执行记录链接已改新路径。

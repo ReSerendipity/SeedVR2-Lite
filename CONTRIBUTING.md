@@ -1,4 +1,4 @@
-# 贡献指南 — SeedVR2-Lite
+# 贡献指南 — SeedVR2-Turbo
 
 ## 提交前
 

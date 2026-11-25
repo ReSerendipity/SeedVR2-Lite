@@ -1,4 +1,4 @@
-# 发布 / 回滚 / SLA 规范（SeedVR2-Lite）
+# 发布 / 回滚 / SLA 规范（SeedVR2-Turbo）
 
 > **来源与权威**：公共条款见 `ReSerendipity/.github` 仓库 `REPOSITORY_GUIDELINES.md` §10（发布 / 分发统一规范）。
 > 本文件是本仓本地化副本：公共条款（远端优先、tag 驱动、版本位一致、不可变标签、扫描阻断、无 GPG）与 §10 保持一致，不自行改写；
@@ -50,7 +50,7 @@
 | 产物 | 构建位置 | 标签 / 命名 | 完整性手段 |
 |---|---|---|---|
 | Windows x64 离线分卷便携包（core / torch / model-shared / model-fp8） | 远端（`portable-release.yml`） | GitHub Release 资产，不可变（已发布资产不覆盖） | `SHA256SUMS.txt` + CycloneDX SBOM（`sbom-python.cdx.json`）+ SLSA build provenance + manifest Ed25519 签名 |
-| 容器镜像 `ghcr.io/ReSerendipity/seedvr2-lite` | 远端（`docker-publish.yml`） | semver（`{{version}}` / `{{major}}.{{minor}}` / `{{major}}`）+ 不可变 `sha-<long>`；**无 floating `latest`** | `provenance: true` + `sbom: true` |
+| 容器镜像 `ghcr.io/ReSerendipity/seedvr2-turbo` | 远端（`docker-publish.yml`） | semver（`{{version}}` / `{{major}}.{{minor}}` / `{{major}}`）+ 不可变 `sha-<long>`；**无 floating `latest`** | `provenance: true` + `sbom: true` |
 
 - 容器镜像：推 `ghcr.io`，`packages: write`；镜像引用全小写；镜像内不含模型权重（`.dockerignore` 排除 `model/`），运行时挂载。
 - 镜像发布前须经 Trivy `CRITICAL,HIGH`（`ignore-unfixed`）**阻断**；豁免逐条登记在 `.trivyignore.yaml`（理由 + expiration）。

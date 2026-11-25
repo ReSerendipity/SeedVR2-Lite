@@ -46,7 +46,7 @@ BOOTSTRAP_DIRNAME = "bootstrap"
 CATALOG_FILENAME = "downloads_catalog.json"
 RUNTIME_META_NAME = "RUNTIME.json"
 
-DEFAULT_RELEASE_BASE = "https://github.com/ReSerendipity/SeedVR2-Lite/releases/download"
+DEFAULT_RELEASE_BASE = "https://github.com/ReSerendipity/SeedVR2-Turbo/releases/download"
 
 ProgressCb = Callable[[str, float, str], None]  # (stage, ratio 0..1, message)
 
@@ -245,7 +245,7 @@ def _download_file(
 ) -> None:
     part = target + ".part"
     resume = os.path.getsize(part) if os.path.exists(part) else 0
-    headers = {"User-Agent": "SeedVR2Lite-Desktop"}
+    headers = {"User-Agent": "SeedVR2Turbo-Desktop"}
     if resume > 0:
         headers["Range"] = f"bytes={resume}-"
     request = urllib.request.Request(url, headers=headers)

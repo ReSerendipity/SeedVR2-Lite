@@ -2,22 +2,22 @@
 layout: home
 
 hero:
-  name: SeedVR2-lite
+  name: SeedVR2-Turbo
   text: 视频与图像超分辨率修复工具箱
   tagline: 基于 SeedVR2 扩散模型 · 独立运行 · 一键修复 · 无需 ComfyUI
   image:
-    src: /SeedVR2-lite/docs/logo.svg
-    alt: SeedVR2-lite
+    src: /SeedVR2-Turbo/docs/logo.svg
+    alt: SeedVR2-Turbo
   actions:
     - theme: brand
       text: 快速开始
       link: /guide/quickstart
     - theme: alt
       text: 在线模拟演示
-      link: https://reserendipity.github.io/SeedVR2-Lite/
+      link: https://reserendipity.github.io/SeedVR2-Turbo/
     - theme: alt
       text: GitHub
-      link: https://github.com/ReSerendipity/SeedVR2-Lite
+      link: https://github.com/ReSerendipity/SeedVR2-Turbo
 
 features:
   - icon: ⚡
