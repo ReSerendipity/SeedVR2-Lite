@@ -28,6 +28,9 @@ from app.integrated_app.utils.crash_telemetry import count_crashes  # noqa: E402
 
 def main(argv: list[str] | None = None) -> int:
     """统计窗口内崩溃并对照阈值；超限返回 1，达标返回 0。"""
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description="崩溃预算检查（窗口计数 vs 上限）")
     parser.add_argument("--crashes-dir", default=None, help="崩溃记录目录（默认项目 logs/crashes）")
     parser.add_argument("--window-days", type=int, default=7, help="统计窗口（天），默认 7")
