@@ -63,3 +63,4 @@
 | 65 | 下载 manager 每组件只保留一个任务，失败重试覆盖前次上下文 | 环境包或模型下载失败后重试 | 旧 attempt 的 stage/error 丢失，且没有直接焦点测试覆盖 DownloadManager/路由 | 为任务增加 attempt id 与阶段日志，保留最近一次失败快照，并补 start/progress/cancel/uninstall/retry 测试 | 2026-11-26 |
 | 66 | Windows 下 Python 子进程默认 GBK 输出，测试按 UTF-8 解码会得到 None | pre-push 全量 pytest 跑 check_crash_budget.py | subprocess reader thread 抛 UnicodeDecodeError，proc.stdout 为 None，两个崩溃预算用例假红 | CLI 脚本在 main 入口将 stdout/stderr reconfigure 为 UTF-8；保留中文输出与 JSON 契约，不改测试编码口径 | 2026-11-26 |
 | 67 | tag 已创建但 CHANGELOG 仍标未发版，release-state 真仓库门禁变红 | v2.0.2 tag 指向 41ed05a 后再次推送 | 最新 tag 与当前版本相等，CHANGELOG 的“未发版”标记成为不一致 | 发版后把对应 CHANGELOG 小节改为真实发布日期；tag 创建与 changelog 状态更新要在同一交付闭环核对 | 2026-11-26 |
+| 68 | workflow_dispatch 输入直接插入 PowerShell run 块，Semgrep 判 shell injection | verify-relaunch.yml 解析 Release tag | `${{ inputs.tag }}` 直接进入脚本，main SAST 阻塞 | github context 先经 env:TAG 中转，run 内只读 $env:TAG；所有 workflow 的 run 块都不得直接内插 github/inputs 上下文 | 2026-11-26 |

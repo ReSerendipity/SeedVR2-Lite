@@ -27,8 +27,10 @@ jobs:
       - name: Resolve version from tag
         id: target
         shell: pwsh
+        env:
+          TAG: ${{ inputs.tag }}
         run: |
-          $tag = "${{ inputs.tag }}"
+          $tag = $env:TAG
           $ver = $tag -replace '^v', ''
           if ($ver -notmatch '^\d+\.\d+\.\d+$') { throw "tag 格式错误: $tag" }
           "tag=$tag" >> $env:GITHUB_OUTPUT
