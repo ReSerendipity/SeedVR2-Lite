@@ -22,6 +22,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import logging
 import os
 import shutil
 import subprocess
@@ -30,11 +31,14 @@ import threading
 import time
 import urllib.error
 import urllib.request
+import uuid
 import zipfile
 from collections.abc import Callable
 from typing import Any
 
 from app.integrated_app.version import get_app_version
+
+logger = logging.getLogger(__name__)
 
 # 打包态：本文件位于 <app_dir>/app/integrated_app/，上溯三级即 app_dir
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -545,12 +549,14 @@ class DownloadTask:
         self.component = component
         self.kind = kind
         self.target = target
+        self.attempt_id = uuid.uuid4().hex[:12]
         self.stage = "queued"
         self.ratio = 0.0
         self.message = ""
         self.error: str | None = None
         self.finished = False
         self.started_at = time.time()
+        self.finished_at: float | None = None
         self._cancel = threading.Event()
 
     def to_dict(self) -> dict:
@@ -558,18 +564,28 @@ class DownloadTask:
             "component": self.component,
             "kind": self.kind,
             "target": self.target,
+            "attempt_id": self.attempt_id,
             "stage": self.stage,
             "ratio": round(self.ratio, 4),
             "message": self.message,
             "error": self.error,
             "finished": self.finished,
-            "elapsed_seconds": round(time.time() - self.started_at, 1),
+            "elapsed_seconds": round((self.finished_at or time.time()) - self.started_at, 1),
         }
 
     def request_cancel(self) -> None:
         self._cancel.set()
 
     def _progress(self, stage: str, ratio: float, message: str) -> None:
+        if stage != self.stage:
+            logger.info(
+                "download attempt=%s component=%s stage=%s ratio=%.2f message=%s",
+                self.attempt_id,
+                self.component,
+                stage,
+                ratio,
+                message,
+            )
         self.stage = stage
         self.ratio = ratio
         self.message = message
@@ -582,23 +598,46 @@ class DownloadTask:
                 install_model(self.target, config, self._progress, self._cancel.is_set)
             self.stage = "done"
             self.ratio = 1.0
+            logger.info("download attempt=%s component=%s completed", self.attempt_id, self.component)
         except InterruptedError as exc:
             self.stage = "cancelled"
             self.error = str(exc)
+            logger.warning(
+                "download attempt=%s component=%s cancelled error=%s",
+                self.attempt_id,
+                self.component,
+                self.error,
+            )
         except (urllib.error.URLError, OSError) as exc:
             self.stage = "error"
             self.error = f"网络错误: {exc}"
+            logger.warning(
+                "download attempt=%s component=%s stage=%s error=%s",
+                self.attempt_id,
+                self.component,
+                self.stage,
+                self.error,
+            )
         except Exception as exc:  # noqa: BLE001 - 错误需回传给用户，不能让线程静默死
             self.stage = "error"
             self.error = str(exc)
+            logger.warning(
+                "download attempt=%s component=%s stage=%s error=%s",
+                self.attempt_id,
+                self.component,
+                self.stage,
+                self.error,
+            )
         finally:
             self.finished = True
+            self.finished_at = time.time()
 
 
 class DownloadManager:
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._tasks: dict[str, DownloadTask] = {}
+        self._recent_failures: dict[str, DownloadTask] = {}
 
     def start(self, kind: str, target: str, config: dict) -> DownloadTask:
         component = "runtime" if kind == "runtime" else f"model:{target}"
@@ -606,6 +645,8 @@ class DownloadManager:
             existing = self._tasks.get(component)
             if existing and not existing.finished:
                 return existing
+            if existing and existing.stage in {"error", "cancelled"}:
+                self._recent_failures[component] = existing
             task = DownloadTask(component, kind, target)
             self._tasks[component] = task
         thread = threading.Thread(target=task.run, args=(config,), name=f"download-{component}", daemon=True)
@@ -616,12 +657,17 @@ class DownloadManager:
         with self._lock:
             return [task.to_dict() for task in self._tasks.values()]
 
+    def recent_failures(self) -> list[dict]:
+        with self._lock:
+            return [task.to_dict() for task in self._recent_failures.values()]
+
     def cancel(self, component: str) -> bool:
-        task = self._tasks.get(component)
-        if not task or task.finished:
-            return False
-        task.request_cancel()
-        return True
+        with self._lock:
+            task = self._tasks.get(component)
+            if not task or task.finished:
+                return False
+            task.request_cancel()
+            return True
 
 
 _MANAGER: DownloadManager | None = None

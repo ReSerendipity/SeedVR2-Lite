@@ -100,7 +100,8 @@ async def start(request: Request, payload: StartRequest):
 @router.get("/progress")
 async def progress():
     """全部任务的进度快照（前端轮询）。"""
-    return respond_success({"tasks": get_download_manager().progress()})
+    manager = get_download_manager()
+    return respond_success({"tasks": manager.progress(), "recent_failures": manager.recent_failures()})
 
 
 @router.post("/cancel")

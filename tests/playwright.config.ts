@@ -4,8 +4,8 @@
  * Features:
  * - Multi-browser testing (Chromium, Firefox, WebKit)
  * - Responsive viewport projects (desktop, laptop, tablet, mobile)
- * - Screenshot on failure, video on first retry
- * - HTML reporter with trace on first retry
+ * - Screenshot, video, and trace retained on failure
+ * - HTML reporter for failed-run review
  * - Optional web server startup with reuse support
  */
 import { defineConfig, devices } from '@playwright/test';
@@ -74,14 +74,14 @@ export default defineConfig({
       origins: [{ origin: BASE_URL, localStorage: FIRST_RUN_LOCAL_STORAGE }],
     },
 
-    // Collect trace on first retry for debugging
-    trace: 'on-first-retry',
+    // Keep failure diagnostics even when retries are disabled.
+    trace: 'retain-on-failure',
 
     // Capture screenshot on test failure
     screenshot: 'only-on-failure',
 
-    // Record video on first retry only to save disk space
-    video: 'on-first-retry',
+    // Record failed runs without introducing automatic retries.
+    video: 'retain-on-failure',
 
     // Maximum navigation timeout (increased for CPU-only environment)
     navigationTimeout: 60000,

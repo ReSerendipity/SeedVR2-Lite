@@ -94,7 +94,7 @@ jobs:
       # removed again on 2026-08-30). To regenerate baselines, run the
       # update-baselines.yml workflow manually.
       - name: Run Playwright tests
-        run: cd tests && npx playwright test --project=${{ matrix.project }} --reporter=github,list
+        run: cd tests && npx playwright test --project=${{ matrix.project }} --reporter=github --reporter=html --reporter=list
 
       - name: Upload HTML report
         if: always()
