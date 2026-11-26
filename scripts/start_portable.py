@@ -26,13 +26,15 @@ if PROJECT_ROOT not in sys.path:
 # 环境隔离（桌面端迁移 B-4，移植自 clean_launch.setup_isolated_env）：
 # 清除可能指向其他 Python 的环境变量、移除系统/用户包路径，防止桌面端
 # 在用户机器上加载错解释器标准库或第三方包（壳只设了 PYTHONNOUSERSITE）。
+#
+# Issue #211：过滤必须豁免当前解释器自身的前缀。便携版默认安装在
+# %LOCALAPPDATA%\SeedVR2（含 AppData 字样），旧的子串黑名单会把 bootstrap\Lib
+# 一并删掉，随后 gettext 惰性 import locale 即 ModuleNotFoundError。
+from app.bootstrap_env import filter_sys_path  # noqa: E402 — 必须先补 PROJECT_ROOT 再导入
+
 for _var in ("PYTHONHOME", "PYTHONSTARTUP"):
     os.environ.pop(_var, None)
-sys.path = [
-    p
-    for p in sys.path
-    if not any(exclude in p.lower() for exclude in ("\\appdata\\", "\\program files\\", "\\programdata\\"))
-]
+sys.path = filter_sys_path(sys.path, PROJECT_ROOT)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
@@ -43,6 +45,11 @@ def main():
     parser.add_argument("--host", type=str, default="127.0.0.1", help="监听地址")
     parser.add_argument("--config", type=str, default=None, help="配置文件路径")
     args = parser.parse_args()
+
+    # 桌面壳直接调用本脚本，不经过 clean_launch.main；VC++ 预检必须在这里也跑一次。
+    from app.clean_launch import check_vc_runtime
+
+    check_vc_runtime()
 
     import uvicorn
 

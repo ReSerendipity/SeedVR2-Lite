@@ -668,6 +668,7 @@
     "not_installed": "Non installé",
     "install": "Installer",
     "cancel": "Annuler",
+    "cancelled": "Annulé",
     "uninstall": "Désinstaller",
     "size": "Taille",
     "path": "Chemin",
@@ -676,6 +677,12 @@
     "no_models": "Aucun poids configuré",
     "confirm_uninstall": "Supprimer ces fichiers ?",
     "confirm_uninstall_runtime": "Désinstaller le runtime ? Une réinstallation sera nécessaire.",
+    "source": "Canal de téléchargement",
+    "source_auto": "Auto (recommandé)",
+    "source_cn": "Chine (ModelScope)",
+    "source_intl": "International (HuggingFace)",
+    "preparing": "Préparation…",
+    "catalog_missing": "Le catalogue downloads_catalog.json est absent. Cliquez sur Actualiser pour réessayer ; si l'erreur persiste, réinstallez avec le paquet complet (les paquets incrémentaux peuvent l'omettre).",
     "error": "Erreur"
   }
 }

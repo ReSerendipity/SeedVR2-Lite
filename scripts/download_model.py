@@ -47,7 +47,17 @@ import os
 import re
 import shutil
 import sys
+from collections.abc import Callable
 from pathlib import Path
+
+# 进度回调：(总体比例 0..1, 当前文件/阶段说明)。取消回调返回 True 时尽快中止。
+ProgressCb = Callable[[float, str], None]
+CancelCb = Callable[[], bool]
+
+# 模型下载线路：auto=按文件默认路由；cn=优先 ModelScope；intl=优先 HuggingFace。
+DOWNLOAD_SOURCES = ("auto", "cn", "intl")
+_HF_BASE = "https://huggingface.co"
+
 
 # 各模型尺寸对应的权重文件名（与 config.yaml model.models.<size> 保持一致）
 _MODEL_FILES: dict[str, list[str]] = {
@@ -133,11 +143,23 @@ def _resolve_source(filename: str, default_repo: str) -> tuple[str, str | None]:
     return default_repo, None
 
 
-def _http_download(url: str, target: Path, chunk: int = 1 << 20) -> None:
-    """ModelScope 直连流式下载：.part 断点续传，完成后原子改名。
+def _hf_endpoint() -> str:
+    """当前 HuggingFace 线路地址（支持 HF_ENDPOINT 镜像）。"""
+    return (os.environ.get("HF_ENDPOINT") or _HF_BASE).rstrip("/")
 
-    进度用 rich.progress 展示（rich 为项目声明依赖）：从已有 .part 字节数续起；
-    服务端不支持 Range 时回退整文件重下，进度条同样回零。
+
+def _http_download(
+    url: str,
+    target: Path,
+    chunk: int = 1 << 20,
+    progress_cb: ProgressCb | None = None,
+    should_cancel: CancelCb | None = None,
+    label: str | None = None,
+) -> None:
+    """直连流式下载：.part 断点续传，完成后原子改名。
+
+    进度同时送 rich.progress（控制台）与 ``progress_cb``（桌面下载页）；
+    每读一块检查 ``should_cancel``，取消抛 InterruptedError 交给任务层记账。
     """
     import requests
     from rich.progress import (
@@ -161,6 +183,9 @@ def _http_download(url: str, target: Path, chunk: int = 1 << 20) -> None:
         # Content-Length 在 Range 请求下是剩余字节数，进度总量要加回已续传部分
         remaining = int(r.headers.get("Content-Length", 0))
         total = start + remaining if remaining else 0
+        written = start
+        if progress_cb:
+            progress_cb((written / total) if total else 0.0, label or target.name)
         with (
             open(part, mode) as f,
             Progress(
@@ -176,9 +201,14 @@ def _http_download(url: str, target: Path, chunk: int = 1 << 20) -> None:
             if start:
                 progress.advance(task_id, start)
             for blk in r.iter_content(chunk_size=chunk):
+                if should_cancel and should_cancel():
+                    raise InterruptedError("已取消")
                 if blk:
                     f.write(blk)
+                    written += len(blk)
                     progress.advance(task_id, len(blk))
+                    if progress_cb:
+                        progress_cb((written / total) if total else 0.0, label or target.name)
     os.replace(part, target)
 
 
@@ -188,6 +218,10 @@ def _download_file(
     save_dir: Path,
     allow_missing: bool = False,
     subfolder: str | None = None,
+    progress_cb: ProgressCb | None = None,
+    should_cancel: CancelCb | None = None,
+    source: str = "auto",
+    endpoint: str | None = None,
 ) -> bool:
     """下载单个文件到 save_dir 根下，已存在则跳过。
 
@@ -197,8 +231,13 @@ def _download_file(
         save_dir: 保存目录（文件直接写入该目录根下）。
         allow_missing: 仓库中缺失该文件时是否允许静默跳过（用于 VAE/嵌入等
                       可能位于其他仓库的文件）。
-        subfolder: 仓库内子目录。给出时视为 ModelScope 来源，走直连 HTTP 下载，
-                  文件落地到 save_dir 根（config 与引擎按裸文件名查找）。
+        subfolder: 仓库内子目录。给出且走 ModelScope 时按直连 HTTP 下载；
+                   HuggingFace 侧同样按 ``<subfolder>/<remote_name>`` 解析。
+        progress_cb: 进度回调（总体比例, 文件名）。
+        should_cancel: 取消回调；返回 True 时抛 InterruptedError。
+        source: ``auto`` / ``cn`` / ``intl``。auto 维持按文件类型路由；
+                cn 优先 ModelScope，intl 优先 HuggingFace，失败自动回退另一条线。
+        endpoint: HuggingFace 线路地址（如 https://hf-mirror.com）。
 
     Returns:
         bool: 下载或已存在返回 True；仓库缺失且 allow_missing 时返回 False。
@@ -206,6 +245,8 @@ def _download_file(
     target = save_dir / Path(filename).name
     if target.exists() and target.stat().st_size > 0:
         print(f"  [跳过] 已存在: {target.name} ({target.stat().st_size / 1024**3:.2f} GB)")
+        if progress_cb:
+            progress_cb(1.0, filename)
         return True
 
     # pos_emb / neg_emb 等公开仓缺失的小文件随安装包内置在 scripts/bundle_assets/。
@@ -215,33 +256,76 @@ def _download_file(
         try:
             shutil.copy2(bundled, target)
             print(f"  [内置] 已复制: {target.name} ({target.stat().st_size / 1024**2:.1f} MB)")
+            if progress_cb:
+                progress_cb(1.0, filename)
             return True
         except OSError as e:
             print(f"  [警告] 内置资产复制失败，继续尝试线上源: {e}")
 
-    try:
-        if subfolder:
-            remote_name = _comfy_remote_name(filename) if repo_id == _COMFY_ORG_REPO else filename
-            url = f"{_MODELSCOPE_BASE}/{repo_id}/resolve/master/{subfolder}/{remote_name}"
-            print(f"  [下载·ModelScope] {filename} ...")
-            _http_download(url, target)
-        else:
+    remote_name = _comfy_remote_name(filename) if repo_id == _COMFY_ORG_REPO else filename
+    # 只有 Comfy-Org 那套文件同时存在两条线路；其它（qwen 等）只有 HF。
+    use_modelscope = subfolder is not None
+    if source == "intl":
+        use_modelscope = False
+    elif source == "cn" and subfolder:
+        use_modelscope = True
+
+    def fetch_modelscope() -> None:
+        url = f"{_MODELSCOPE_BASE}/{repo_id}/resolve/master/{subfolder}/{remote_name}"
+        print(f"  [下载·ModelScope] {filename} ...")
+        _http_download(url, target, progress_cb=progress_cb, should_cancel=should_cancel, label=filename)
+
+    def fetch_huggingface() -> None:
+        base = endpoint or _hf_endpoint()
+        rel = f"{subfolder}/{remote_name}" if subfolder else filename
+        url = f"{base}/{repo_id}/resolve/main/{rel}"
+        print(f"  [下载·HuggingFace] {filename} ...")
+        try:
+            _http_download(url, target, progress_cb=progress_cb, should_cancel=should_cancel, label=filename)
+        except InterruptedError:
+            raise
+        except Exception as direct_error:  # 直链受限（鉴权/重定向）时回退官方库
+            print(f"  [回退] 直链下载失败，尝试 huggingface_hub: {direct_error}")
             from huggingface_hub import hf_hub_download
 
-            print(f"  [下载·HuggingFace] {filename} ...")
-            hf_hub_download(
-                repo_id=repo_id,
-                filename=filename,
-                local_dir=str(save_dir),
-                local_dir_use_symlinks=False,
-            )
+            if should_cancel and should_cancel():
+                raise InterruptedError("已取消") from None
+            downloaded = Path(hf_hub_download(repo_id=repo_id, filename=rel, local_dir=str(save_dir)))
+            if should_cancel and should_cancel():
+                raise InterruptedError("已取消") from None
+            if downloaded.resolve() != target.resolve():
+                target.parent.mkdir(parents=True, exist_ok=True)
+                os.replace(downloaded, target)
+            if progress_cb:
+                progress_cb(1.0, filename)
+
+    first, second = (fetch_modelscope, fetch_huggingface) if use_modelscope else (fetch_huggingface, None)
+    if second is None and subfolder is not None:
+        second = fetch_modelscope
+    try:
+        first()
         print(f"  [完成] {filename}")
         return True
-    except Exception as e:
-        if allow_missing:
-            print(f"  [跳过] 仓库中未找到 {filename}（不影响其他文件）: {e}")
-            return False
+    except InterruptedError:
         raise
+    except Exception as primary_error:
+        if second is None:
+            if allow_missing:
+                print(f"  [跳过] 仓库中未找到 {filename}（不影响其他文件）: {primary_error}")
+                return False
+            raise
+        print(f"  [回退] 首选线路失败，切换备用线路: {primary_error}")
+        try:
+            second()
+            print(f"  [完成] {filename}")
+            return True
+        except InterruptedError:
+            raise
+        except Exception as secondary_error:
+            if allow_missing:
+                print(f"  [跳过] 仓库中未找到 {filename}（不影响其他文件）: {secondary_error}")
+                return False
+            raise RuntimeError(f"{filename} 两条线路均失败: {primary_error} | {secondary_error}") from secondary_error
 
 
 def _load_checkpoint_files(config_path: Path, model_size: str, precisions: list[str]) -> list[str]:
@@ -286,13 +370,17 @@ def download_model(
     only_files: list[str] | None = None,
     verify_hashes: bool = True,
     precisions: list[str] | None = None,
+    progress_cb: ProgressCb | None = None,
+    should_cancel: CancelCb | None = None,
+    source: str = "auto",
+    endpoint: str | None = None,
 ) -> None:
     """下载指定尺寸/精度的 SeedVR2 模型权重到根目录（fp16/fp8 走 HF，量化走 ModelScope）。
 
     Args:
         model_size: 模型参数规模，可选 "3b" / "7b" / "7b_sharp"。默认为 "3b"。
         save_dir: 模型保存的根目录路径（权重文件直接写入该目录根下）。默认为 "model"。
-        repo_id: HuggingFace 仓库 ID，默认为社区整理仓库 numz/SeedVR2_comfyUI。
+        repo_id: HuggingFace 仓库 ID，默认为官方转换仓 Comfy-Org/SeedVR2。
                  仅用于 fp16/fp8 与共享组件；Comfy-Org 量化文件固定走 ModelScope。
         with_vae: 是否同时下载共享的 VAE 与文本嵌入文件。默认为 True。
         only_files: 精确指定要下载的文件名列表，给出时忽略 model_size 清单与 with_vae。
@@ -302,6 +390,10 @@ def download_model(
         verify_hashes: 下载后按 config.yaml 的 sha256_* 期望哈希校验完整性。默认 True。
         precisions: 精度清单（如 ["fp16","nvfp4"]）。仅在未指定 only_files 时生效；
                     为 None 时保持旧行为只取 fp16/fp8。量化精度文件名从 config.yaml 解析。
+        progress_cb: 桌面下载页进度回调（总体比例, 当前文件名）；每块下载都会回调。
+        should_cancel: 取消回调（用户点「取消」时返回 True）。
+        source: ``auto`` / ``cn`` / ``intl`` 线路偏好；失败自动切另一条线。
+        endpoint: HuggingFace 线路地址（如 https://hf-mirror.com）。
 
     Returns:
         None
@@ -309,7 +401,10 @@ def download_model(
     Raises:
         ValueError: model_size / precisions 非法时抛出（only_files 未给定时）。
         RuntimeError: 文件缺失或 SHA256 校验失败时抛出。
+        InterruptedError: 用户取消时抛出。
     """
+    if source not in DOWNLOAD_SOURCES:
+        raise ValueError(f"非法下载线路: {source!r}（可选 {DOWNLOAD_SOURCES}）")
     config_path = Path(__file__).resolve().parent.parent / "config.yaml"
     if only_files:
         files = list(only_files)
@@ -336,14 +431,38 @@ def download_model(
 
     missing: list[str] = []
     sources: dict[str, tuple[str, str | None]] = {}
-    for filename in files:
+    file_count = len(files)
+    for index, filename in enumerate(files):
+        if should_cancel and should_cancel():
+            raise InterruptedError("已取消")
+
+        def _file_progress(ratio: float, label: str, i: int = index) -> None:
+            """把单文件比例折算成整批比例，供任务层/UI 直接使用。"""
+            if not progress_cb:
+                return
+            clamped = min(max(ratio, 0.0), 1.0)
+            overall = (i + clamped) / file_count if file_count else 1.0
+            progress_cb(min(overall, 1.0), label)
+
         # only_files 模式不允许静默跳过：便携包 CI 以「全部权重就在该仓库」为前提，
         # 任何文件缺失都必须失败并暴露给调用方，否则会产出"假成功"（此前就漏了 pos/neg）。
         allow = (filename in _SHARED_FILES) and not only_files
         repo, subfolder = _resolve_source(filename, repo_id)
         sources[filename] = (repo, subfolder)
-        if not _download_file(repo, filename, save_path, allow_missing=allow, subfolder=subfolder):
+        if not _download_file(
+            repo,
+            filename,
+            save_path,
+            allow_missing=allow,
+            subfolder=subfolder,
+            progress_cb=_file_progress if progress_cb else None,
+            should_cancel=should_cancel,
+            source=source,
+            endpoint=endpoint,
+        ):
             missing.append(filename)
+        if progress_cb:
+            progress_cb((index + 1) / file_count if file_count else 1.0, filename)
 
     print()
     print("=" * 60)
@@ -534,6 +653,13 @@ if __name__ == "__main__":
         help=f"HuggingFace 仓库 ID（默认官方 {_DEFAULT_REPO}；社区整理仓可用 numz/SeedVR2_comfyUI）",
     )
     parser.add_argument(
+        "--source",
+        default="auto",
+        choices=list(DOWNLOAD_SOURCES),
+        help="下载线路：auto=按文件类型路由（默认）；cn=优先 ModelScope；intl=优先 HuggingFace。"
+        "首选线路失败会自动切换另一条线",
+    )
+    parser.add_argument(
         "--endpoint",
         default=None,
         help="HuggingFace endpoint，如 https://hf-mirror.com（国内镜像加速，P1-3）。"
@@ -578,4 +704,6 @@ if __name__ == "__main__":
         only_files=args.files,
         verify_hashes=not args.no_verify,
         precisions=args.precisions,
+        source=args.source,
+        endpoint=args.endpoint,
     )

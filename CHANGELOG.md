@@ -6,6 +6,16 @@
 
 > 2026 Q3 及更早版本已分片到 [CHANGELOG-2026-Q3.md](CHANGELOG-2026-Q3.md)（C 轨，单片 ≤128 KiB）。
 
+## [Unreleased]
+
+### Fixed
+
+* **portable**: 修复 Issue #211 的 AppData 启动崩溃。`sys.path` 隔离改为 `app/bootstrap_env.py` 的共享过滤器，保护解释器自身 `sys.prefix` / `base_prefix` / `exec_prefix` 与项目根；默认装到 `%LOCALAPPDATA%\SeedVR2` 时不再把 `bootstrap\Lib` 当“外部 Python”裁掉，`import locale` 不再触发 `No module named 'locale'`。`clean_launch` 的泄露检测复用同一判据，不再误报 bootstrap。
+* **downloads**: 模型下载补齐进度回调与 UI 行内进度条；新增自动 / 国内（ModelScope）/ 国外（HuggingFace）线路选择并透传到下载器（仍以 `config.yaml` 的 sha256 为唯一内容校验）；点击安装立即进入“准备中”禁用态；取消态显示“已取消”而非“出错”；移除 `.sv-progress-bar{width:100%!important}`，恢复真实比例。
+* **downloads**: 在线安装推理环境增加阶段心跳，pip 长时间无输出时进度不再停在 0%；`downloads_catalog.json` 缺失时页面给出可操作提示，发布校验 `verify_release_integrity.py` 增加 catalog 门禁。
+* **runtime**: 文案区分“推理运行环境（Python + PyTorch）”与“VC++ 运行库”；桌面启动链路（`start_portable.py`）增加 VC++ DLL 预检，缺失时打印微软官方安装链接。
+* **watermark**: 水印密钥文件为空/过短时备份为 `.invalid-<ts>` 并重建，审计 `WATERMARK_KEY_INVALID`，避免旧密钥阻断出图。
+
 ## [2.0.2] - 2026-11-24
 
 ### Added

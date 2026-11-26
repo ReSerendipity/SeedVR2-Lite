@@ -1,5 +1,6 @@
 """下载管理焦点测试：attempt 归属、失败保留、取消与路由。"""
 
+import threading
 from unittest.mock import MagicMock
 
 import pytest
@@ -112,3 +113,48 @@ def test_download_routes_expose_attempts_and_failures(test_app, monkeypatch, def
     removed = csrf_post(test_app, "/api/downloads/uninstall", json={"kind": "runtime", "target": ""})
     assert removed.json()["success"] is True
     uninstall.assert_called_once_with()
+
+
+def test_online_install_cancel_interrupts_silent_pip(monkeypatch, tmp_path):
+    class SilentStdout:
+        def __init__(self, proc):
+            self.proc = proc
+
+        def __iter__(self):
+            self.proc.terminated.wait(timeout=5)
+            return iter(())
+
+    class FakeProc:
+        def __init__(self):
+            self.terminated = threading.Event()
+            self.stdout = SilentStdout(self)
+            self.returncode = None
+
+        def poll(self):
+            return self.returncode
+
+        def terminate(self):
+            self.returncode = -15
+            self.terminated.set()
+
+        def kill(self):
+            self.returncode = -9
+            self.terminated.set()
+
+        def wait(self, timeout=None):
+            if self.returncode is None:
+                self.returncode = 0
+            return self.returncode
+
+    proc = FakeProc()
+    monkeypatch.setattr("subprocess.Popen", lambda *args, **kwargs: proc)
+    monkeypatch.setattr(download_service, "_python_dir", lambda: str(tmp_path))
+
+    with pytest.raises(InterruptedError):
+        download_service._install_runtime_online(
+            {"install_mode": "online", "packages": ["torch"]},
+            should_cancel=lambda: True,
+        )
+
+    assert proc.terminated.is_set()
+    assert not (tmp_path / "RUNTIME.json").exists()

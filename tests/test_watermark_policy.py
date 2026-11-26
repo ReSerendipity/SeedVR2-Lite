@@ -303,3 +303,72 @@ def test_key_present_audits_nothing(monkeypatch):
 
     assert watermark_policy.report_missing_watermark_key() is True
     assert events == []
+
+
+def test_invalid_key_file_backed_up_and_audited(monkeypatch, tmp_path):
+    """0 字节 / 过短密钥文件：改名留证 + 审计 WATERMARK_KEY_INVALID，再走内核重建。"""
+    import app.integrated_app.security.watermark as wm
+
+    key_path = tmp_path / ".watermark_key"
+    key_path.write_text("", encoding="utf-8")
+    events = []
+    monkeypatch.setattr(watermark_policy, "audit_event", lambda event, **kw: events.append(event))
+    monkeypatch.setattr(watermark_policy, "_WATERMARK_KEY_PATH", key_path)
+    monkeypatch.setattr(wm, "watermark_key_available", lambda: False)
+
+    assert watermark_policy.ensure_watermark_key_file() is False
+    backups = list(tmp_path.glob(".watermark_key.invalid-*"))
+    assert len(backups) == 1, "损坏文件必须改名留证，不能直接覆盖删除"
+    assert events == ["WATERMARK_KEY_INVALID"]
+    assert not key_path.exists(), "损坏文件应已移走，交给内核重建"
+
+
+def test_invalid_utf8_key_is_backed_up_without_crashing(monkeypatch, tmp_path):
+    import app.integrated_app.security.watermark as wm
+
+    key_path = tmp_path / ".watermark_key"
+    key_path.write_bytes(b"\xff\xfe\x00")
+    events = []
+    monkeypatch.setattr(watermark_policy, "audit_event", lambda event, **kw: events.append((event, kw["detail"])))
+    monkeypatch.setattr(watermark_policy, "_WATERMARK_KEY_PATH", key_path)
+    monkeypatch.setattr(wm, "watermark_key_available", lambda: False)
+
+    assert watermark_policy.ensure_watermark_key_file() is False
+    assert len(list(tmp_path.glob(".watermark_key.invalid-*"))) == 1
+    assert events[0][0] == "WATERMARK_KEY_INVALID"
+    assert "已备份" in events[0][1] and "重建失败" in events[0][1]
+
+
+def test_invalid_key_audit_records_backup_failure(monkeypatch, tmp_path):
+    import app.integrated_app.security.watermark as wm
+
+    key_path = tmp_path / ".watermark_key"
+    key_path.write_text("short", encoding="utf-8")
+    events = []
+    monkeypatch.setattr(watermark_policy, "audit_event", lambda event, **kw: events.append((event, kw["detail"])))
+    monkeypatch.setattr(watermark_policy, "_WATERMARK_KEY_PATH", key_path)
+    monkeypatch.setattr(wm, "watermark_key_available", lambda: False)
+    monkeypatch.setattr(Path, "replace", lambda self, target: (_ for _ in ()).throw(OSError("readonly")))
+
+    assert watermark_policy.ensure_watermark_key_file() is False
+    assert "备份失败" in events[0][1]
+    assert key_path.exists()
+
+
+def test_short_key_backup_remains_usable_for_verification(monkeypatch, tmp_path):
+    import app.integrated_app.security.watermark as wm
+
+    key_path = tmp_path / ".watermark_key"
+    key_path.write_text("short", encoding="utf-8")
+    monkeypatch.setattr(watermark_policy, "_WATERMARK_KEY_PATH", key_path)
+    monkeypatch.setattr(wm, "_WATERMARK_KEY_FILE_DATA", key_path)
+    monkeypatch.setattr(wm, "_WATERMARK_KEY_FILE_LEGACY", tmp_path / "legacy-key")
+    monkeypatch.setattr(wm, "_WATERMARK_KEY_FILE_OLD", tmp_path / "old-key")
+    monkeypatch.delenv(wm._WATERMARK_KEY_ENV, raising=False)
+
+    assert watermark_policy.ensure_watermark_key_file() is True
+    backup = next(tmp_path.glob(".watermark_key.invalid-*"))
+    assert backup.read_text(encoding="utf-8").strip() == "short"
+    assert b"short" in wm._load_verify_keys()
+    signed = wm._sign_payload("historical-payload", b"short")
+    assert wm._verify_signature(signed, b"short") == "historical-payload"

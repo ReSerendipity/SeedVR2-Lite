@@ -38,6 +38,13 @@ from typing import Any
 
 from app.integrated_app.version import get_app_version
 
+# 线路选择只影响下载 URL，不改变文件内容：落盘后仍按 config.yaml 的 sha256 校验。
+MODEL_SOURCES = [
+    {"id": "auto", "label": "自动（推荐）"},
+    {"id": "cn", "label": "国内（ModelScope）"},
+    {"id": "intl", "label": "国外（HuggingFace）"},
+]
+
 logger = logging.getLogger(__name__)
 
 # 打包态：本文件位于 <app_dir>/app/integrated_app/，上溯三级即 app_dir
@@ -210,13 +217,18 @@ def build_runtime_status() -> dict:
     meta = _read_runtime_meta() or {}
     present = os.path.isfile(exe)
     files, size = _dir_stats(runtime_dir) if os.path.isdir(runtime_dir) else (0, 0)
+    # RUNTIME.json 可能随瘦包一起被复制，但 torch 已被排除；只认标记会把
+    # 「空 bootstrap」误报成已安装，用户点开始修复才撞到 No module named 'torch'。
+    torch_dir = os.path.join(runtime_dir, "Lib", "site-packages", "torch")
+    torch_present = os.path.isfile(os.path.join(torch_dir, "__init__.py"))
     app_version = get_app_version()
     min_app = meta.get("min_app_version")
     return {
         "present": present,
-        # 引导态下 python.exe 本来就在，但 torch 还没装——「可用」要看 RUNTIME.json，
-        # 它只在环境安装成功后才写入。两者分开报，页面才能提示「需安装环境」。
-        "installed": bool(meta),
+        # 引导态下 python.exe 本来就在，但 torch 还没装——「可用」要看
+        # RUNTIME.json + torch 实际存在，二者缺一都应在页面提示「需安装环境」。
+        "torch_present": torch_present,
+        "installed": bool(meta and torch_present),
         "path": runtime_dir,
         "executable": exe if present else None,
         "python_version": meta.get("python"),
@@ -304,7 +316,7 @@ def _install_runtime_online(
         if on_progress:
             on_progress(stage, ratio, message)
 
-    report("download", 0.01, "连接官方索引…")
+    report("download", 0.02, "连接官方索引…")
     command = [sys.executable, "-m", "pip", "install", *packages, "--no-warn-script-location", "--progress-bar", "off"]
     if index_url:
         command += ["--index-url", index_url]
@@ -323,17 +335,58 @@ def _install_runtime_online(
     )
     tail: list[str] = []
     assert proc.stdout is not None
-    for raw in proc.stdout:
-        if should_cancel and should_cancel():
+    started = time.monotonic()
+    finished = threading.Event()
+    cancelled = threading.Event()
+
+    def _stop_pip() -> None:
+        if proc.poll() is None:
             proc.terminate()
-            raise InterruptedError("已取消")
-        line = raw.rstrip()
-        if not line:
-            continue
-        tail.append(line)
-        tail = tail[-3:]
-        report("download", 0.5, line[:160])
-    code = proc.wait()
+        try:
+            proc.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
+
+    def _heartbeat() -> None:
+        """pip 静默下载时也保持 UI 有心跳，并及时响应取消。"""
+        while not finished.wait(2.0):
+            if should_cancel and should_cancel():
+                cancelled.set()
+                if proc.poll() is None:
+                    proc.terminate()
+                return
+            elapsed = time.monotonic() - started
+            # 600s 内从 5% 缓慢爬到 85%，只做阶段提示，最终以退出码与 RUNTIME.json 为准。
+            report("install", min(0.85, 0.05 + elapsed / 600 * 0.80), "安装依赖中（pip 正在下载/安装）")
+
+    beat = threading.Thread(target=_heartbeat, name="runtime-install-heartbeat", daemon=True)
+    beat.start()
+    try:
+        for raw in proc.stdout:
+            if should_cancel and should_cancel():
+                cancelled.set()
+                _stop_pip()
+                raise InterruptedError("已取消")
+            line = raw.rstrip()
+            if not line:
+                continue
+            tail.append(line)
+            tail = tail[-3:]
+            report("install", min(0.9, 0.05 + (time.monotonic() - started) / 600 * 0.80), line[:160])
+    finally:
+        finished.set()
+        beat.join(timeout=1.0)
+    if cancelled.is_set() or (should_cancel and should_cancel()):
+        _stop_pip()
+        raise InterruptedError("已取消")
+    try:
+        code = proc.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        code = proc.wait()
+    if cancelled.is_set() or (should_cancel and should_cancel()):
+        raise InterruptedError("已取消")
     if code != 0:
         raise RuntimeError(f"在线安装失败（退出码 {code}）：{' | '.join(tail)[-300:]}")
 
@@ -470,8 +523,21 @@ def install_model(
     config: dict,
     on_progress: ProgressCb | None = None,
     should_cancel: Callable[[], bool] | None = None,
+    source: str = "auto",
 ) -> dict:
-    """下载 `size/precision` 指定的权重（如 `3b/mxfp8`），含共享 VAE 与文本嵌入。"""
+    """下载 `size/precision` 指定的权重（如 `3b/mxfp8`），含共享 VAE 与文本嵌入。
+
+    Args:
+        component: 组件 ID（``<size>/<precision>``）。
+        config: 应用配置。
+        on_progress: ``(stage, ratio, message)`` 进度回调；按 0.5s 节流后上报，
+            避免 GB 级下载每 1MB 刷新一次任务状态。
+        should_cancel: 取消回调。
+        source: ``auto`` / ``cn`` / ``intl`` 线路偏好，透传给下载脚本。
+
+    Returns:
+        dict: 完成信息。
+    """
     module = _load_model_script()
     parts = str(component).split("/", 1)
     if len(parts) != 2:
@@ -482,6 +548,16 @@ def install_model(
         if on_progress:
             on_progress(stage, ratio, message)
 
+    last_emit = {"at": 0.0}
+
+    def _throttled(ratio: float, label: str) -> None:
+        """下载脚本每块回调一次；这里压到 ≤2 次/秒，但 100% 必须即时上报。"""
+        now = time.monotonic()
+        if ratio < 1.0 and now - last_emit["at"] < 0.5:
+            return
+        last_emit["at"] = now
+        report("download", ratio, f"下载 {label}")
+
     if should_cancel and should_cancel():
         raise InterruptedError("已取消")
     report("download", 0.0, f"下载 {model_size}/{precision}")
@@ -491,9 +567,12 @@ def install_model(
         precisions=[precision],
         with_vae=True,
         verify_hashes=True,
+        progress_cb=_throttled,
+        should_cancel=should_cancel,
+        source=source,
     )
     report("done", 1.0, f"{model_size}/{precision} 下载完成")
-    return {"component": component, "model_size": model_size, "precision": precision}
+    return {"component": component, "model_size": model_size, "precision": precision, "source": source}
 
 
 def uninstall_runtime() -> None:
@@ -545,10 +624,11 @@ def uninstall_model(component: str, config: dict) -> None:
 
 # ------------------------------------------------------------ 任务管理 ----
 class DownloadTask:
-    def __init__(self, component: str, kind: str, target: str) -> None:
+    def __init__(self, component: str, kind: str, target: str, source: str = "auto") -> None:
         self.component = component
         self.kind = kind
         self.target = target
+        self.source = source
         self.attempt_id = uuid.uuid4().hex[:12]
         self.stage = "queued"
         self.ratio = 0.0
@@ -564,6 +644,7 @@ class DownloadTask:
             "component": self.component,
             "kind": self.kind,
             "target": self.target,
+            "source": self.source,
             "attempt_id": self.attempt_id,
             "stage": self.stage,
             "ratio": round(self.ratio, 4),
@@ -595,7 +676,7 @@ class DownloadTask:
             if self.kind == "runtime":
                 install_runtime(self._progress, self._cancel.is_set)
             else:
-                install_model(self.target, config, self._progress, self._cancel.is_set)
+                install_model(self.target, config, self._progress, self._cancel.is_set, source=self.source)
             self.stage = "done"
             self.ratio = 1.0
             logger.info("download attempt=%s component=%s completed", self.attempt_id, self.component)
@@ -639,7 +720,7 @@ class DownloadManager:
         self._tasks: dict[str, DownloadTask] = {}
         self._recent_failures: dict[str, DownloadTask] = {}
 
-    def start(self, kind: str, target: str, config: dict) -> DownloadTask:
+    def start(self, kind: str, target: str, config: dict, source: str = "auto") -> DownloadTask:
         component = "runtime" if kind == "runtime" else f"model:{target}"
         with self._lock:
             existing = self._tasks.get(component)
@@ -647,7 +728,7 @@ class DownloadManager:
                 return existing
             if existing and existing.stage in {"error", "cancelled"}:
                 self._recent_failures[component] = existing
-            task = DownloadTask(component, kind, target)
+            task = DownloadTask(component, kind, target, source=source)
             self._tasks[component] = task
         thread = threading.Thread(target=task.run, args=(config,), name=f"download-{component}", daemon=True)
         thread.start()
@@ -695,6 +776,8 @@ def build_status(config: dict) -> dict:
         "runtime": runtime,
         "models": models,
         "model_root": model_root(config),
+        "catalog_present": bool(load_catalog()),
+        "model_sources": MODEL_SOURCES,
     }
 
 
@@ -714,7 +797,12 @@ def catalog_view(config: dict) -> dict:
                 "source": "modelscope（Comfy-Org/SeedVR2）",
             }
         )
-    return {"runtime": runtime, "models": models, "catalog_present": bool(load_catalog())}
+    return {
+        "runtime": runtime,
+        "models": models,
+        "catalog_present": bool(load_catalog()),
+        "model_sources": MODEL_SOURCES,
+    }
 
 
 def _unused(*args: Any) -> None:

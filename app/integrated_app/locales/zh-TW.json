@@ -668,6 +668,7 @@
     "not_installed": "未安裝",
     "install": "安裝",
     "cancel": "取消",
+    "cancelled": "已取消",
     "uninstall": "解除安裝",
     "size": "大小",
     "path": "路徑",
@@ -676,6 +677,12 @@
     "no_models": "未設定權重",
     "confirm_uninstall": "確認刪除這些檔案？",
     "confirm_uninstall_runtime": "確認解除安裝執行環境？解除後需重新安裝才能推理。",
+    "source": "下載線路",
+    "source_auto": "自動（推薦）",
+    "source_cn": "國內（ModelScope）",
+    "source_intl": "國外（HuggingFace）",
+    "preparing": "準備中…",
+    "catalog_missing": "安裝包缺少下載清單 downloads_catalog.json：請點「重新整理」重試；仍失敗請用完整安裝包覆蓋安裝（增量包可能不含該檔案）。",
     "error": "發生錯誤"
   }
 }

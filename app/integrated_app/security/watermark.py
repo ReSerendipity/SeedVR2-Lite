@@ -220,8 +220,9 @@ def _load_verify_keys() -> list[bytes]:
     """加载用于水印签名验证的全部密钥（K-1 多密钥验证链）。
 
     顺序：环境变量注入密钥（签发密钥）→ 当前 data/.watermark_key →
-    旧位置项目根 .watermark_key → 轮换备份 data/.watermark_key.old。
-    轮换后旧产物仍可用 .old 备份密钥验明归属；密钥轮换不破坏历史取证链。
+    旧位置项目根 .watermark_key → 轮换备份 data/.watermark_key.old →
+    损坏修复备份 data/.watermark_key.invalid-*。
+    轮换或修复后旧产物仍可用备份密钥验明归属；历史取证链不因密钥更换中断。
     """
 
     def _read(path: Path) -> bytes | None:
@@ -238,11 +239,13 @@ def _load_verify_keys() -> list[bytes]:
     env_key = os.environ.get(_WATERMARK_KEY_ENV, "").strip()
     if env_key:
         keys.append(env_key.encode("utf-8"))
-    for path in (
+    paths = [
         _WATERMARK_KEY_FILE_DATA,
         _WATERMARK_KEY_FILE_LEGACY,
         _WATERMARK_KEY_FILE_OLD,
-    ):
+    ]
+    paths.extend(sorted(_WATERMARK_KEY_FILE_DATA.parent.glob(f"{_WATERMARK_KEY_FILE_DATA.name}.invalid-*")))
+    for path in paths:
         k = _read(path)
         if k is not None and k not in keys:
             keys.append(k)

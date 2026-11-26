@@ -334,18 +334,34 @@ pub enum PythonMode {
 /// 判据必须是「环境安装流程写下的元信息」`RUNTIME.json`，不能只看
 /// `site-packages/torch`：WinPython 完整版自带 CPU 版 torch（CUDA 不可用），
 /// 只看 torch 目录会把「未装环境」误判成 Full —— 用户直接进首页，永远看不到
-/// 下载管理页，也就永远装不上真正的 CUDA 环境。
+/// 下载管理页，也就永远装不上真正的 CUDA 环境。元信息与 torch 必须同时存在，
+/// 否则升级残留的 `RUNTIME.json` 仍会把空 bootstrap 误判为 Full。
 pub fn detect_python_mode(app_dir: &Path) -> PythonMode {
+    let is_full = |dir: &Path| {
+        dir.join("python.exe").exists()
+            && dir.join(RUNTIME_META_FILE).exists()
+            && dir
+                .join("Lib")
+                .join("site-packages")
+                .join("torch")
+                .join("__init__.py")
+                .exists()
+    };
     let bootstrap = app_dir.join("bootstrap");
     if bootstrap.join("python.exe").exists() {
-        if bootstrap.join(RUNTIME_META_FILE).exists() {
-            return PythonMode::Full;
-        }
-        return PythonMode::Bootstrap;
+        return if is_full(&bootstrap) {
+            PythonMode::Full
+        } else {
+            PythonMode::Bootstrap
+        };
     }
     let runtime = app_dir.join("runtime");
     if runtime.join("python.exe").exists() {
-        return PythonMode::Full;
+        return if is_full(&runtime) {
+            PythonMode::Full
+        } else {
+            PythonMode::Bootstrap
+        };
     }
     PythonMode::Dev
 }
@@ -462,11 +478,27 @@ mod tests {
     }
 
     #[test]
-    fn mode_is_full_when_bootstrap_has_runtime_meta() {
+    fn mode_is_full_when_bootstrap_has_runtime_meta_and_torch() {
         let app = make_app_dir("boot-meta", true);
         std::fs::write(app.join("bootstrap").join(RUNTIME_META_FILE), b"{}").unwrap();
+        let torch = app
+            .join("bootstrap")
+            .join("Lib")
+            .join("site-packages")
+            .join("torch");
+        std::fs::create_dir_all(&torch).unwrap();
+        std::fs::write(torch.join("__init__.py"), b"").unwrap();
         assert_eq!(detect_python_mode(&app), PythonMode::Full);
         assert_eq!(startup_entry(detect_python_mode(&app)), "");
+        let _ = std::fs::remove_dir_all(&app);
+    }
+
+    #[test]
+    fn mode_is_bootstrap_when_stale_meta_without_torch() {
+        let app = make_app_dir("boot-stale-meta", true);
+        std::fs::write(app.join("bootstrap").join(RUNTIME_META_FILE), b"{}").unwrap();
+        assert_eq!(detect_python_mode(&app), PythonMode::Bootstrap);
+        assert_eq!(startup_entry(detect_python_mode(&app)), "downloads");
         let _ = std::fs::remove_dir_all(&app);
     }
 
@@ -488,6 +520,10 @@ mod tests {
         let runtime = app.join("runtime");
         std::fs::create_dir_all(&runtime).unwrap();
         std::fs::write(runtime.join("python.exe"), b"stub").unwrap();
+        std::fs::write(runtime.join(RUNTIME_META_FILE), b"{}").unwrap();
+        let torch = runtime.join("Lib").join("site-packages").join("torch");
+        std::fs::create_dir_all(&torch).unwrap();
+        std::fs::write(torch.join("__init__.py"), b"").unwrap();
         assert_eq!(detect_python_mode(&app), PythonMode::Full);
         assert_eq!(resolve_runtime_dir(&app), runtime);
         let _ = std::fs::remove_dir_all(&app);

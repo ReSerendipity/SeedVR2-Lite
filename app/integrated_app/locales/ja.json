@@ -668,6 +668,7 @@
     "not_installed": "未インストール",
     "install": "インストール",
     "cancel": "キャンセル",
+    "cancelled": "キャンセル済み",
     "uninstall": "アンインストール",
     "size": "サイズ",
     "path": "パス",
@@ -676,6 +677,12 @@
     "no_models": "重みが未設定です",
     "confirm_uninstall": "これらのファイルを削除しますか？",
     "confirm_uninstall_runtime": "ランタイムをアンインストールしますか？推論には再インストールが必要です。",
+    "source": "ダウンロード経路",
+    "source_auto": "自動（推奨）",
+    "source_cn": "中国（ModelScope）",
+    "source_intl": "海外（HuggingFace）",
+    "preparing": "準備中…",
+    "catalog_missing": "ダウンロード目録 downloads_catalog.json がありません。「更新」で再試行してください。それでも失敗する場合は完全版で上書きインストールしてください（増分パッケージには含まれない場合があります）。",
     "error": "エラー"
   }
 }

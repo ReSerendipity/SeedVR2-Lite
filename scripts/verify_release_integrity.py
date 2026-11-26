@@ -30,6 +30,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import importlib
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -134,6 +135,64 @@ def check_repo_state_normalization(repo_root: Path) -> list[str]:
     return problems
 
 
+def check_download_catalog(app_root: Path) -> list[str]:
+    """校验 ``downloads_catalog.json`` 随包且可解析（Issue #211 hikari668 ④）。
+
+    下载页「安装运行环境」依赖这份清单；增量包若漏带，用户只会看到
+    「未找到环境包清单」，且没有任何自救入口。这里把缺文件前移到构建门禁。
+
+    Args:
+        app_root: App 根（安装态 = ``<安装根>\\app``）。
+
+    Returns:
+        list[str]: 问题描述；空列表表示通过。
+    """
+    import json
+
+    candidates = [app_root / "downloads_catalog.json"]
+    # 仓库态：catalog 在 app/ 包内（app/downloads_catalog.json）；打包态：在 App 根。
+    if not candidates[0].is_file():
+        candidates.append(app_root / "app" / "downloads_catalog.json")
+    catalog_path = next((p for p in candidates if p.is_file()), candidates[-1])
+    if not catalog_path.is_file():
+        return [f"缺少下载清单: {' / '.join(str(p) for p in candidates)}（下载页将无法安装运行环境）"]
+    try:
+        data = json.loads(catalog_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        return [f"下载清单不可解析: {catalog_path}: {exc}"]
+    if not isinstance(data, dict):
+        return [f"下载清单顶层必须是对象: {catalog_path}"]
+    runtime = data.get("runtime")
+    if not isinstance(runtime, dict) or not runtime:
+        return [f"下载清单缺少 runtime 段: {catalog_path}"]
+
+    mode = runtime.get("install_mode", "archive")
+    if mode not in {"online", "archive"}:
+        return [f"runtime.install_mode 必须是 online/archive: {catalog_path}"]
+    if mode == "online":
+        packages = runtime.get("packages")
+        if (
+            not isinstance(packages, list)
+            or not packages
+            or not all(isinstance(item, str) and item.strip() for item in packages)
+        ):
+            return [f"runtime.install_mode=online 但 packages 必须是非空字符串列表: {catalog_path}"]
+    else:
+        volumes = runtime.get("volumes")
+        if not isinstance(volumes, list) or not volumes:
+            return [f"runtime.install_mode={mode} 但缺少 volumes: {catalog_path}"]
+        for index, volume in enumerate(volumes):
+            if not isinstance(volume, dict):
+                return [f"runtime.volumes[{index}] 必须是对象: {catalog_path}"]
+            name = volume.get("name")
+            if not isinstance(name, str) or not name or name in {".", ".."} or "/" in name or "\\" in name:
+                return [f"runtime.volumes[{index}].name 必须是安全文件名: {catalog_path}"]
+            sha256 = volume.get("sha256")
+            if not isinstance(sha256, str) or re.fullmatch(r"[0-9a-fA-F]{64}", sha256) is None:
+                return [f"runtime.volumes[{index}].sha256 必须是 64 位十六进制: {catalog_path}"]
+    return []
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="发布前完整性门禁")
     parser.add_argument(
@@ -211,6 +270,10 @@ def main() -> int:
         problems.extend(drift)
     else:
         print("  仓库态字节归一漂移（#103）: 跳过（发布态 --app-root 无 git 索引可比）")
+
+    catalog_problems = check_download_catalog(app_root)
+    print(f"  下载清单 downloads_catalog.json: {'OK' if not catalog_problems else '缺失/不可用'}")
+    problems.extend(catalog_problems)
 
     print("-" * 68)
     if problems:

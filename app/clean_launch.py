@@ -113,21 +113,48 @@ def setup_isolated_env() -> None:
     for var in ["PYTHONHOME", "PYTHONSTARTUP", "PYTHONIOENCODING"]:
         os.environ.pop(var, None)
 
-    sys.path = [
-        p
-        for p in sys.path
-        if not any(
-            exclude in p.lower()
-            for exclude in [
-                "\\appdata\\",
-                "\\program files\\",
-                "\\programdata\\",
-            ]
-        )
-    ]
+    # 本文件以脚本方式运行时 sys.path[0] 是 app/，共享过滤器在 app 包下，
+    # 先补项目根再导入（与 main() 的前插同一路径，后续过滤器会豁免它）。
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
+    from app.bootstrap_env import filter_sys_path
+
+    # Issue #211：只移除「别人的 Python」，当前解释器自身前缀（即使位于
+    # AppData / Program Files 下）必须保留，否则标准库会被整体裁掉。
+    sys.path = filter_sys_path(sys.path, project_root)
 
     if project_root not in sys.path:
         sys.path.insert(0, project_root)
+
+
+def check_vc_runtime() -> bool:
+    """预检 Microsoft VC++ 运行库（torch / 扩展模块的硬依赖）。
+
+    便携包若被杀软或解压工具截断，``vcruntime140.dll`` 可能缺失；此时 Python 本体
+    能起，但 torch 导入会报「DLL load failed」。提前给出可操作提示，比让用户
+    在首个任务里撞见 500 更容易自救（Issue #211 hikari668 ④ 的「运行库」歧义）。
+
+    Returns:
+        bool: 三个 DLL 均可加载返回 True；非 Windows 平台直接返回 True。
+    """
+    if os.name != "nt":
+        return True
+    import ctypes
+
+    missing: list[str] = []
+    for dll in ("vcruntime140.dll", "vcruntime140_1.dll", "msvcp140.dll"):
+        try:
+            ctypes.WinDLL(dll)
+        except OSError:
+            missing.append(dll)
+    if not missing:
+        return True
+    print(f"[WARN] 未检测到 VC++ 运行库组件: {', '.join(missing)}")
+    print("[WARN] 这会导致 torch / 扩展模块导入失败（与「推理运行环境」是两回事）。")
+    print("[WARN] 安装指引: https://aka.ms/vs/17/release/vc_redist.x64.exe （安装后重启应用）")
+    print("[WARN] 便携包内若带 VC_redist\\VC_redist.x64.exe，可直接运行它修复。")
+    return False
 
 
 def main() -> int | None:
@@ -198,24 +225,24 @@ def main() -> int | None:
     except Exception as e:  # 预检失败不阻塞启动
         print(f"[WARN] FFmpeg 预检跳过: {e}")
 
+    # VC++ 运行库预检（Issue #211 hikari668 ④：把「运行库」与「运行时」分开提示）
+    try:
+        check_vc_runtime()
+    except Exception as e:  # 预检失败不阻塞启动
+        print(f"[WARN] VC++ 运行库预检跳过: {e}")
+
     wp_python = find_winpython_python()
     if wp_python:
         print(f"[WinPython] 检测到 WinPython: {wp_python}")
     else:
         print("[系统] 使用当前 Python 环境运行")
 
-    leaked = [
-        p
-        for p in sys.path
-        if any(
-            exclude in p.lower()
-            for exclude in [
-                "\\appdata\\",
-                "\\program files\\",
-                "\\programdata\\",
-            ]
-        )
-    ]
+    # 泄露检测与过滤器共用同一判据：bootstrap/runtime 自身即使位于 AppData /
+    # Program Files 下也不再被误报，只有「别人的 Python」才会告警。
+    from app.bootstrap_env import is_foreign_path, protected_prefixes
+
+    protected = protected_prefixes(project_root)
+    leaked = [p for p in sys.path if is_foreign_path(p, protected)]
     if leaked:
         print(f"[WARN] 检测到系统 Python 路径泄露: {leaked}")
 
@@ -253,6 +280,7 @@ def main() -> int | None:
     from app.integrated_app.app_server import main as app_main
 
     app_main()
+    return None
 
 
 if __name__ == "__main__":

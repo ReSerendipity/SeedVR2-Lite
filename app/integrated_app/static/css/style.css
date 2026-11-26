@@ -6562,9 +6562,12 @@ input[type="number"].sv-form-control::-webkit-outer-spin-button {
     }
 }
 
-/* ===== 进度条性能优化：使用transform:scaleX替代width动画 ===== */
+/* ===== 进度条性能优化：使用 transform:scaleX 替代 width 动画 =====
+   Issue #211：这里曾用 `width:100%!important` 覆盖 width 动画，但下载页仍按
+   `style.width=<pct>%` 写入——!important 的层叠优先级高于普通行内声明，
+   进度条因此从头到尾都是满格。现统一由 transform 驱动，不再钉死 width。 */
 .sv-progress-bar {
-    width: 100% !important;
+    width: 100%;
     transform-origin: left center;
     will-change: transform;
 }
@@ -10228,9 +10231,12 @@ a,
 .dl-model-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .dl-model-item {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    flex-wrap: wrap;
     padding: 10px 12px; border: 1px solid var(--sv-border); border-radius: var(--sv-radius);
     background: var(--sv-bg-elevated, transparent);
 }
+.dl-model-item [data-role="progress"],
+.dl-model-item [data-role="progress-text"] { flex-basis: 100%; }
 .dl-model-meta { display: flex; flex-direction: column; gap: 2px; }
 .dl-model-name { font-size: 14px; }
 .dl-model-sub { font-size: 12px; color: var(--sv-text-muted); }
@@ -10239,6 +10245,12 @@ a,
 .dl-dot.off { background: var(--sv-text-muted); opacity: .4; }
 .dl-muted { color: var(--sv-text-muted); font-size: 13px; }
 .dl-hint { margin: 12px 0 0; font-size: 12px; color: var(--sv-text-muted); font-family: var(--sv-font-mono, monospace); }
+.dl-error { margin: 10px 0 0; font-size: 12px; color: var(--sv-danger, #c0392b); }
+.dl-source-label { align-self: center; font-size: 12px; color: var(--sv-text-muted); }
+.dl-source-select {
+    padding: 4px 8px; border-radius: var(--sv-radius); border: 1px solid var(--sv-border);
+    background: var(--sv-bg-elevated, transparent); color: var(--sv-text); font-size: 12px;
+}
 .dl-hidden { display: none !important; }
 .dl-progress-text { margin: 8px 0 0; font-size: 12px; color: var(--sv-text-muted); }
 

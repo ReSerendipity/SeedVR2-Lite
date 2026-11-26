@@ -19,6 +19,8 @@
             <i class="bi bi-arrow-clockwise"></i> {{ t('downloads.refresh') }}
         </button>
     </div>
+    <p class="dl-hint dl-hidden" id="dlCatalogWarning"></p>
+    <p class="dl-error dl-hidden" id="dlPageError"></p>
 </div>
 
 <!-- 运行环境 -->
@@ -66,6 +68,14 @@
             <div>
                 <h2 class="dl-section-title">{{ t('downloads.models') }}</h2>
                 <p class="dl-section-desc">{{ t('downloads.models_desc') }}</p>
+            </div>
+            <div class="dl-actions">
+                <label class="dl-source-label" for="dlModelSource">{{ t('downloads.source') }}</label>
+                <select class="dl-source-select" id="dlModelSource" aria-label="{{ t('downloads.source') }}">
+                    <option value="auto">{{ t('downloads.source_auto') }}</option>
+                    <option value="cn">{{ t('downloads.source_cn') }}</option>
+                    <option value="intl">{{ t('downloads.source_intl') }}</option>
+                </select>
             </div>
         </div>
         <ul class="dl-model-list" id="dlModelList">
@@ -130,6 +140,21 @@
 
     var state = { status: null, tasks: [] };
 
+    function showError(message) {
+        var el = document.getElementById('dlPageError');
+        if (!el) return;
+        el.textContent = message || '';
+        el.classList.toggle('dl-hidden', !message);
+    }
+
+    function modelRow(id) {
+        var rows = document.querySelectorAll('#dlModelList .dl-model-item');
+        for (var i = 0; i < rows.length; i++) {
+            if (rows[i].getAttribute('data-model-id') === id) return rows[i];
+        }
+        return null;
+    }
+
     function renderStatus() {
         var data = state.status;
         if (!data) return;
@@ -141,6 +166,13 @@
         var modeEl = document.getElementById('dlMode');
         if (modeEl) modeEl.classList.toggle('is-ready', !!data.ready);
         setText('dlReadyText', data.ready ? t('downloads.ready', 'Ready') : t('downloads.not_ready', 'Not ready'));
+
+        // 清单缺失时给出可操作指引，而不是只弹后端原文（Issue #211 hikari668 ④）。
+        var warn = document.getElementById('dlCatalogWarning');
+        if (warn) {
+            warn.textContent = data.catalog_present === false ? t('downloads.catalog_missing') : '';
+            warn.classList.toggle('dl-hidden', data.catalog_present !== false);
+        }
 
         var rt = data.runtime || {};
         setText('dlRuntimeStatus', rt.installed ? t('downloads.installed', 'Installed') : t('downloads.not_installed', 'Not installed'));
@@ -158,6 +190,7 @@
         (data.models || []).forEach(function (model) {
             var li = document.createElement('li');
             li.className = 'dl-model-item';
+            li.setAttribute('data-model-id', model.id);
             var meta = document.createElement('div');
             meta.className = 'dl-model-meta';
             var name = document.createElement('span');
@@ -175,13 +208,36 @@
             var btn = document.createElement('button');
             btn.className = 'sv-btn sv-btn-sm ' + (model.present ? 'sv-btn-danger' : 'sv-btn-primary');
             btn.type = 'button';
+            btn.setAttribute('data-role', 'action');
             btn.textContent = model.present ? t('downloads.uninstall', 'Uninstall') : t('downloads.install', 'Install');
             btn.addEventListener('click', function () {
                 if (model.present) uninstallModel(model.id);
-                else startTask('model', model.id);
+                else startTask('model', model.id, btn);
             });
             actions.appendChild(btn);
+
+            var cancelBtn = document.createElement('button');
+            cancelBtn.className = 'sv-btn sv-btn-outline sv-btn-sm dl-hidden';
+            cancelBtn.type = 'button';
+            cancelBtn.setAttribute('data-role', 'cancel');
+            cancelBtn.textContent = t('downloads.cancel', 'Cancel');
+            cancelBtn.addEventListener('click', function () { cancelTask('model', model.id); });
+            actions.appendChild(cancelBtn);
             li.appendChild(actions);
+
+            var progressWrap = document.createElement('div');
+            progressWrap.className = 'sv-progress dl-hidden';
+            progressWrap.setAttribute('data-role', 'progress');
+            var bar = document.createElement('div');
+            bar.className = 'sv-progress-bar';
+            bar.setAttribute('data-role', 'bar');
+            progressWrap.appendChild(bar);
+            li.appendChild(progressWrap);
+
+            var progressText = document.createElement('p');
+            progressText.className = 'dl-progress-text dl-hidden';
+            progressText.setAttribute('data-role', 'progress-text');
+            li.appendChild(progressText);
             list.appendChild(li);
         });
         if (!(data.models || []).length) {
@@ -190,10 +246,36 @@
         setText('dlModelRoot', (t('downloads.path', 'Path') + ': ') + (data.model_root || ''));
     }
 
+    function renderModelTask(row, task) {
+        var wrap = row.querySelector('[data-role="progress"]');
+        var bar = row.querySelector('[data-role="bar"]');
+        var text = row.querySelector('[data-role="progress-text"]');
+        var btn = row.querySelector('[data-role="action"]');
+        var cancelBtn = row.querySelector('[data-role="cancel"]');
+        var running = !task.finished;
+        var pct = Math.max(0, Math.min(100, (task.ratio || 0) * 100));
+        if (wrap) wrap.classList.toggle('dl-hidden', !running);
+        if (text) text.classList.toggle('dl-hidden', !(running || task.error));
+        if (bar) bar.style.transform = 'scaleX(' + (pct / 100).toFixed(4) + ')';
+        if (text) {
+            text.textContent = task.stage === 'cancelled'
+                ? t('status.cancelled', 'Cancelled')
+                : (task.error ? t('downloads.error', 'Error') + ': ' + task.error : (task.message || task.stage) + ' · ' + pct.toFixed(0) + '%');
+        }
+        if (btn) btn.classList.toggle('dl-hidden', running);
+        if (cancelBtn) cancelBtn.classList.toggle('dl-hidden', !running);
+    }
+
     function renderProgress() {
         var tasks = state.tasks || [];
         var runtimeTask = null;
-        tasks.forEach(function (task) { if (task.component === 'runtime') runtimeTask = task; });
+        tasks.forEach(function (task) {
+            if (task.component === 'runtime') runtimeTask = task;
+            else if (task.component && task.component.indexOf('model:') === 0) {
+                var row = modelRow(task.component.slice('model:'.length));
+                if (row) renderModelTask(row, task);
+            }
+        });
         if (runtimeTask && !runtimeTask.finished) {
             show('dlRuntimeProgress', true);
             show('dlRuntimeProgressText', true);
@@ -201,13 +283,16 @@
             show('dlCancelRuntime', true);
             var pct = Math.max(0, Math.min(100, (runtimeTask.ratio || 0) * 100));
             var bar = document.getElementById('dlRuntimeBar');
-            if (bar) bar.style.width = pct.toFixed(1) + '%';
+            if (bar) bar.style.transform = 'scaleX(' + (pct / 100).toFixed(4) + ')';
             setText('dlRuntimeProgressText', (runtimeTask.message || runtimeTask.stage) + ' · ' + pct.toFixed(0) + '%');
         } else {
             show('dlRuntimeProgress', false);
             show('dlRuntimeProgressText', false);
             show('dlCancelRuntime', false);
-            if (runtimeTask && runtimeTask.finished && runtimeTask.error) {
+            if (runtimeTask && runtimeTask.finished && runtimeTask.stage === 'cancelled') {
+                show('dlRuntimeProgressText', true);
+                setText('dlRuntimeProgressText', t('downloads.cancelled', 'Cancelled') + ': ' + (runtimeTask.error || ''));
+            } else if (runtimeTask && runtimeTask.finished && runtimeTask.error) {
                 show('dlRuntimeProgressText', true);
                 setText('dlRuntimeProgressText', t('downloads.error', 'Error') + ': ' + runtimeTask.error);
             }
@@ -226,7 +311,7 @@
             renderStatus();
             renderProgress();
         }).catch(function (err) {
-            setText('dlReadyText', t('downloads.error', 'Error') + ': ' + err);
+            showError(t('downloads.error', 'Error') + ': ' + err);
         });
     }
 
@@ -246,25 +331,44 @@
         if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     }
 
-    function startTask(kind, target) {
+    function startTask(kind, target, btn) {
         if (busy) return;
         busy = true;
-        api('/api/downloads/start', { method: 'POST', body: JSON.stringify({ kind: kind, target: target || '' }) })
+        showError('');
+        var originalText = btn ? btn.textContent : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = t('downloads.preparing', 'Preparing…');
+        }
+        var sourceEl = document.getElementById('dlModelSource');
+        var source = kind === 'model' && sourceEl ? sourceEl.value : 'auto';
+        api('/api/downloads/start', {
+            method: 'POST',
+            body: JSON.stringify({ kind: kind, target: target || '', source: source })
+        })
             .then(function (resp) {
                 if (!resp.success) {
-                    alert((resp.error && resp.error.message) || t('downloads.error', 'Error'));
+                    showError((resp.error && resp.error.message) || t('downloads.error', 'Error'));
                     return;
                 }
                 startPolling();
                 refresh();
             })
-            .catch(function (err) { alert(String(err)); })
-            .then(function () { busy = false; });
+            .catch(function (err) { showError(String(err)); })
+            .then(function () {
+                busy = false;
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            });
     }
 
-    function cancelTask(kind) {
-        api('/api/downloads/cancel', { method: 'POST', body: JSON.stringify({ kind: kind, target: '' }) })
-            .then(refresh);
+    function cancelTask(kind, target) {
+        api('/api/downloads/cancel', {
+            method: 'POST',
+            body: JSON.stringify({ kind: kind, target: target || '' })
+        }).then(refresh);
     }
 
     function uninstallModel(id) {
@@ -279,7 +383,7 @@
             .then(refresh);
     }
 
-    document.getElementById('dlInstallRuntime').addEventListener('click', function () { startTask('runtime', ''); });
+    document.getElementById('dlInstallRuntime').addEventListener('click', function () { startTask('runtime', '', this); });
     document.getElementById('dlCancelRuntime').addEventListener('click', function () { cancelTask('runtime'); });
     document.getElementById('dlUninstallRuntime').addEventListener('click', uninstallRuntime);
     document.getElementById('dlRefresh').addEventListener('click', refresh);

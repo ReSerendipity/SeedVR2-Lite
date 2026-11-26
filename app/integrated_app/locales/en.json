@@ -662,12 +662,13 @@
     "ready": "Ready",
     "not_ready": "Not ready",
     "runtime": "Runtime",
-    "runtime_desc": "Python runtime with PyTorch (CUDA). The slim package ships without it — install it here before running inference.",
+    "runtime_desc": "Python runtime with PyTorch (CUDA). The slim package ships without it — install it here before running inference. This is not the VC++ runtime library; a missing VC++ runtime is reported separately at startup.",
     "status": "Status",
     "installed": "Installed",
     "not_installed": "Not installed",
     "install": "Install",
     "cancel": "Cancel",
+    "cancelled": "Cancelled",
     "uninstall": "Uninstall",
     "size": "Size",
     "path": "Path",
@@ -676,6 +677,12 @@
     "no_models": "No weights configured",
     "confirm_uninstall": "Delete these files?",
     "confirm_uninstall_runtime": "Uninstall the runtime? You must reinstall it before running inference.",
+    "source": "Download route",
+    "source_auto": "Auto (recommended)",
+    "source_cn": "China (ModelScope)",
+    "source_intl": "International (HuggingFace)",
+    "preparing": "Preparing…",
+    "catalog_missing": "The download catalog downloads_catalog.json is missing. Click Refresh to retry; if it still fails, reinstall with the full package (incremental packages may omit this file).",
     "error": "Error"
   }
 }

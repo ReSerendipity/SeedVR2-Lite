@@ -45,6 +45,10 @@ def _deny_remote(request: Request):
 class StartRequest(BaseModel):
     kind: str = Field(description="runtime | model")
     target: str = Field(default="", description="kind=model 时为 <size>/<precision>")
+    source: str = Field(default="auto", description="下载线路：auto | cn | intl（仅 kind=model 生效）")
+
+
+DOWNLOAD_SOURCES = ("auto", "cn", "intl")
 
 
 class ComponentRequest(BaseModel):
@@ -82,6 +86,13 @@ async def start(request: Request, payload: StartRequest):
     kind = payload.kind.strip()
     if kind not in ("runtime", "model"):
         return respond_error(code="BAD_REQUEST", message="kind 必须是 runtime 或 model", status=400)
+    source = (payload.source or "auto").strip().lower()
+    if source not in DOWNLOAD_SOURCES:
+        return respond_error(
+            code="BAD_REQUEST",
+            message=f"source 必须是 {'/'.join(DOWNLOAD_SOURCES)} 之一",
+            status=400,
+        )
     if kind == "model" and not payload.target.strip():
         return respond_error(code="BAD_REQUEST", message="kind=model 必须指定 target", status=400)
     if kind == "runtime":
@@ -93,7 +104,7 @@ async def start(request: Request, payload: StartRequest):
                 message="未找到环境包清单 downloads_catalog.json，无法确定下载地址",
                 status=503,
             )
-    task = get_download_manager().start(kind, payload.target.strip(), _config(request))
+    task = get_download_manager().start(kind, payload.target.strip(), _config(request), source=source)
     return respond_success(task.to_dict())
 
 

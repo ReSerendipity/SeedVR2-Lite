@@ -119,6 +119,67 @@ def embed_with_retry(
 
 _key_missing_audited = False
 
+# 与 security/watermark.py 的默认位置保持一致：<安装根>/data/.watermark_key。
+_WATERMARK_KEY_PATH = Path(__file__).resolve().parents[3] / "data" / ".watermark_key"
+_MIN_KEY_CHARS = 16
+
+
+def ensure_watermark_key_file() -> bool:
+    """确保 ``data/.watermark_key`` 可用；损坏文件先备份再让内核重建。
+
+    Issue #211 hikari668 ⑤：用户侧曾看到「水印文件不正确」这类无法定位的报错。
+    实际最常见的是密钥文件被截断成 0 字节 / 写入失败 / 被杀软替换。这里把
+    「文件存在但内容不可用」与「文件缺失」分开处理：
+
+    - 内容过短（<16 字符）或为空：改名 ``.invalid-<时间戳>`` 留证 + 审计，
+      再由 :mod:`security.watermark` 自动生成新密钥；
+    - 文件缺失：直接触发内核自动生成；
+    - 只读目录：返回 False，由调用方按策略降级并给出明确提示。
+
+    Returns:
+        bool: 密钥可用返回 True；只读/生成失败返回 False。
+    """
+    from app.integrated_app.security import watermark as wm
+
+    path = _WATERMARK_KEY_PATH
+    invalid_seen = False
+    backed_up = False
+    content = ""
+    if path.is_file():
+        try:
+            content = path.read_text(encoding="utf-8").strip()
+        except (OSError, UnicodeError) as e:
+            logger.error(f"[SECURITY] 水印密钥文件不可读: {path}: {e}")
+            content = ""
+        if len(content) >= _MIN_KEY_CHARS:
+            # 内容长度合理也继续走内核判定：env 覆盖、显式禁用等以内核为准。
+            logger.debug("[SECURITY] 水印密钥文件外观正常: %s", path)
+        else:
+            invalid_seen = True
+            backup = path.with_name(f".watermark_key.invalid-{datetime.now().strftime('%Y%m%d-%H%M%S')}")
+            try:
+                path.replace(backup)
+                backed_up = True
+                logger.error(f"[SECURITY] 水印密钥文件内容不可用，已备份到 {backup.name} 并准备重建")
+            except OSError as e:
+                logger.error(f"[SECURITY] 损坏的水印密钥文件备份失败（继续尝试重建）: {e}")
+
+    try:
+        available = bool(wm.watermark_key_available())
+    except Exception as e:  # noqa: BLE001 — 密钥生成失败也要给业务侧明确返回值
+        logger.error(f"[SECURITY] 水印密钥自动生成失败: {e}")
+        available = False
+    if invalid_seen:
+        backup_state = "已备份" if backed_up else "备份失败"
+        rebuild_state = "重建成功" if available else "重建失败"
+        audit_event(
+            "WATERMARK_KEY_INVALID",
+            detail=f"密钥文件内容不可用（{len(content)} 字符），{backup_state}，{rebuild_state}",
+        )
+    if not available:
+        logger.error("[SECURITY] 水印密钥不可用（只读目录或生成失败）")
+    return available
+
 
 def report_missing_watermark_key() -> bool:
     """生产路径的密钥可用性上报；返回密钥是否可用。
@@ -129,15 +190,13 @@ def report_missing_watermark_key() -> bool:
     """
     global _key_missing_audited
 
-    from app.integrated_app.security import watermark as wm
-
-    if wm.watermark_key_available():
-        return True
-    if not _key_missing_audited:
-        _key_missing_audited = True
-        logger.error("[SECURITY] 水印签名密钥缺失，产物水印降级为不可证伪的弱水印")
-        audit_event("WATERMARK_KEY_MISSING", detail="水印签名密钥缺失，产物降级为未签名弱水印（不可证伪）")
-    return False
+    if not ensure_watermark_key_file():
+        if not _key_missing_audited:
+            _key_missing_audited = True
+            logger.error("[SECURITY] 水印签名密钥缺失，产物水印降级为不可证伪的弱水印")
+            audit_event("WATERMARK_KEY_MISSING", detail="水印签名密钥缺失，产物降级为未签名弱水印（不可证伪）")
+        return False
+    return True
 
 
 def select_image_embed_tier(ext: str) -> tuple[float, int]:
