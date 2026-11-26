@@ -68,3 +68,4 @@
 | 70 | HuggingFace Hub 回退忽略子目录返回路径且吞掉取消 | HF 直链失败转 hf_hub_download | 文件落到 model/diffusion_models 或 model/vae，根目录校验报缺失；InterruptedError 被广泛捕获 | 单独放行取消，接收返回路径并 os.replace 到扁平 target，Hub 调用前后检查取消，补真实回退测试 | 2026-11-26 |
 | 71 | pip 静默期 stdout 阻塞导致取消失效，桌面壳只看 RUNTIME.json | 在线安装静默下载或 bootstrap 残留陈旧元信息 | /cancel 返回 true 但任务继续；API 报未安装而壳判 Full | 心跳检查取消并 terminate/wait/kill，写元信息前复查；壳要求 meta+torch 同时存在并补 Rust 回归 | 2026-11-26 |
 | 72 | 水印损坏修复与 catalog 门禁的边界条件不足 | 非 UTF-8 密钥、备份失败、短密钥历史产物、类型错误 catalog | 异常中断推理、审计写未发生操作、旧产物失验、非法清单假绿 | 捕获 UnicodeError 并按真实备份/重建结果审计；invalid 备份仅加入验签链；严格校验 catalog 枚举、列表、文件名与 sha256 | 2026-11-26 |
+| 73 | 跨平台测试手工 lower 路径与 Windows 子进程默认编码不一致 | Ubuntu/Windows 双跑 bootstrap 测试 | POSIX 大小写敏感导致前缀断言假红；Windows 子进程 UTF-8 输出按 cp1252 解码致 stdout=None | 路径用 os.path.normcase；subprocess 显式 encoding=utf-8，与子进程 -X utf8 契约一致 | 2026-11-27 |

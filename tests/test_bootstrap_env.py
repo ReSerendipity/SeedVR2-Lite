@@ -87,7 +87,7 @@ def test_project_root_under_appdata_is_preserved(tmp_path: Path) -> None:
 
 def test_prefix_does_not_match_sibling_directory(tmp_path: Path) -> None:
     """前缀匹配按目录边界，不做裸字符串前缀。"""
-    prefix = str(tmp_path / "AppData" / "SeedVR2").lower()
+    prefix = os.path.normcase(str(tmp_path / "AppData" / "SeedVR2"))
     assert is_under(str(tmp_path / "AppData" / "SeedVR2-Other"), prefix) is False
     assert is_under(str(tmp_path / "AppData" / "SeedVR2" / "Lib"), prefix) is True
 
@@ -116,6 +116,7 @@ def test_start_portable_help_runs() -> None:
         cwd=str(REPO_ROOT),
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=30,
         check=False,
     )
