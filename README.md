@@ -28,7 +28,7 @@ A standalone video & image super-resolution toolkit powered by SeedVR2 diffusion
 
 SeedVR2-Turbo 把字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开源的 [SeedVR2](https://huggingface.co/ByteDance-Seed) 单步扩散修复模型，包装成一个**独立运行的本地 Web 应用**：上传一张图片或一段视频，即可完成超分辨率与细节增强，数据全程不出本机。它不依赖 ComfyUI，也不需要任何外部推理服务。
 
-对外正式分发为 **Tauri v2 桌面版**（单文件安装包 `SeedVR2-Setup-v<版本>.exe`，离线完整包解压即用）；开发者也可以直接用源码或便携分卷包在浏览器中运行。当前稳定版本为 **v2.0.0**（截至 2026-11-23）。
+对外正式分发为 **Tauri v2 桌面版**（Windows 单文件安装包 `SeedVR2-Setup-v<版本>.exe`，内含运行环境与数据卷）；开发者也可以从源码运行，或使用便携包在浏览器中运行。当前最新稳定版本为 **v2.0.2**（发布于 2026-11-24）；便携离线分卷包见 [v2.0.1 Release](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/tag/v2.0.1)。
 
 ### 核心特性
 
@@ -70,7 +70,7 @@ SeedVR2-Turbo 把字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开�
 
 ### 快速开始
 
-> 推荐普通用户到 [Releases](https://github.com/ReSerendipity/SeedVR2-Turbo/releases) 下载 `SeedVR2-Setup-v<版本>.exe`（单文件安装包，便携运行环境与数据卷已内嵌，无需另外下载分卷），双击安装即可；同批发布 `.sha256` 供校验。以下为从源码运行的路径。
+> 推荐普通用户从 [v2.0.2 Release](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/tag/v2.0.2) 下载 [Windows 安装包 `SeedVR2-Setup-v2.0.2.exe`](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/download/v2.0.2/SeedVR2-Setup-v2.0.2.exe)，并使用同批发布的 [SHA-256 校验文件](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/download/v2.0.2/SeedVR2-Setup-v2.0.2.exe.sha256)。需要便携离线分卷包时，请前往 [v2.0.1 Release](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/tag/v2.0.1) 并下载所需的全部分卷。以下为从源码运行的路径。
 
 **1. 环境**
 
@@ -246,7 +246,7 @@ seedvr2 restore -i photo.png -o outputs --server-url http://127.0.0.1:7870
 
 参与贡献请遵循上述[组织级贡献指南](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md)（Conventional Commits + DCO 签名）。Issue 与 Discussion 请在仓库内发起；安全问题请按仓库安全政策私下报告，勿公开提 issue。
 
-- Releases（单文件安装器 `SeedVR2-Setup-v<版本>.exe` / 便携分卷包）：<https://github.com/ReSerendipity/SeedVR2-Turbo/releases>
+- Releases（当前最新版安装器与校验文件；便携离线分卷包见 v2.0.1）：<https://github.com/ReSerendipity/SeedVR2-Turbo/releases>
 
 ### 许可证
 
@@ -260,7 +260,7 @@ seedvr2 restore -i photo.png -o outputs --server-url http://127.0.0.1:7870
 
 SeedVR2-Turbo packages the [SeedVR2](https://huggingface.co/ByteDance-Seed) one-step diffusion restoration model (jointly open-sourced by ByteDance's Seed team and NTU S-Lab) into a **standalone local web app**: upload an image or video and get super-resolution / detail enhancement on the spot, with all data staying on your machine. It does **not** depend on ComfyUI or any external inference service.
 
-The supported distribution is a **Tauri v2 desktop build**, shipped as a single-file Windows installer (`SeedVR2-Setup-v<version>.exe`, bundled runtime and data volume, no separate parts to download); developers can also run it from source or via the portable bundle in a browser. Current stable release: **v1.8.0** (as of 2026-11-15).
+The supported distribution is a **Tauri v2 desktop build**, shipped as a single-file Windows installer (`SeedVR2-Setup-v<version>.exe`, with the runtime and data volume bundled); developers can also run it from source or use a portable bundle in a browser. The latest stable release is **v2.0.2** (published 2026-11-24); the portable offline bundles are available in the [v2.0.1 release](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/tag/v2.0.1).
 
 ### Highlights
 
@@ -301,7 +301,7 @@ The supported distribution is a **Tauri v2 desktop build**, shipped as a single-
 
 ### Quick start
 
-> Regular users should download the [single-file Windows installer, `SeedVR2-Setup-v<version>.exe`](https://github.com/ReSerendipity/SeedVR2-Turbo/releases), and run it. Below is the from-source path.
+> Regular users should download the [v2.0.2 Windows installer, `SeedVR2-Setup-v2.0.2.exe`](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/download/v2.0.2/SeedVR2-Setup-v2.0.2.exe) and verify it with the accompanying [SHA-256 file](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/download/v2.0.2/SeedVR2-Setup-v2.0.2.exe.sha256). For portable offline bundles, go to the [v2.0.1 release](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/tag/v2.0.1) and download all required parts. Below is the from-source path.
 
 **1. Requirements**
 
@@ -448,7 +448,7 @@ Please read [USER_AGREEMENT.md](docs/USER_AGREEMENT.md) before use. This is an i
 
 Follow the [org-level contributing guide](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md) (Conventional Commits + DCO sign-off). Open issues and discussions in the repository; report security problems privately per the security policy rather than in a public issue.
 
-- Releases (desktop / portable bundle / incremental updates): <https://github.com/ReSerendipity/SeedVR2-Turbo/releases>
+- Releases (latest installer and checksum; portable offline bundles in v2.0.1): <https://github.com/ReSerendipity/SeedVR2-Turbo/releases>
 
 ### License
 
