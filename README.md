@@ -28,7 +28,7 @@ A standalone video & image super-resolution toolkit powered by SeedVR2 diffusion
 
 SeedVR2-Turbo 把字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开源的 [SeedVR2](https://huggingface.co/ByteDance-Seed) 单步扩散修复模型，包装成一个**独立运行的本地 Web 应用**：上传一张图片或一段视频，即可完成超分辨率与细节增强，数据全程不出本机。它不依赖 ComfyUI，也不需要任何外部推理服务。
 
-对外正式分发为 **Tauri v2 桌面版**（Windows 单文件安装包 `SeedVR2-Setup-v<版本>.exe`，内含运行环境与数据卷）；开发者也可以从源码运行，或使用便携包在浏览器中运行。当前最新稳定版本为 **v2.0.2**（发布于 2026-11-24）；便携离线分卷包见 [v2.0.1 Release](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/tag/v2.0.1)。
+对外正式分发为 **Tauri v2 Windows 桌面应用**。当前最新稳定版为 **v2.0.2**；安装器内含桌面应用及应用数据，推理运行环境与模型由用户首次启动后在「下载管理」中安装/下载。安装完成后可从桌面快捷方式或开始菜单启动。
 
 ### 核心特性
 
@@ -36,7 +36,7 @@ SeedVR2-Turbo 把字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开�
 - **三档模型**：3B / 7B / 7B-Sharp，支持 FP16 / FP8 及 MXFP8 / NVFP4 / INT8-convrot 量化变体（`.safetensors`，不兼容 GGUF）。
 - **显存友好**：GPU Block Swap 在推理时动态换入换出 Transformer 块；3B FP8 可在 8 GB 显存起步运行。
 - **批量与断点续跑**：单文件修复 + 文件夹批量扫描，批量任务在 `data/checkpoints/` 记录进度，中断后可续跑。
-- **开箱即用的桌面版**：Tauri 原生窗口、系统托盘、Windows Toast 通知、文件拖拽、单实例与崩溃自动恢复；官网与「检查更新」统一走完整安装包，覆盖安装保留模型与用户配置。
+- **Windows 桌面应用**：Tauri 原生窗口、系统托盘、Toast 通知、文件拖拽、单实例与崩溃恢复；从桌面/开始菜单启动，首次运行在应用内安装推理环境和模型；应用内更新使用完整安装器，更新后自动重启并保留用户数据。
 - **Agent CLI**：`seedvr2 status/check/models/launch/restore` 全局命令，JSON 输出 + 语义退出码，供脚本与 AI agent 自动化调用。
 - **多语言与实时监控**：界面支持简体中文、繁体中文、英文、日文、法文；GPU/显存/内存与任务进度经 SSE 实时推送。
 
@@ -70,49 +70,20 @@ SeedVR2-Turbo 把字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开�
 
 ### 快速开始
 
-> 推荐普通用户从 [v2.0.2 Release](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/tag/v2.0.2) 下载 [Windows 安装包 `SeedVR2-Setup-v2.0.2.exe`](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/download/v2.0.2/SeedVR2-Setup-v2.0.2.exe)，并使用同批发布的 [SHA-256 校验文件](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/download/v2.0.2/SeedVR2-Setup-v2.0.2.exe.sha256)。需要便携离线分卷包时，请前往 [v2.0.1 Release](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/tag/v2.0.1) 并下载所需的全部分卷。以下为从源码运行的路径。
+> **普通用户无需克隆仓库、安装系统 Python 或运行启动脚本。** 当前最新稳定版为 **v2.0.2**：从 [GitHub Release 下载 Windows 安装包](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/download/v2.0.2/SeedVR2-Setup-v2.0.2.exe)，并可用同批 [SHA-256 文件](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/download/v2.0.2/SeedVR2-Setup-v2.0.2.exe.sha256)校验。
 
-**1. 环境**
+**1. 安装并启动桌面应用**
 
-- Windows x64、NVIDIA CUDA GPU（必须，不支持纯 CPU 推理）、Python 3.12+。
-- 磁盘预留 ≥ 15 GB；视频修复需自行安装 FFmpeg 并加入 PATH（因许可证原因不随包分发，见 [NOTICE](NOTICE)）。
+- 适用于 Windows 10/11 x64；图像/视频修复需要 NVIDIA CUDA GPU。Windows LTSC 等精简系统可能需要另行安装 WebView2 Runtime。
+- 双击 `SeedVR2-Setup-v2.0.2.exe` 完成安装，然后从桌面快捷方式或开始菜单启动 **SeedVR2**。日常使用不需要打开终端或运行 `.bat` / Python 脚本。
 
-**2. 安装依赖**
+**2. 首次使用时下载运行环境和模型**
 
-```bash
-git clone https://github.com/ReSerendipity/SeedVR2-Turbo.git
-cd SeedVR2-Turbo
+安装包包含桌面应用及其应用数据，但**不包含完整推理运行环境或模型权重**。启动后打开「下载管理」，按页面引导安装 Python + PyTorch 推理环境、选择并下载模型；完成后按提示重启应用。请为运行环境和所选模型预留足够磁盘空间。
 
-# Windows 一键安装（推荐）
-install.bat
+**3. 开始修复**
 
-# 或开发者用 uv（自动创建 .venv 并安装 CUDA 版 PyTorch）
-uv sync
-# 驱动较旧时，改 pyproject.toml 中 [[tool.uv.index]] 的 url 为 cu121 / cu132 后重跑
-```
-
-**3. 下载模型**
-
-```bash
-python scripts/download_model.py --size 3b      # 3B + VAE + 文本嵌入，约 20 GB
-# 7B：--size 7b ；7B-Sharp：--size 7b_sharp
-```
-
-大陆网络下载慢时先设置镜像：`set HF_ENDPOINT=https://hf-mirror.com` 再重跑下载脚本。权重必须放在 `model/` **根目录**（不要建子文件夹）。
-
-**4. 启动**
-
-```bash
-start.bat
-# 或：python app/integrated_app/app_server.py
-```
-
-浏览器打开 <http://127.0.0.1:7870>（端口被占用时自动顺延，以日志打印的地址为准）。
-
-**5. 最小验证**
-
-进入「修复工作台」上传一张图片 → 点击「上传并修复」→ 在「系统状态」页看到 GPU 占用上升、「历史记录」中出现一条已完成任务，即说明推理链路打通。
-
+在「修复工作台」上传图片或视频、选择模型和输出参数后开始修复；任务进度与结果可在应用内查看。视频修复需另行安装 FFmpeg 并加入 `PATH`（因许可证原因不随安装包分发，见 [NOTICE](NOTICE)）。
 #### 交付前检查（改动代码后）
 
 上面的「最小验证」是需要 GPU 的人工冒烟；**改完代码要跑的机器检查**在下面（完整命令矩阵与覆盖率阈值口径见
@@ -135,7 +106,7 @@ python .github/scripts/check_layout.py
 |---|---|
 | 操作系统 | Windows（推荐；源码/Linux 可经 Docker 运行） |
 | GPU | NVIDIA CUDA GPU（必须） |
-| Python | 3.12+（或使用桌面版内置便携 Python） |
+| Python | 桌面版无需单独安装系统 Python；推理运行环境由应用内「下载管理」安装 |
 | 显存 | 3B FP8 最低 8 GB；3B FP16 约 16 GB；7B FP8 约 12 GB；7B FP16 约 24 GB |
 | 磁盘 | ≥ 15 GB |
 
@@ -150,49 +121,7 @@ python .github/scripts/check_layout.py
 
 > FP8 当前仅作权重存储格式，推理仍按 FP16/FP32 加载，故与 FP16 速度基本一致；真正影响速度的是 BlockSwap、输出分辨率与帧数。完整显存对比见仓内 [用户手册](docs/用户手册.md)。
 
-### 显存与配置估算
 
-> 站点 rewq.cn 实验区原有的交互式估算器（2026-11-08 下线）口径存档于此。官方值只取 [ByteDance-Seed/SeedVR](https://github.com/ByteDance-Seed/SeedVR) README 的 GPU Requirement 与 3B/7B 模型名（configs_3b / configs_7b）；**权重显存与相对负载是派生值，不含激活与框架开销**。官方没有给吞吐与单价，这里只算显存与配置，不编价格。
-
-**在线交互版**：<https://reserendipity.github.io/SeedVR2-Turbo/vram.html>（调 3B/7B、输出高度、帧数、GPU 数，实时读数；源文件 [docs/vram.html](docs/vram.html)，经 GitHub Pages 发布）。
-
-**官方参考档位**：
-
-| 场景 | 官方参考 |
-|---|---|
-| 100×720×1280（720p · 100 帧） | 1×H100-80G |
-| 1080p / 2K（sp_size=4） | 4×H100-80G |
-
-**派生口径**：
-
-- 权重显存 ≈ 参数量 × 2 GB（bf16：3B ≈ 6.0 GB，7B ≈ 14.0 GB）
-- 每卡相对负载 = (输出高度 ÷ 720)² × (帧数 ÷ 100)（以 720p · 100 帧为 1×）
-- 所选 GPU 总显存 = 卡数 × 80 GB
-
-**判定规则**：3B 卡数低于档位 → 「低于官方参考：建议 {n}×H100-80G」；7B 官方未单列档位，恒标注「以实测为准」；帧数超过 100 → 超出官方示例，需实测。
-
-示例（原估算器给出的读数）：
-
-| 模型 | 输出高度 | 帧数 | GPU 数 | 官方档位 | 权重显存（派生） | 每卡负载（派生） | 结论 |
-|---|---|---|---|---|---|---|---|
-| 3B | 720p | 100 | 1 | 1×H100-80G | ≈ 6.0 GB | 1.00× | 满足官方参考 |
-| 3B | 1080p | 100 | 1 | 4×H100-80G | ≈ 6.0 GB | 2.25× | 低于官方参考：建议 4×H100-80G |
-| 3B | 2K | 200 | 4 | 4×H100-80G | ≈ 6.0 GB | 8.00× | 满足官方参考 · 帧数超过官方示例的 100 帧，需实测 |
-| 7B | 720p | 100 | 1 | 1×H100-80G | ≈ 14.0 GB | 1.00× | 7B 官方参考未单列，建议以实测为准 |
-| 7B | 1080p | 100 | 4 | 4×H100-80G | ≈ 14.0 GB | 2.25× | 7B 官方参考未单列，建议以实测为准 |
-
-> 工作台里的「VRAM 预检 & 推荐参数」是按本机实际显存的运行时预检，与这张静态参考表互补。
-
-### 分辨率对比 · 480 / 1024
-
-> 站点 rewq.cn 实验区「RESOLUTION · 480 / 1024」交互对比（2026-11-08 下线）的存档：同一张 AI 生成图（[魔搭 #259472](https://modelscope.cn/aigc/gallery/share/259472)，原图 SHA-256 前 8 位 `2b862db8`）的两个分辨率档，都是 WebP。
-
-| 480 档（rewq.cn 省流档默认） | 1024 档 |
-|---|---|
-| ![480 档](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-res-cmp-259472-w480-20261108.webp) | ![1024 档](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-res-cmp-259472-w1024-20261108.webp) |
-| 28.4 KB | 102.2 KB |
-
-同一张图，字节差 **3.6×**——这是 rewq.cn 省流档把 w480 设为默认档的数据依据；两档的细节差异看发簪、竹叶和衣袖。
 
 ### 使用示例
 
@@ -202,33 +131,30 @@ docker build -t seedvr2 .
 docker run --gpus all -p 7870:7870 seedvr2
 
 # 或使用随 v* 标签发布的 GHCR 镜像
-docker pull ghcr.io/reserendipity/seedvr2-turbo:1.7.0
-docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-turbo:1.7.0
+docker pull ghcr.io/reserendipity/seedvr2-turbo:2.0.2
+docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-turbo:2.0.2
 ```
 
 环境变量模板见 `.env.example`，常用 `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`。
 
 ### 常见问题（FAQ）
 
-- **模型文件未找到？** 权重必须放 `model/` 根目录，文件名与下载脚本输出一致，不要自行建子文件夹或改名。
-- **显存不足（OOM）？** 改用 FP8 模型、开启 GPU BlockSwap、或降低输出分辨率；工作台的「VRAM 预检 & 推荐参数」会自动给出组合。
-- **`install.bat` 装 PyTorch 失败？** 手动执行 `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128`，按 `nvidia-smi` 换成对应 CUDA 版本。
-- **视频修复没有输出？** 需自行安装 FFmpeg 并加入 PATH（图片修复开箱即用）。
-- **HuggingFace 下载慢？** 设置 `HF_ENDPOINT=https://hf-mirror.com` 后重跑下载脚本。
+- **首次启动后无法修复？** 在应用内「下载管理」完成推理运行环境安装和模型下载，并按页面提示重启。
+- **显存不足（OOM）？** 在工作台选择更轻量的模型/精度、开启 GPU BlockSwap 或降低输出分辨率；先使用应用内显存预检建议。
+- **视频修复没有输出？** 单独安装 FFmpeg 并加入 `PATH`；图片修复不需要 FFmpeg。
+- **自动更新失败？** 检查网络与磁盘空间后重试；也可从当前 [Release](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/latest) 下载完整安装包覆盖安装。
+- **模型下载慢？** 在「下载管理」切换可用下载线路后重试。
+### Agent CLI（桌面版）
 
-### Agent CLI（桌面版 / 源码均可用）
-
-安装桌面版后安装目录已加入当前用户 PATH，新开终端即可；源码环境用 `python scripts/agent_cli.py`：
+安装桌面版后，安装目录已加入当前用户 `PATH`；新开终端即可检查状态、配置和可用模型：
 
 ```bat
 seedvr2 status --json
 seedvr2 check --json
 seedvr2 models --json
-seedvr2 restore -i photo.png -o outputs --server-url http://127.0.0.1:7870
 ```
 
-`restore` 通过已运行的 Web 服务提交任务，保留显存预检 / 精度降级 / 坏案例重试保护；首次使用需在程序内「下载管理」页装好运行环境与模型。所有命令支持 `--json`（任意位置），stdout 仅输出结构化结果、日志走 stderr，退出码语义见 `scripts/agent_cli.py` 文件头。
-
+CLI 输出格式和退出码适合脚本及 AI agent 调用。图像/视频修复仍建议直接使用桌面应用中的「修复工作台」。
 ### 安全与合规
 
 > **网络绑定警告**：Web UI 默认仅绑定 `127.0.0.1`（`config.yaml` 的 `server.host`），默认未开启认证。**严禁改为 `0.0.0.0` 或公网 IP**，否则任何人都可调用推理 API、上传恶意文件或下载 outputs/uploads。如需局域网共享，请开启 Basic Auth 并在反向代理后启用 HTTPS。
@@ -240,13 +166,13 @@ seedvr2 restore -i photo.png -o outputs --server-url http://127.0.0.1:7870
 - **文档**：仓内 [用户手册](docs/用户手册.md) 与 [开发者指南](docs/开发者指南.md)。
 - **治理规范**：组织级治理与贡献约定见 [ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance) 与 [贡献指南](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md)。
 - **架构决策（ADR）**：关键技术选型记录于 [`docs/adr/`](docs/adr/)。
-- **发布治理**：版本发布、增量更新与回滚见 [release-governance](docs/release-governance.md)、[发布检查清单（历史记录，v1.5.1 时代）](docs/_archive/发布检查清单.md)、[增量更新发布手册](docs/增量更新发布手册.md) 与 [rollback_sop](docs/rollback_sop.md)；版本与变更见 [CHANGELOG.md](CHANGELOG.md)。
+- **发布与更新**：桌面版通过完整安装器发布和更新；流程与回滚说明见 [release-governance](docs/release-governance.md) 和 [rollback_sop](docs/rollback_sop.md)，版本变更见 [CHANGELOG.md](CHANGELOG.md)。
 
 ### 贡献与支持
 
 参与贡献请遵循上述[组织级贡献指南](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md)（Conventional Commits + DCO 签名）。Issue 与 Discussion 请在仓库内发起；安全问题请按仓库安全政策私下报告，勿公开提 issue。
 
-- Releases（当前最新版安装器与校验文件；便携离线分卷包见 v2.0.1）：<https://github.com/ReSerendipity/SeedVR2-Turbo/releases>
+- Releases（最新桌面安装器与 SHA-256 校验文件）：<https://github.com/ReSerendipity/SeedVR2-Turbo/releases/latest>
 
 ### 许可证
 
@@ -260,7 +186,7 @@ seedvr2 restore -i photo.png -o outputs --server-url http://127.0.0.1:7870
 
 SeedVR2-Turbo packages the [SeedVR2](https://huggingface.co/ByteDance-Seed) one-step diffusion restoration model (jointly open-sourced by ByteDance's Seed team and NTU S-Lab) into a **standalone local web app**: upload an image or video and get super-resolution / detail enhancement on the spot, with all data staying on your machine. It does **not** depend on ComfyUI or any external inference service.
 
-The supported distribution is a **Tauri v2 desktop build**, shipped as a single-file Windows installer (`SeedVR2-Setup-v<version>.exe`, with the runtime and data volume bundled); developers can also run it from source or use a portable bundle in a browser. The latest stable release is **v2.0.2** (published 2026-11-24); the portable offline bundles are available in the [v2.0.1 release](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/tag/v2.0.1).
+The supported distribution is a **Tauri v2 Windows desktop app**. The latest stable release is **v2.0.2**. The installer contains the desktop app and its application payload; users install the inference runtime and download model weights from the in-app Download Manager on first use.
 
 ### Highlights
 
@@ -268,7 +194,7 @@ The supported distribution is a **Tauri v2 desktop build**, shipped as a single-
 - **Three model tiers**: 3B / 7B / 7B-Sharp, with FP16 / FP8 and MXFP8 / NVFP4 / INT8-convrot quantized variants (`.safetensors`; GGUF is not supported).
 - **VRAM friendly**: GPU Block Swap dynamically swaps Transformer blocks in/out during inference; 3B FP8 starts from 8 GB VRAM.
 - **Batch & resumable**: single-file repair plus folder batch scanning, with progress persisted under `data/checkpoints/`.
-- **Single-file Windows installer**: native Tauri window, system tray, Windows toast notifications, drag & drop, single-instance + auto-restart, tray-based incremental updates.
+- **Windows desktop app**: native Tauri window, system tray, Windows toast notifications, drag & drop, single-instance and crash recovery; launch from the desktop or Start menu, install the inference runtime and model in-app, and update through the full installer with automatic restart.
 - **i18n & live monitoring**: UI in Simplified/Traditional Chinese, English, Japanese and French; GPU/VRAM/memory and task progress streamed over SSE.
 
 ### Screenshots
@@ -301,56 +227,27 @@ The supported distribution is a **Tauri v2 desktop build**, shipped as a single-
 
 ### Quick start
 
-> Regular users should download the [v2.0.2 Windows installer, `SeedVR2-Setup-v2.0.2.exe`](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/download/v2.0.2/SeedVR2-Setup-v2.0.2.exe) and verify it with the accompanying [SHA-256 file](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/download/v2.0.2/SeedVR2-Setup-v2.0.2.exe.sha256). For portable offline bundles, go to the [v2.0.1 release](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/tag/v2.0.1) and download all required parts. Below is the from-source path.
+> **Regular users do not need to clone the repository, install system Python, or run startup scripts.** The current stable release is **v2.0.2**: download the [Windows installer](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/download/v2.0.2/SeedVR2-Setup-v2.0.2.exe); the matching [SHA-256 file](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/download/v2.0.2/SeedVR2-Setup-v2.0.2.exe.sha256) is available for verification.
 
-**1. Requirements**
+**1. Install and launch the desktop app**
 
-- Windows x64, an NVIDIA CUDA GPU (required; pure CPU inference is not supported), Python 3.12+.
-- ≥ 15 GB disk; video restoration requires FFmpeg on PATH (not bundled for licensing reasons, see [NOTICE](NOTICE)).
+- Windows 10/11 x64. An NVIDIA CUDA GPU is required for image/video restoration. Windows LTSC and other stripped-down editions may need WebView2 Runtime installed separately.
+- Run `SeedVR2-Setup-v2.0.2.exe`, finish setup, then launch **SeedVR2** from the desktop shortcut or Start menu. Normal use does not require a terminal, `.bat` file, or Python command.
 
-**2. Install dependencies**
+**2. Download the inference runtime and model on first use**
 
-```bash
-git clone https://github.com/ReSerendipity/SeedVR2-Turbo.git
-cd SeedVR2-Turbo
+The installer includes the desktop app and its application payload, but **not the full inference runtime or model weights**. Open **Download Manager** in the app and follow its prompts to install the Python + PyTorch runtime and download a model. Restart the app when prompted, and allow sufficient disk space for the runtime and selected model.
 
-# Windows one-click (recommended)
-install.bat
+**3. Restore your media**
 
-# Or with uv (creates .venv and installs CUDA PyTorch)
-uv sync
-# For older drivers, change the [[tool.uv.index]] url in pyproject.toml to cu121 / cu132 and rerun
-```
-
-**3. Download weights**
-
-```bash
-python scripts/download_model.py --size 3b      # 3B + VAE + text embeddings, ~20 GB
-# 7B: --size 7b ; 7B-Sharp: --size 7b_sharp
-```
-
-Slow downloads in mainland China: set `set HF_ENDPOINT=https://hf-mirror.com` first, then rerun. Weights must sit in the `model/` **root** (no subfolders).
-
-**4. Launch**
-
-```bash
-start.bat
-# or: python app/integrated_app/app_server.py
-```
-
-Open <http://127.0.0.1:7870> (auto-increments if busy; use the address printed in the log).
-
-**5. Minimal verification**
-
-In the workbench, upload an image → click "upload & restore" → on the "System status" page you should see GPU usage rise and a completed task appear in "History". That confirms the inference pipeline works.
-
+In the workbench, upload an image or video, select a model and output settings, and start restoration. Progress and results are available in the app. Video restoration requires FFmpeg on `PATH` (not bundled for licensing reasons; see [NOTICE](NOTICE)).
 ### Requirements & compatibility
 
 | Item | Requirement |
 |---|---|
 | OS | Windows (recommended; Linux via Docker from source) |
 | GPU | NVIDIA CUDA GPU (required) |
-| Python | 3.12+ (or the portable Python bundled in the desktop build) |
+| Python | No system Python installation is needed for the desktop app; install the inference runtime in the in-app Download Manager. |
 | VRAM | 3B FP8 from 8 GB; 3B FP16 ~16 GB; 7B FP8 ~12 GB; 7B FP16 ~24 GB |
 | Disk | ≥ 15 GB |
 
@@ -365,49 +262,7 @@ Model precision (`.safetensors`):
 
 > FP8 is currently a weight storage format only; inference still runs at FP16/FP32, so speed is essentially the same as FP16. What actually affects speed is BlockSwap, output resolution and frame count. See the in-repo [user manual](docs/用户手册.md) for the full VRAM table.
 
-### VRAM & configuration sizing
 
-> This archives the sizing logic of the interactive estimator that used to live in the rewq.cn lab section (retired 2026-11-08). Official values come only from the GPU Requirement section of the [ByteDance-Seed/SeedVR](https://github.com/ByteDance-Seed/SeedVR) README and the 3B/7B model names (configs_3b / configs_7b); **weight VRAM and relative load are derived values, excluding activations and framework overhead**. No throughput or pricing has been published officially, so this covers VRAM and configuration only — no invented prices.
-
-**Interactive version**: <https://reserendipity.github.io/SeedVR2-Turbo/vram.html> (tune 3B/7B, output height, frames and GPU count with live readouts; source at [docs/vram.html](docs/vram.html), served via GitHub Pages).
-
-**Official reference tiers**:
-
-| Scenario | Official reference |
-|---|---|
-| 100×720×1280 (720p · 100 frames) | 1×H100-80G |
-| 1080p / 2K (sp_size=4) | 4×H100-80G |
-
-**Derived figures** (same as the original estimator):
-
-- Weight VRAM ≈ parameter count × 2 GB (bf16: 3B ≈ 6.0 GB, 7B ≈ 14.0 GB)
-- Per-GPU relative load = (output height ÷ 720)² × (frames ÷ 100) (720p · 100 frames = 1×)
-- Total VRAM of the selected GPUs = GPU count × 80 GB
-
-**Verdict rules**: 3B with fewer GPUs than the tier → "below official reference: {n}×H100-80G recommended"; no official tier is published for 7B, so it is always marked "verify by benchmarking"; more than 100 frames → beyond the official example, benchmark required.
-
-Examples (readings the original estimator would show):
-
-| Model | Output height | Frames | GPUs | Official tier | Weight VRAM (derived) | Per-GPU load (derived) | Verdict |
-|---|---|---|---|---|---|---|---|
-| 3B | 720p | 100 | 1 | 1×H100-80G | ≈ 6.0 GB | 1.00× | Meets official reference |
-| 3B | 1080p | 100 | 1 | 4×H100-80G | ≈ 6.0 GB | 2.25× | Below official reference: 4×H100-80G recommended |
-| 3B | 2K | 200 | 4 | 4×H100-80G | ≈ 6.0 GB | 8.00× | Meets official reference · >100 frames exceeds the official example, benchmark required |
-| 7B | 720p | 100 | 1 | 1×H100-80G | ≈ 14.0 GB | 1.00× | No official 7B tier; verify by benchmarking |
-| 7B | 1080p | 100 | 4 | 4×H100-80G | ≈ 14.0 GB | 2.25× | No official 7B tier; verify by benchmarking |
-
-> The workbench's "VRAM preflight & recommended parameters" is a runtime check against your actual local VRAM and complements this static reference table.
-
-### Resolution comparison · 480 / 1024
-
-> Archive of the "RESOLUTION · 480 / 1024" interactive comparison from the rewq.cn lab section (retired 2026-11-08): the same AI-generated image ([ModelScope #259472](https://modelscope.cn/aigc/gallery/share/259472), original SHA-256 first 8 hex `2b862db8`) in two resolution tiers, both WebP.
-
-| 480 tier (rewq.cn data-saver default) | 1024 tier |
-|---|---|
-| ![480 tier](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-res-cmp-259472-w480-20261108.webp) | ![1024 tier](https://gcore.jsdelivr.net/gh/ReSerendipity/SeedVR2-Turbo@main/docs/assets/readme-res-cmp-259472-w1024-20261108.webp) |
-| 28.4 KB | 102.2 KB |
-
-Same image, **3.6×** byte difference — the data basis for rewq.cn's data-saver mode defaulting to w480; the detail differences are in the hairpin, the bamboo leaves and the sleeves.
 
 ### Usage examples
 
@@ -417,20 +272,30 @@ docker build -t seedvr2 .
 docker run --gpus all -p 7870:7870 seedvr2
 
 # Or use the GHCR image published with v* tags
-docker pull ghcr.io/reserendipity/seedvr2-turbo:1.7.0
-docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-turbo:1.7.0
+docker pull ghcr.io/reserendipity/seedvr2-turbo:2.0.2
+docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-turbo:2.0.2
 ```
 
 Environment variables: see `.env.example`; a common one is `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`.
 
 ### FAQ
 
-- **Model not found?** Weights must be in the `model/` root with the exact filenames printed by the download script; do not create subfolders or rename files.
-- **Out-of-memory (OOM)?** Switch to an FP8 model, enable GPU BlockSwap, or lower the output resolution; the workbench's "VRAM preflight" recommends a combination automatically.
-- **`install.bat` fails to install PyTorch?** Run `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128`, adjusting the CUDA suffix to match `nvidia-smi`.
-- **No output for videos?** Install FFmpeg and put it on PATH (image restoration works out of the box).
-- **Slow HuggingFace download?** Set `HF_ENDPOINT=https://hf-mirror.com` and rerun the download script.
+- **Restoration is unavailable after first launch?** Install the inference runtime and download a model in the in-app Download Manager, then restart when prompted.
+- **Out of memory (OOM)?** Select a lighter model/precision, enable GPU BlockSwap, or lower the output resolution; start with the app's VRAM preflight recommendations.
+- **Videos produce no output?** Install FFmpeg separately and add it to `PATH`; image restoration does not require FFmpeg.
+- **Automatic update fails?** Check network access and free disk space, then retry. You can also download the full installer from the [latest Release](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/latest) and install over the existing app.
+- **Model download is slow?** Choose another available download route in the Download Manager and retry.
+### Desktop CLI
 
+After installation, the app directory is added to the current user's `PATH`. Open a new terminal to inspect status, configuration and available models:
+
+```bat
+seedvr2 status --json
+seedvr2 check --json
+seedvr2 models --json
+```
+
+Structured output and exit codes are suitable for scripts and AI agents. For image/video restoration, use the app's workbench.
 ### Security & compliance
 
 > **Network binding warning**: the web UI binds to `127.0.0.1` only (`server.host` in `config.yaml`) and ships without authentication by default. **Never change it to `0.0.0.0` or a public IP** — otherwise anyone can invoke the inference API, upload malicious files, or download outputs/uploads. For LAN sharing, enable Basic Auth and put the app behind an HTTPS reverse proxy.
@@ -442,13 +307,13 @@ Please read [USER_AGREEMENT.md](docs/USER_AGREEMENT.md) before use. This is an i
 - **Docs**: in-repo [user manual](docs/用户手册.md) and [developer guide](docs/开发者指南.md).
 - **Governance**: org-level governance and contribution conventions live in [ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance) and the [contributing guide](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md).
 - **Architecture decisions (ADR)**: key design records are under [`docs/adr/`](docs/adr/).
-- **Release governance**: versioning, incremental updates and rollback are covered by [release-governance](docs/release-governance.md), the [release checklist (historical, v1.5.1 era)](docs/_archive/发布检查清单.md), the [incremental-update manual](docs/增量更新发布手册.md) and [rollback_sop](docs/rollback_sop.md); see [CHANGELOG.md](CHANGELOG.md) for versions and changes.
+- **Release & updates**: the desktop app is released and updated through the full installer. See [release-governance](docs/release-governance.md) and [rollback_sop](docs/rollback_sop.md) for process and rollback guidance, and [CHANGELOG.md](CHANGELOG.md) for changes.
 
 ### Contributing & support
 
 Follow the [org-level contributing guide](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md) (Conventional Commits + DCO sign-off). Open issues and discussions in the repository; report security problems privately per the security policy rather than in a public issue.
 
-- Releases (latest installer and checksum; portable offline bundles in v2.0.1): <https://github.com/ReSerendipity/SeedVR2-Turbo/releases>
+- Releases (latest desktop installer and SHA-256 checksum): <https://github.com/ReSerendipity/SeedVR2-Turbo/releases/latest>
 
 ### License
 
