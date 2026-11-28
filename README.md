@@ -8,7 +8,7 @@ A standalone video & image super-resolution toolkit powered by SeedVR2 diffusion
 
 [![CI](https://github.com/ReSerendipity/SeedVR2-Turbo/actions/workflows/ci.yml/badge.svg)](https://github.com/ReSerendipity/SeedVR2-Turbo/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/ReSerendipity/SeedVR2-Turbo?logo=github)](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/latest)
-[![Python](https://img.shields.io/badge/Python-3.12+-blue?logo=python&logoColor=white)](pyproject.toml)
+[![Desktop](https://img.shields.io/badge/Desktop-Windows-0078D4?logo=windows&logoColor=white)](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/latest)
 [![CUDA](https://img.shields.io/badge/GPU-NVIDIA%20CUDA-76B900?logo=nvidia&logoColor=white)](#系统要求与兼容性)
 [![License](https://img.shields.io/badge/License-Apache%202.0-green)](LICENSE)
 [![Last commit](https://img.shields.io/github/last-commit/ReSerendipity/SeedVR2-Turbo)](https://github.com/ReSerendipity/SeedVR2-Turbo/commits/main)
@@ -37,12 +37,12 @@ SeedVR2-Turbo 把字节跳动 Seed 团队与南洋理工大学 S-Lab 联合开�
 - **显存友好**：GPU Block Swap 在推理时动态换入换出 Transformer 块；3B FP8 可在 8 GB 显存起步运行。
 - **批量与断点续跑**：单文件修复 + 文件夹批量扫描，批量任务在 `data/checkpoints/` 记录进度，中断后可续跑。
 - **Windows 桌面应用**：Tauri 原生窗口、系统托盘、Toast 通知、文件拖拽、单实例与崩溃恢复；从桌面/开始菜单启动，首次运行在应用内安装推理环境和模型；应用内更新使用完整安装器，更新后自动重启并保留用户数据。
-- **Agent CLI**：`seedvr2 status/check/models/launch/restore` 全局命令，JSON 输出 + 语义退出码，供脚本与 AI agent 自动化调用。
+- **Agent CLI**：桌面版提供 `seedvr2 status/check/models` 命令，支持 JSON 输出与语义退出码，便于脚本和 AI agent 查询应用状态。
 - **多语言与实时监控**：界面支持简体中文、繁体中文、英文、日文、法文；GPU/显存/内存与任务进度经 SSE 实时推送。
 
 ### 界面展示
 
-> 以下截图均在云端 Linux（无 GPU）真实启动 Web UI 后截取，浅色主题；无 GPU 时界面如实显示降级状态。
+> 以下界面截图于 2026-10-26 在云端 Linux（无 GPU）启动 Web UI 后截取，采用浅色主题，仅作界面预览；当前桌面版通过 Tauri 窗口呈现应用界面。
 
 **首页仪表盘** —— 一句话定位、入口卡片与状态角标。本图在无 GPU 云环境启动，角标显示「未检测到可用 GPU · 未加载」；有 GPU 时此处显示设备型号与当前模型。
 
@@ -119,7 +119,7 @@ python .github/scripts/check_layout.py
 | SeedVR2-7B | FP8 | 12 GB | ~12 GB |
 | SeedVR2-7B-Sharp | FP16 | 24 GB | ~20 GB |
 
-> FP8 当前仅作权重存储格式，推理仍按 FP16/FP32 加载，故与 FP16 速度基本一致；真正影响速度的是 BlockSwap、输出分辨率与帧数。完整显存对比见仓内 [用户手册](docs/用户手册.md)。
+> FP8 当前仅作权重存储格式，推理仍按 FP16/FP32 加载，故与 FP16 速度基本一致；实际显存需求取决于所选模型与输出参数，可先使用工作台内的显存预检建议。
 
 
 
@@ -143,7 +143,7 @@ docker run --gpus all -p 7870:7870 ghcr.io/reserendipity/seedvr2-turbo:2.0.2
 - **显存不足（OOM）？** 在工作台选择更轻量的模型/精度、开启 GPU BlockSwap 或降低输出分辨率；先使用应用内显存预检建议。
 - **视频修复没有输出？** 单独安装 FFmpeg 并加入 `PATH`；图片修复不需要 FFmpeg。
 - **自动更新失败？** 检查网络与磁盘空间后重试；也可从当前 [Release](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/latest) 下载完整安装包覆盖安装。
-- **模型下载慢？** 在「下载管理」切换可用下载线路后重试。
+- **模型下载慢或失败？** 检查网络连接和剩余磁盘空间后，在「下载管理」中重试。
 ### Agent CLI（桌面版）
 
 安装桌面版后，安装目录已加入当前用户 `PATH`；新开终端即可检查状态、配置和可用模型：
@@ -163,11 +163,9 @@ CLI 输出格式和退出码适合脚本及 AI agent 调用。图像/视频修�
 
 ### 文档与治理
 
-- **文档**：仓内 [用户手册](docs/用户手册.md) 与 [开发者指南](docs/开发者指南.md)。
-- **治理规范**：组织级治理与贡献约定见 [ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance) 与 [贡献指南](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md)。
+- **版本与变更**：见 [CHANGELOG.md](CHANGELOG.md)。
 - **架构决策（ADR）**：关键技术选型记录于 [`docs/adr/`](docs/adr/)。
-- **发布与更新**：桌面版通过完整安装器发布和更新；流程与回滚说明见 [release-governance](docs/release-governance.md) 和 [rollback_sop](docs/rollback_sop.md)，版本变更见 [CHANGELOG.md](CHANGELOG.md)。
-
+- **贡献与治理**：遵循 [组织级贡献指南](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md) 与 [组织级治理规范](https://github.com/ReSerendipity/.github/tree/main/governance)。
 ### 贡献与支持
 
 参与贡献请遵循上述[组织级贡献指南](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md)（Conventional Commits + DCO 签名）。Issue 与 Discussion 请在仓库内发起；安全问题请按仓库安全政策私下报告，勿公开提 issue。
@@ -199,7 +197,7 @@ The supported distribution is a **Tauri v2 Windows desktop app**. The latest sta
 
 ### Screenshots
 
-> All screenshots were taken by actually launching the web UI on a headless cloud Linux box without a GPU (light theme); the degraded no-GPU state is shown honestly.
+> These UI previews were captured from the web app on a headless Linux host without a GPU on 2026-10-26 (light theme); the current desktop app presents the application UI in a Tauri window.
 
 **Home dashboard** — tagline, entry cards and status pill. This shot was taken on a GPU-less cloud box, so the pill reads "No GPU detected · model not loaded"; on a GPU box it shows the device name and current model.
 
@@ -260,7 +258,7 @@ Model precision (`.safetensors`):
 | SeedVR2-7B | FP8 | 12 GB | ~12 GB |
 | SeedVR2-7B-Sharp | FP16 | 24 GB | ~20 GB |
 
-> FP8 is currently a weight storage format only; inference still runs at FP16/FP32, so speed is essentially the same as FP16. What actually affects speed is BlockSwap, output resolution and frame count. See the in-repo [user manual](docs/用户手册.md) for the full VRAM table.
+> FP8 is currently a weight storage format only; inference still runs at FP16/FP32, so speed is essentially the same as FP16. What affects speed includes BlockSwap, output resolution and frame count. Actual VRAM use depends on the selected model and output settings; use the workbench VRAM preflight for guidance.
 
 
 
@@ -284,7 +282,7 @@ Environment variables: see `.env.example`; a common one is `PYTORCH_CUDA_ALLOC_C
 - **Out of memory (OOM)?** Select a lighter model/precision, enable GPU BlockSwap, or lower the output resolution; start with the app's VRAM preflight recommendations.
 - **Videos produce no output?** Install FFmpeg separately and add it to `PATH`; image restoration does not require FFmpeg.
 - **Automatic update fails?** Check network access and free disk space, then retry. You can also download the full installer from the [latest Release](https://github.com/ReSerendipity/SeedVR2-Turbo/releases/latest) and install over the existing app.
-- **Model download is slow?** Choose another available download route in the Download Manager and retry.
+- **Model download is slow or fails?** Check your network connection and free disk space, then retry in the Download Manager.
 ### Desktop CLI
 
 After installation, the app directory is added to the current user's `PATH`. Open a new terminal to inspect status, configuration and available models:
@@ -304,11 +302,9 @@ Please read [USER_AGREEMENT.md](docs/USER_AGREEMENT.md) before use. This is an i
 
 ### Documentation & governance
 
-- **Docs**: in-repo [user manual](docs/用户手册.md) and [developer guide](docs/开发者指南.md).
-- **Governance**: org-level governance and contribution conventions live in [ReSerendipity/.github/governance](https://github.com/ReSerendipity/.github/tree/main/governance) and the [contributing guide](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md).
+- **Versions and changes**: see [CHANGELOG.md](CHANGELOG.md).
 - **Architecture decisions (ADR)**: key design records are under [`docs/adr/`](docs/adr/).
-- **Release & updates**: the desktop app is released and updated through the full installer. See [release-governance](docs/release-governance.md) and [rollback_sop](docs/rollback_sop.md) for process and rollback guidance, and [CHANGELOG.md](CHANGELOG.md) for changes.
-
+- **Contributing & governance**: follow the [org-level contributing guide](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md) and [governance rules](https://github.com/ReSerendipity/.github/tree/main/governance).
 ### Contributing & support
 
 Follow the [org-level contributing guide](https://github.com/ReSerendipity/.github/blob/main/CONTRIBUTING.md) (Conventional Commits + DCO sign-off). Open issues and discussions in the repository; report security problems privately per the security policy rather than in a public issue.
